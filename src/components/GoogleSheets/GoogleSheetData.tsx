@@ -75,16 +75,16 @@ function GoogleSheetData() {
       const columnMark = getColumnLetter(Number(updateSheetsData.column) + 2);
       const params = {
         spreadsheetId: process.env.REACT_APP_SHEETS_ID,
-        // range: `Mar!${updateSheetsData.column}${updateSheetsData.row}`, // Define the range you want to update
+        // range: `April!${updateSheetsData.column}${updateSheetsData.row}`, // Define the range you want to update
         // values: [[updateSheetsData.time]],
         resource: {
           data: [
             {
-              range: `Mar!${columnDate}${updateSheetsData.row}`,
+              range: `April!${columnDate}${updateSheetsData.row}`,
               values: [[updateSheetsData.time]],
             },
             {
-              range: `Mar!${columnMark}${updateSheetsData.row}`,
+              range: `April!${columnMark}${updateSheetsData.row}`,
               values: [[updateSheetsData.mark]],
             },
           ],
@@ -119,7 +119,7 @@ function GoogleSheetData() {
 
   const getSheets = async () => {
     // API URL and your API key
-    const apiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${process.env.REACT_APP_SHEETS_ID}/values/Mar?key=${process.env.REACT_APP_API_KEY}`;
+    const apiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${process.env.REACT_APP_SHEETS_ID}/values/April?key=${process.env.REACT_APP_API_KEY}`;
 
     // Fetch data from Google Sheets
     axios

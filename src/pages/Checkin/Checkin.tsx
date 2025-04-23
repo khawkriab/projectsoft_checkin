@@ -2,6 +2,7 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { gapi } from "gapi-script";
 import dayjs from "dayjs";
+import { Layout } from "components/layout";
 
 interface SheetData {
   range: string;
@@ -9,7 +10,7 @@ interface SheetData {
   values: string[][];
 }
 
-function GoogleSheetData() {
+function Checkin() {
   const [sheetData, setSheetData] = useState<string[][]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [authLoaded, setAuthLoaded] = useState(false);
@@ -174,7 +175,8 @@ function GoogleSheetData() {
 
   return (
     <div>
-      <h1>Projectsoft Check-In :)</h1>
+      <h1>Projectsoft Check-In :</h1>
+
       <div className="form-update">
         <div className="form-group">
           {!authLoaded ? (
@@ -311,4 +313,4 @@ function GoogleSheetData() {
   );
 }
 
-export default GoogleSheetData;
+export default Checkin;

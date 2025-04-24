@@ -1,14 +1,30 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { gapi } from "gapi-script";
-import dayjs from "dayjs";
-import { Layout } from "components/layout";
-
+import dayjs, { Dayjs } from "dayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { DatePicker } from "@mui/x-date-pickers";
+import "dayjs/locale/th";
+import InputLabel from "@mui/material/InputLabel";
+import FormControl from "@mui/material/FormControl";
+import Select from "@mui/material/Select";
+import Box from "@mui/material/Box";
+import { SelectChangeEvent } from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+dayjs.locale("th");
 interface SheetData {
   range: string;
   majorDimension: string;
   values: string[][];
 }
+
+type ProfileData = {
+  id: string;
+  fullName: string;
+  profileURL: string;
+  email: string;
+};
 
 function Checkin() {
   const [sheetData, setSheetData] = useState<string[][]>([]);
@@ -17,6 +33,9 @@ function Checkin() {
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [dateList, setDateList] = useState<string[]>([]);
   const [employeeList, setEmployeeList] = useState<string[]>([]);
+  const [personName, setPersonName] = React.useState<string[]>([]);
+  const [openDrop, setOpenDrop] = useState(false);
+  const [profile, setProfile] = useState<ProfileData>();
   const [updateSheetsData, setUpdateSheetsData] = useState<{
     row: string;
     column: string;
@@ -24,11 +43,36 @@ function Checkin() {
     mark?: string;
   }>({ row: "3", column: "1", mark: "" });
 
+  const [sdate, setsDate] = useState<Dayjs | null>(dayjs());
+  //console.log("sdate:", sdate);
+  const [edate, seteDate] = useState<Dayjs | null>(dayjs());
+  //console.log("edate:", edate);
+
+  const handleChangeMultiple = (event: SelectChangeEvent<string[]>) => {
+    const {
+      target: { value },
+    } = event;
+    setPersonName(typeof value === "string" ? value.split(",") : value);
+    setOpenDrop(false);
+  };
+
+  const [value, setValue] = React.useState<Dayjs | null>(dayjs("2022-04-17"));
+
   // Function to get the cell range in format like A1, B1, ..., Z1, AA1, AB1, etc.
   const getCellRange = (rowIndex: number, colIndex: number): string => {
     const column = getColumnLetter(colIndex); // Get the column letter for the current index
     return `${column}${rowIndex + 1}`; // Return the cell in format like A1, B1, C1, ..., AA1, AB1, etc.
   };
+
+  const filteredRows = sheetData.slice(2).filter((row) => {
+    const dateStr = row[0]; // วันที่ใน format 'DD-MM-YYYY'
+    const rowDate = dayjs(dateStr, "DD-MM-YYYY");
+
+    return (
+      (rowDate.isAfter(sdate, "day") || rowDate.isSame(sdate, "day")) &&
+      (rowDate.isBefore(edate, "day") || rowDate.isSame(edate, "day"))
+    );
+  });
 
   // Helper function to convert column index to letter (supports multi-letter columns)
   const getColumnLetter = (colIndex: number): string => {
@@ -41,10 +85,13 @@ function Checkin() {
   };
 
   const initClient = () => {
+    const clientId =
+      "617287579060-66r4kae3sergkb7bv933ipkekpg1l8a6.apps.googleusercontent.com";
+    const apiKey = "AIzaSyC5wYRXYMuUGQGchOqgtreNx2y3bf2eTic";
     gapi.client
       .init({
-        apiKey: process.env.REACT_APP_API_KEY,
-        clientId: process.env.REACT_APP_GOOGLE_PRIVATE_KEY,
+        apiKey: apiKey,
+        clientId: clientId,
         discoveryDocs: [
           "https://sheets.googleapis.com/$discovery/rest?version=v4",
         ],
@@ -52,7 +99,24 @@ function Checkin() {
       })
       .then(() => {
         const authInstance = gapi.auth2.getAuthInstance();
+        console.log("authInstance:", authInstance.currentUser.get());
+        const googleUser = authInstance.currentUser.get();
+        console.log("googleUser:", googleUser.getBasicProfile());
+
+        const profile = googleUser.getBasicProfile();
+
+        console.log("ID: " + profile.getId()); // Google's unique ID for the user
+        console.log("Full Name: " + profile.getName()); // Full name
+        console.log("Given Name: " + profile.getGivenName()); // First name
+        console.log("Family Name: " + profile.getFamilyName()); // Last name
+        console.log("Image URL: " + profile.getImageUrl()); // Profile picture
+        console.log("Email: " + profile.getEmail()); // Email address
+
         setIsSignedIn(authInstance.isSignedIn.get());
+        console.log(
+          "authInstance.isSignedIn.get():",
+          authInstance.isSignedIn.get()
+        );
 
         authInstance.isSignedIn.listen(setIsSignedIn);
         setAuthLoaded(true);
@@ -127,6 +191,7 @@ function Checkin() {
       .get<SheetData>(apiUrl)
       .then((response) => {
         const data = response.data.values;
+        console.log("data:", data);
         const maxLength = data[1].length;
         const normalizedData = data.map((row) => {
           const rowCopy = [...row];
@@ -139,10 +204,10 @@ function Checkin() {
         setSheetData(normalizedData); // Set the sheet data
         const dateListSheets = normalizedData.slice(2).map((row) => row[0]);
         const currentDate = dayjs().format("DD-MM-YYYY");
-        console.log("currentDate:", currentDate);
+        //console.log("currentDate:", currentDate);
         const indexOfList = dateListSheets.findIndex((f) => f === currentDate);
         const rowSelect = String(indexOfList + 3);
-        console.log("selectDate:", rowSelect);
+        //console.log("selectDate:", rowSelect);
         setDateList([...dateListSheets]);
         setUpdateSheetsData((prev) => ({ ...prev, row: rowSelect }));
 
@@ -155,6 +220,7 @@ function Checkin() {
         });
 
         setEmployeeList([...arr]);
+
         setLoading(false); // Set loading to false
       })
       .catch((err) => {
@@ -177,7 +243,7 @@ function Checkin() {
     <div>
       <h1>Projectsoft Check-In :</h1>
 
-      <div className="form-update">
+      {/* <div className="form-update">
         <div className="form-group">
           {!authLoaded ? (
             <div>Loading...</div>
@@ -265,7 +331,42 @@ function Checkin() {
             </div>
           )}
         </div>
-      </div>
+      </div> */}
+      <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="th">
+        <Box display="flex" gap={2} alignItems="center">
+          <DatePicker
+            label="First date"
+            value={sdate}
+            onChange={(newValue) => setsDate(newValue)}
+          />
+          <DatePicker
+            label="Last Date"
+            value={edate}
+            onChange={(newValue) => seteDate(newValue)}
+          />
+          <FormControl sx={{ minWidth: 200 }}>
+            <InputLabel id="employee-select-label">Employee</InputLabel>
+            <Select
+              labelId="employee-select-label"
+              id="employee-select"
+              multiple
+              value={personName}
+              onChange={handleChangeMultiple}
+              onClose={() => setOpenDrop(false)}
+              onOpen={() => setOpenDrop(true)}
+              label="Employee"
+              renderValue={(selected) => (selected as string[]).join(", ")}
+            >
+              {employeeList.map((name: string) => (
+                <MenuItem key={name} value={name}>
+                  {name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+      </LocalizationProvider>
+
       <div className="table-listing-container">
         <div className="table-listing-content">
           {!loading && (
@@ -294,16 +395,26 @@ function Checkin() {
                 </tr>
               </thead>
               <tbody>
-                {sheetData.slice(2).map((row, rowIdx) => (
-                  <tr key={rowIdx}>
-                    {row.map((cell, cellIdx) => (
-                      <td key={cellIdx}>
-                        {cell}
-                        {/* ({getCellRange(rowIdx + 2, cellIdx)}) */}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
+                {sheetData
+                  .slice(2)
+                  .filter((row) => {
+                    const rowDate = dayjs(row[0], "DD-MM-YYYY");
+                    return (
+                      (rowDate.isAfter(sdate, "day") ||
+                        rowDate.isSame(sdate, "day")) &&
+                      (rowDate.isBefore(edate, "day") ||
+                        rowDate.isSame(edate, "day"))
+                    );
+                  })
+                  .map((row, rowIdx) => (
+                    <tr key={rowIdx}>
+                      {row.map((cell, cellIdx) => (
+                        <td key={cellIdx}>{cell}</td>
+                      ))}
+                    </tr>
+                  ))}
+
+                {/* filter by date */}
               </tbody>
             </table>
           )}

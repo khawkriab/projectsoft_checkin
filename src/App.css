@@ -1,5 +1,5 @@
  body {
-   padding: 24px;
+   padding: 0px;
  }
 
  .table-listing-container {
@@ -7,6 +7,7 @@
    width: 100%;
    max-width: 100%;
    padding-right: 4px;
+   margin-top: 20px;
  }
 
  .table-listing-container::after {
@@ -31,6 +32,7 @@
  .table-listing-container table th {
    border: 1px solid #ccc;
    padding: 6px 12px;
+   
  }
 
  .table-listing-container table td:nth-of-type(1) {

@@ -1,0 +1,76 @@
+{/* <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <Box sx={{ p: 4 }}>
+        <Typography variant="h4" sx={{ mb: 2, fontWeight: 'bold', color: 'navy' }}>
+          Absent
+        </Typography>
+        <Box
+          sx={{
+            border: '1px solid grey',
+            borderRadius: 2,
+            p: 3,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+            maxWidth: '600px'
+          }}
+        >
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <DatePicker
+              label="วันเริ่มลา"
+              value={sdate}
+              onChange={(newValue) => setsDate(newValue)}
+              format="MM/DD/YYYY"
+            />
+            <DatePicker
+              label="วันสิ้นสุดการลา"
+              value={edate}
+              onChange={(newValue) => seteDate(newValue)}
+              format="MM/DD/YYYY"
+            />
+          </Box>
+
+          <ToggleButtonGroup
+            value={leaveType}
+            exclusive
+            onChange={handleLeaveTypeChange}
+            aria-label="leave type"
+            sx={{ mt: 2 }}
+          >
+            <ToggleButton value="ลาพัก">ลาพัก</ToggleButton>
+            <ToggleButton value="ลาป่วย">ลาป่วย</ToggleButton>
+            <ToggleButton value="ลากิจ">ลากิจ</ToggleButton>
+          </ToggleButtonGroup>
+
+          <TextField
+            label="เหตุผลการลา"
+            multiline
+            rows={4}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            fullWidth
+          />
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+              หลักฐานการลา :
+            </Typography>
+            <Button
+              component="label"
+              variant="contained"
+              startIcon={<UploadIcon />}
+              sx={{ backgroundColor: 'navy' }}
+            >
+              อัปโหลดหลักฐาน
+              <input
+                type="file"
+                hidden
+                onChange={handleFileUpload}
+              />
+            </Button>
+            <Typography variant="body2" sx={{ ml: 1 }}>
+              {fileName ? `[${fileName}]` : '[File name]'}
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+    </LocalizationProvider> */}

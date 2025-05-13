@@ -15,15 +15,21 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
+import { useGoogleLogin } from "components/GoogleLoginProvider";
 
-interface RegisterProps {
-  fullName: string;
-  email: string;
+/*
+type ProfileData = {
   id: string;
-  idToken: string;
-}
+  token: string;
+  fullName: string;
+  profileURL: string;
+  email: string;
+};
+*/
 
-function Register({ fullName, email, id, idToken }: RegisterProps) {
+function Register() {
+  const { profile, signinStatus } = useGoogleLogin();
+
   const [objDataUser, setObjDataUser] = useState("");
   const [jobPosition, setJobposition] = useState("");
   const [userName, setUserName] = useState("");
@@ -40,17 +46,17 @@ function Register({ fullName, email, id, idToken }: RegisterProps) {
 
   const handleSubmit = async () => {
     const formData = {
-      userId: id,
+      userId: profile?.id,
       userName: userName,
-      userEmail: email,
+      userEmail: profile?.email,
       phoneNumber: phoneNumber,
-      userFullName: fullName,
+      userFullName: profile?.fullName,
       jobPosition: jobPosition,
       jobStatus: userType,
-      userIdToken: idToken,
+      userIdToken: profile?.token,
     };
 
-    console.log("formData:", formData);
+    //console.log("formData:", formData);
 
     try {
       const response = await fetch("http://192.168.31.165:8000/user/register", {
@@ -62,7 +68,6 @@ function Register({ fullName, email, id, idToken }: RegisterProps) {
       });
 
       if (!response.ok) {
-        // 👇 ดึงข้อความจาก response body (ถ้ามี)
         const errorText = await response.text();
         throw new Error(`Code: ${response.status} - Message: ${errorText}`);
       }
@@ -73,10 +78,10 @@ function Register({ fullName, email, id, idToken }: RegisterProps) {
     } catch (error) {
       if (error instanceof Error) {
         console.error("error:", error.message);
-        alert("error:\n" + error.message);
+        console.log("error:\n" + error.message);
       } else {
         console.error("unknow error:", error);
-        alert("unknow error");
+        console.log("unknow error");
       }
     }
   };
@@ -137,7 +142,7 @@ function Register({ fullName, email, id, idToken }: RegisterProps) {
                   label="Full Name"
                   variant="outlined"
                   disabled
-                  value={fullName}
+                  value={profile?.fullName || ""}
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
@@ -146,7 +151,7 @@ function Register({ fullName, email, id, idToken }: RegisterProps) {
                   label="Email"
                   variant="outlined"
                   disabled
-                  value={email}
+                  value={profile?.email || ""}
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 6 }}>

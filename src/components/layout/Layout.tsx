@@ -1,6 +1,6 @@
 import { NavLink, Outlet } from "react-router-dom";
 import logo from "./dino_logo.png";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
@@ -9,8 +9,10 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import Avatar from "@mui/material/Avatar";
 import LogoutIcon from "@mui/icons-material/Logout";
-import { gapi } from "gapi-script";
-
+import useFetcher from "../../hooks/useFetcher/useFetcher";
+import { useGoogleLogin } from "components/GoogleLoginProvider";
+import { useContext } from "react";
+import { GoogleLoginContext } from "../GoogleLoginProvider/GoogleLoginProvider";
 interface LayoutProps {
   onProfileLoad: (profileData: {
     fullName: string;
@@ -28,115 +30,55 @@ const navLinks = [
   { label: "Summary", path: "/Summary" },
   { label: "Absent", path: "/Absent" },
   { label: "Register", path: "/Register" },
+  { label: "Map", path: "/Map" },
 ];
 
-type ProfileData = {
-  id: string;
-  fullName: string;
-  profileURL: string;
-  email: string;
-};
-
 function Layout({ onProfileLoad }: LayoutProps) {
-  const [isSignedIn, setIsSignedIn] = useState(false);
-  const [authLoaded, setAuthLoaded] = useState(false);
-  const [profile, setProfile] = useState<ProfileData | null>(null);
-
-  const initClient = () => {
-    const clientId =
-      "617287579060-66r4kae3sergkb7bv933ipkekpg1l8a6.apps.googleusercontent.com";
-    const apiKey = "AIzaSyC5wYRXYMuUGQGchOqgtreNx2y3bf2eTic";
-
-    gapi.client
-      .init({
-        apiKey,
-        clientId,
-        discoveryDocs: [
-          "https://sheets.googleapis.com/$discovery/rest?version=v4",
-        ],
-        scope: "https://www.googleapis.com/auth/spreadsheets",
-      })
-      .then(() => {
-        const authInstance = gapi.auth2.getAuthInstance();
-
-        if (authInstance.isSignedIn.get()) {
-          const googleUser = authInstance.currentUser.get();
-          console.log("googleUser:", googleUser);
-
-          const profile = googleUser.getBasicProfile();
-          const idToken = googleUser.getAuthResponse().id_token;
-          console.log("idToken:", idToken);
-
-          setProfile({
-            id: profile.getId(),
-            fullName: profile.getName(),
-            profileURL: profile.getImageUrl(),
-            email: profile.getEmail(),
-          });
-
-          onProfileLoad({
-            fullName: profile.getName(),
-            email: profile.getEmail(),
-            id: profile.getId(),
-            idToken: idToken,
-          });
-          console.log("onProfileLoad:", onProfileLoad);
-        }
-        console.log("hello");
-        setIsSignedIn(authInstance.isSignedIn.get());
-        authInstance.isSignedIn.listen(setIsSignedIn);
-        setAuthLoaded(true);
-      })
-      .catch((error: any) => {
-        console.error("Error initializing Google API client:", error);
-      });
-  };
-
-  const handleSignIn = () => {
-    console.log("handleSignIn:");
-    gapi.auth2
-      .getAuthInstance()
-      .signIn()
-      .then((user: any) => {
-        console.log("user:", user);
-        const profile = user.getBasicProfile();
-        console.log("profile:", profile);
-
-        setProfile({
-          id: profile.getId(),
-          fullName: profile.getName(),
-          profileURL: profile.getImageUrl(),
-          email: profile.getEmail(),
-        });
-      })
-      .catch((error: any) => {
-        alert("Sign-in error");
-      });
-
-    // console.log('authInstance:', authInstance)
-    // if (authInstance.isSignedIn.get()) {
-    //   const googleUser = authInstance.currentUser.get();
-    //   const profile = googleUser.getBasicProfile();
-    //   console.log("profile:", profile);
-    //   //console.log("profile:", profile);
-
-    //   setProfile({
-    //     id: profile.getId(),
-    //     fullName: profile.getName(),
-    //     profileURL: profile.getImageUrl(),
-    //     email: profile.getEmail(),
-    //   });
-    // }
-  };
-
-  const handleSignOut = () => {
-    gapi.auth2.getAuthInstance().signOut();
-    setProfile({} as ProfileData);
-  };
+  const { profile, onLoginGoogle, onLogoutGoogle, authLoaded, signinStatus } =
+    useGoogleLogin();
+  const { POST } = useFetcher();
+  const hasPostedAuth = useRef(false);
+  const { setRoleId } = useContext(GoogleLoginContext);
 
   useEffect(() => {
-    gapi.load("client:auth2", initClient);
-  }, []);
+    if (
+      signinStatus &&
+      profile?.token &&
+      profile?.id &&
+      !hasPostedAuth.current
+    ) {
+      hasPostedAuth.current = true;
+
+      onProfileLoad({
+        fullName: profile.fullName,
+        email: profile.email,
+        id: profile.id,
+        idToken: profile.token,
+      });
+
+      POST(
+        "/user/authentication",
+        {},
+        {
+          headers: {
+            "user-id-token": profile.token,
+            "user-id": profile.id,
+          },
+        }
+      )
+        .then((res) => {
+          console.log("Authentication success:", res);
+
+          const roleId = res?.role_id;
+          if (roleId !== undefined) {
+            setRoleId(roleId);
+          }
+        })
+        .catch((err) => {
+          console.error("Authentication error:", err);
+        });
+    }
+  }, [signinStatus, profile, POST, onProfileLoad]);
 
   return (
     <>
@@ -179,20 +121,19 @@ function Layout({ onProfileLoad }: LayoutProps) {
           <Stack direction="row" spacing={2} alignItems="center">
             {!authLoaded ? (
               <Typography color="white">Loading...</Typography>
-            ) : isSignedIn && profile ? (
+            ) : signinStatus && profile ? (
               <>
                 <Avatar alt={profile.fullName} src={profile.profileURL} />
-                {console.log("profile.profileURL:", profile.profileURL)}
                 <Typography color="white">{profile.fullName}</Typography>
                 <IconButton
-                  onClick={handleSignOut}
+                  onClick={onLogoutGoogle}
                   sx={{ bgcolor: "#f44336", color: "white" }}
                 >
                   <LogoutIcon />
                 </IconButton>
               </>
             ) : (
-              <button className="btn btn-primary" onClick={handleSignIn}>
+              <button className="btn btn-primary" onClick={onLoginGoogle}>
                 Sign In to Google
               </button>
             )}

@@ -2,6 +2,7 @@ import RoutesManagement from "RoutesManagement";
 import "./App.css";
 import { createTheme } from "@mui/material";
 import { ThemeProvider } from "@emotion/react";
+import { GoogleLoginProvider } from "components/GoogleLoginProvider";
 
 // const theme = createTheme({
 //   components: {
@@ -77,7 +78,9 @@ const theme = createTheme({
 function App() {
   return (
     <ThemeProvider theme={theme}>
-      <RoutesManagement />
+      <GoogleLoginProvider>
+        <RoutesManagement />
+      </GoogleLoginProvider>
     </ThemeProvider>
   );
 }

@@ -1,13 +1,9 @@
-import React, { useEffect, useState } from "react";
-
-import dayjs, { Dayjs } from "dayjs";
-
+import React, { useContext, useEffect, useState } from "react";
+import { deviceDetect } from "react-device-detect";
+import dayjs from "dayjs";
 import "dayjs/locale/th";
-
-import Box from "@mui/material/Box";
-import { SelectChangeEvent } from "@mui/material/Select";
-
 import {
+  Box,
   Button,
   Grid,
   Paper,
@@ -20,21 +16,26 @@ import {
   TableHead,
   TableRow,
   TextField,
-  Typography,
 } from "@mui/material";
-import { checkInData } from "./mockData";
+
+import { useGoogleLogin } from "components/GoogleLoginProvider";
+import { useFetcher } from "hooks/useFetcher";
+import TimeCurrent from "../../components/tool/TimeCurrent";
+import UserApprovalCell from "../../components/tool/UserApprovalCell";
+import { GoogleLoginContext } from "../../components/GoogleLoginProvider/GoogleLoginProvider";
+
 dayjs.locale("th");
-interface SheetData {
-  range: string;
-  majorDimension: string;
-  values: string[][];
-}
+
 type UserCheckIn = {
-  name: string;
-  checkInTime: string;
-  lateTime: number;
+  approvedBy: string | null;
+  approvedStatus: string | null;
+  checkInId: string | null;
+  checkinTime: string | null;
+  lateTime: string | null;
+  userId: string;
+  userNickname: string;
+  reason: string;
   remark: string;
-  status: string;
 };
 
 type DataCheckin = {
@@ -45,6 +46,14 @@ type DataCheckin = {
   userCheckIn: UserCheckIn[];
 };
 
+type LocationData = {
+  lat: number;
+  lng: number;
+  errMassage: string;
+  allowLocation: boolean;
+};
+
+// Custom Table Cell
 function CustomTableCell({ children, ...arg }: TableCellProps) {
   return (
     <TableCell {...arg} sx={{ borderLeft: "1px solid #dddddd", ...arg.sx }}>
@@ -53,6 +62,7 @@ function CustomTableCell({ children, ...arg }: TableCellProps) {
   );
 }
 
+// Custom Table Header Cell
 function CustomTableCellHeader({ children, ...arg }: TableCellProps) {
   return (
     <TableCell
@@ -73,100 +83,116 @@ function CustomTableCellHeader({ children, ...arg }: TableCellProps) {
 }
 
 function Checkin() {
-  const [loading, setLoading] = useState<boolean>(true);
-  const [dataCheckin, setDataCheckin] = useState<DataCheckin[]>(checkInData);
-  const [reason, setReason] = useState<string>();
+  const { roleId } = useContext(GoogleLoginContext);
+  const { profile } = useGoogleLogin();
+  const { POST } = useFetcher();
 
-  const [value, setValue] = React.useState<Dayjs | null>(dayjs());
-  const [sdate, setsDate] = useState<Dayjs | null>(dayjs());
-  //console.log("sdate:", sdate);
-  const [edate, seteDate] = useState<Dayjs | null>(dayjs());
-  //console.log("edate:", edate);
+  const [loading, setLoading] = useState(true);
+  const [dataCheckin, setDataCheckin] = useState<DataCheckin[]>([]);
+  const [reason, setReason] = useState("");
+
+  const [locationData, setLocationData] = useState<LocationData>({
+    lat: 0,
+    lng: 0,
+    errMassage: "",
+    allowLocation: false,
+  });
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      const payload = {
-        mount: dayjs().month() + 1,
-        year: dayjs().year(),
-      };
-      try {
-        const response = await fetch(
-          "http://192.168.31.165:8000/checkin/getCheckIn",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(payload),
-          }
-        );
-        const data: {
-          checkInData: DataCheckin[];
-          mount: number;
-          mountDescription: number;
-          year: number;
-        } = await response.json();
-        console.log("data from backend :", data);
-        //setDataCheckin(data.checkInData);
-      } catch (error) {
-        console.error("เกิดข้อผิดพลาดในการโหลดข้อมูล:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchUsers();
+
+    if (!navigator.geolocation) {
+      setLocationData((prev) => ({
+        ...prev,
+        errMassage: "เบราว์เซอร์ไม่รองรับการใช้งานตำแหน่ง",
+        allowLocation: false,
+      }));
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocationData({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          errMassage: "",
+          allowLocation: true,
+        });
+      },
+      (error) => {
+        setLocationData((prev) => ({
+          ...prev,
+          errMassage: error.message,
+          allowLocation: false,
+        }));
+      }
+    );
   }, []);
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  const handleApprove = (checkInId: string | null, approved_status: number) => {
+    POST(
+      "/approve/checkin",
+      {
+        checkInId,
+        approved_status,
+      },
+      {
+        headers: {
+          "user-id": checkInId ?? "",
+        },
+      }
+    ).catch((err) => {
+      console.error("Approve Error:", err?.response?.data || err.message);
+    });
+  };
+
+  const onClickCheckin = async () => {
+    if (!locationData.allowLocation) {
+      alert("ยังไม่ได้รับอนุญาตให้เข้าถึงตำแหน่ง: " + locationData.errMassage);
+      return;
+    }
+
+    try {
+      const response = await POST("/checkin/add", {
+        reason,
+        latitude: locationData.lat,
+        longitude: locationData.lng,
+      });
+      fetchUsers();
+      alert("เช็คอินสำเร็จ");
+    } catch (error) {
+      console.error("เช็คอินไม่สำเร็จ:", error);
+    }
+  };
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const result = await POST("/checkin/getCheckIn", {
+        mount: dayjs().month() + 1,
+        year: dayjs().year(),
+      });
+      setDataCheckin(result.checkInData || []);
+    } catch (error) {
+      console.error("โหลดข้อมูลล้มเหลว:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) return <div>Loading...</div>;
 
   return (
-    <>
-      <Box
-        //B1
-        sx={{
-          display: "flex",
-          width: "100%",
-
-          //border: 1,
-          //borderColor: "#1300ff",
-          justifyContent: "center",
-        }}
-      >
-        <Box
-          //B2
-          sx={{
-            width: "100%",
-
-            //border: 1,
-            //borderColor: "#00f0ff",
-          }}
-        >
-          <Box
-            //B3
-            sx={{ maxWidth: 800 }}
-            marginBottom={3}
-          >
-            <Grid
-              container
-              rowSpacing={4}
-              columnSpacing={1}
-              alignItems="center"
-            >
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Typography variant="h4" sx={{ whiteSpace: "pre-line" }}>
-                  {`This Day: ${value?.format("DD-MM")}\nTime : ${value?.format(
-                    "HH:mm"
-                  )}`}
-                </Typography>
+    <Box sx={{ display: "flex", width: "100%", justifyContent: "center" }}>
+      <Box sx={{ width: "100%", maxWidth: 1000 }}>
+        {/* Check-in Panel */}
+        <Grid container spacing={2} marginBottom={3}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Grid container spacing={2} padding={2} alignItems="center">
+              <Grid size={{ xs: 12 }}>
+                <TimeCurrent />
               </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Button variant="contained" color="primary" fullWidth>
-                  เช็คอินเข้างาน
-                </Button>
-              </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   label="เหตุผลที่ work from home"
                   value={reason}
@@ -174,166 +200,145 @@ function Checkin() {
                   fullWidth
                 />
               </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
+            </Grid>
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Grid container spacing={2} padding={2} alignItems="center">
+              <Grid size={{ xs: 12 }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  fullWidth
+                  onClick={onClickCheckin}
+                  disabled={!locationData.allowLocation}
+                  sx={{ borderRadius: "2rem" }}
+                >
+                  เช็คอินเข้างาน
+                </Button>
+              </Grid>
+              <Grid size={{ xs: 12 }}>
                 <Button
                   variant="outlined"
                   color="primary"
-                  disabled={!reason}
+                  disabled={!reason || !locationData.allowLocation}
                   fullWidth
+                  onClick={onClickCheckin}
+                  sx={{ borderRadius: "2rem" }}
                 >
-                  เช็คอิน work from home
+                  เช็คอิน WORK FROM HOME
                 </Button>
               </Grid>
             </Grid>
-          </Box>
-          <Box
-          //B4
-          >
-            <TableContainer component={Paper} sx={{ overflowX: "auto" }}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <CustomTableCellHeader>ชื่อพนักงาน</CustomTableCellHeader>
-                    {dataCheckin[0].userCheckIn.map((item) => (
-                      <CustomTableCellHeader colSpan={2}>
-                        {item.name}{" "}
-                      </CustomTableCellHeader>
-                    ))}
-                  </TableRow>
-                  <TableRow>
-                    <CustomTableCellHeader>วันที่</CustomTableCellHeader>
-                    {dataCheckin[0].userCheckIn.map((item) => (
-                      <>
-                        <CustomTableCellHeader>
-                          เวลาเข้างาน
-                        </CustomTableCellHeader>
-                        <CustomTableCellHeader>สถานะ</CustomTableCellHeader>
-                      </>
-                    ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {dataCheckin.map((data, index) => (
-                    <TableRow key={data.date}>
-                      <CustomTableCell>{data.date}</CustomTableCell>
-                      {data.userCheckIn.map((user) => (
-                        <>
-                          <CustomTableCell>{user.checkInTime}</CustomTableCell>
-                          <CustomTableCell>{user.remark}</CustomTableCell>
-                        </>
-                      ))}
-                    </TableRow>
-                  ))}
-                  <CustomTableCell></CustomTableCell>
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Box>
-        </Box>
-      </Box>
+          </Grid>
+        </Grid>
 
-      {/* <div>
-        <h1>
-          <Button variant="contained" color="primary" sx={{ marginLeft: 2 }}>
-            ....
-          </Button>
-        </h1>
-        <Box sx={{ padding: 4 }}>
-          <Grid>
-            <Button variant="contained" color="primary">
-              primary
-            </Button>
-          </Grid>
-          <Grid>
-            <Button variant="contained" color="secondary" size="large">
-              secondary
-            </Button>
-          </Grid>
-          <Grid>
-            <Button variant="outlined" color="primary" size="large">
-              primary
-            </Button>
-          </Grid>
-          <Grid>
-            <Button variant="outlined" color="secondary" size="large">
-              secondary
-            </Button>
-          </Grid>
-        </Box>
-        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="th">
-          <Box display="flex" gap={2} alignItems="center">
-            <DatePicker
-              label="First date"
-              value={sdate}
-              onChange={(newValue) => setsDate(newValue)}
-            />
-            <DatePicker
-              label="Last Date"
-              value={edate}
-              onChange={(newValue) => seteDate(newValue)}
-            />
-            <FormControl sx={{ minWidth: 200 }}>
-              <InputLabel id="employee-select-label">Employee</InputLabel>
-              <Select
-                labelId="employee-select-label"
-                id="employee-select"
-                multiple
-                value={personName}
-                onChange={handleChangeMultiple}
-                onClose={() => setOpenDrop(false)}
-                onOpen={() => setOpenDrop(true)}
-                label="Employee"
-                renderValue={(selected) => (selected as string[]).join(", ")}
-              >
-                {employeeList.map((name: string) => (
-                  <MenuItem key={name} value={name}>
-                    {name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-        </LocalizationProvider>
-
-        <TableContainer component={Paper}>
+        {/* Check-in Table */}
+        <TableContainer component={Paper} sx={{ overflowX: "auto" }}>
           <Table>
             <TableHead>
               <TableRow>
-                <CustomTableCellHeader>ชื่อพนักงาน</CustomTableCellHeader>
-                {dataCheckin[0].userCheckIn.map((item) => (
-                  <CustomTableCellHeader colSpan={2}>
-                    {item.name}{" "}
-                  </CustomTableCellHeader>
+                <TableCell
+                  align="center"
+                  sx={{
+                    fontWeight: "bold",
+                    fontSize: "1rem",
+                    minWidth: 120,
+                    backgroundColor: "#144da0",
+                    borderRight: "1px solid #ccc",
+                  }}
+                >
+                  Name
+                </TableCell>
+                {dataCheckin[0]?.userCheckIn.map((user, index) => (
+                  <TableCell
+                    key={`user-${index}`}
+                    align="center"
+                    colSpan={2}
+                    sx={{
+                      fontWeight: "bold",
+                      fontSize: "1rem",
+                      minWidth: 120,
+                      backgroundColor: "#144da0",
+                      borderRight:
+                        index !== dataCheckin[0].userCheckIn.length - 1
+                          ? "1px solid #ccc"
+                          : "none",
+                    }}
+                  >
+                    {user.userNickname}
+                  </TableCell>
                 ))}
               </TableRow>
+
               <TableRow>
-                <CustomTableCellHeader>วันที่</CustomTableCellHeader>
-                {dataCheckin[0].userCheckIn.map((item) => (
-                  <>
-                    <CustomTableCellHeader>เวลาเข้างาน</CustomTableCellHeader>
-                    <CustomTableCellHeader>สถานะ</CustomTableCellHeader>
-                  </>
+                <TableCell
+                  align="center"
+                  sx={{
+                    fontWeight: "bold",
+                    fontSize: "1rem",
+                    backgroundColor: "#37b4d1",
+                    borderRight: "1px solid #eee",
+                  }}
+                >
+                  Date
+                </TableCell>
+                {dataCheckin[0]?.userCheckIn.map((_, index) => (
+                  <React.Fragment key={`subheader-${index}`}>
+                    <TableCell
+                      align="center"
+                      sx={{
+                        fontWeight: 500,
+                        fontSize: "0.95rem",
+                        backgroundColor: "#37b4d1",
+                        borderRight: "1px solid #eee",
+                      }}
+                    >
+                      Check-in Time
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{
+                        fontWeight: 500,
+                        fontSize: "0.95rem",
+                        backgroundColor: "#37b4d1",
+                        borderRight:
+                          index !== dataCheckin[0].userCheckIn.length - 1
+                            ? "1px solid #ccc"
+                            : "none",
+                      }}
+                    >
+                      Status
+                    </TableCell>
+                  </React.Fragment>
                 ))}
               </TableRow>
             </TableHead>
+
             <TableBody>
-              {dataCheckin.map((data, index) => (
-                <TableRow key={data.date}>
-                  <CustomTableCell>{data.date}</CustomTableCell>
-                  {data.userCheckIn.map((user) => (
-                    <>
-                      <CustomTableCell>{user.checkInTime}</CustomTableCell>
-                      <CustomTableCell>{user.status}</CustomTableCell>
-                    </>
+              {dataCheckin.map((row) => (
+                <TableRow key={row.date}>
+                  <TableCell align="center">{row.date}</TableCell>
+                  {row.userCheckIn.map((user) => (
+                    <React.Fragment key={`${row.date}-${user.userId}`}>
+                      <TableCell align="center" sx={{ minWidth: 95 }}>
+                        {user.checkinTime || user.lateTime || "XX:XX"}
+                      </TableCell>
+                      <UserApprovalCell
+                        user={user}
+                        handleApprove={handleApprove}
+                        roleid={roleId}
+                        checkinID={user.checkInId}
+                      />
+                    </React.Fragment>
                   ))}
                 </TableRow>
               ))}
-              <CustomTableCell></CustomTableCell>
             </TableBody>
           </Table>
         </TableContainer>
-      </div> */}
-    </>
+      </Box>
+    </Box>
   );
 }
 

@@ -7,6 +7,7 @@ import { Summary } from "./pages/Summary";
 import { Layout } from "components/layout";
 import { Absent } from "./pages/Absent";
 import { Register } from "./pages/Register";
+import { Map } from "./pages/Map";
 
 interface RegisterProps {
   fullName: string;
@@ -27,7 +28,7 @@ function RoutesManagement() {
     id: string;
     idToken: string;
   }) => {
-    console.log("Profile received from Layout:", profileData);
+    //console.log("Profile received from Layout:", profileData);
     setProfile(profileData);
   };
 
@@ -40,17 +41,8 @@ function RoutesManagement() {
           <Route path="/Schedule" element={<Schedule />} />
           <Route path="/Summary" element={<Summary />} />
           <Route path="/Absent" element={<Absent />} />
-          <Route
-            path="/Register"
-            element={
-              <Register
-                fullName={profile.fullName}
-                email={profile.email}
-                id={profile.id}
-                idToken={profile.idToken}
-              />
-            }
-          />
+          <Route path="/Register" element={<Register />} />
+          <Route path="/Map" element={<Map />} />
         </Route>
       </Routes>
     </BrowserRouter>

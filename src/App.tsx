@@ -1,11 +1,17 @@
 import { BrowserRouter } from "react-router-dom";
-import "./App.css";
 import RoutesManagement from "./RouteManagement";
+import { GoogleLoginProvider } from "components/GoogleLoginProvider";
+import "./App.css";
+import { ThemeProvider } from "components/ThemeProvider";
 
 function App() {
   return (
     <BrowserRouter basename="/projectsoft_checkin">
-      <RoutesManagement />;
+      <ThemeProvider>
+        <GoogleLoginProvider>
+          <RoutesManagement />
+        </GoogleLoginProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

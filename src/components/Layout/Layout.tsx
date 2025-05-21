@@ -1,156 +1,240 @@
-// import {
-//   AppBar,
-//   Box,
-//   Grid,
-//   Menu,
-//   MenuItem,
-//   Toolbar,
-//   Typography,
-// } from "@mui/material";
-// import { Outlet } from "react-router-dom";
-
-// function Layout() {
-//   return (
-//     <Box sx={{ width: "100%" }}>
-//       <AppBar position="relative" sx={{ height: "75px", padding: "0 24px" }}>
-//         <Grid container height={"100%"} alignItems={"center"}>
-//           <Grid size="grow">
-//             <Typography variant="h6" noWrap>
-//               Projectsoft Check-In :)
-//             </Typography>
-//             <Menu
-//               open
-//               //   anchorOrigin={{
-//               //     vertical: "bottom",
-//               //     horizontal: "left",
-//               //   }}
-//               //   keepMounted
-//               //   transformOrigin={{
-//               //     vertical: "top",
-//               //     horizontal: "left",
-//               //   }}
-//               //   open={Boolean(anchorElNav)}
-//               //   onClose={handleCloseNavMenu}
-//               //   sx={{ display: { xs: "block", md: "none" } }}
-//             >
-//               <MenuItem>
-//                 <Typography sx={{ textAlign: "center" }}>{"Home"}</Typography>
-//               </MenuItem>
-//             </Menu>
-//           </Grid>
-//           <Grid size="auto">
-//             <Typography variant="h6" noWrap>
-//               Projectsoft Check-In :)
-//             </Typography>
-//           </Grid>
-//         </Grid>
-//       </AppBar>
-//       <Box component={"main"} sx={{ padding: "24px" }}>
-//         <Outlet />
-//       </Box>
-//     </Box>
-//   );
-// }
-
-// export default Layout;
-import React from "react";
 import {
   AppBar,
-  Toolbar,
-  IconButton,
-  Typography,
-  Menu,
-  MenuItem,
-  Button,
+  Avatar,
   Box,
+  Button,
+  CardMedia,
+  Divider,
+  Drawer,
+  FormControlLabel,
+  Grid,
+  IconButton,
+  Stack,
+  Switch,
+  Toolbar,
+  Typography,
+  useTheme,
 } from "@mui/material";
-// import MenuIcon from '@mui/icons-material/Menu';
+import { useGoogleLogin } from "components/GoogleLoginProvider";
+import { useColorMode } from "components/ThemeProvider";
+import { NavLink, Outlet } from "react-router-dom";
+import LightModeIcon from "@mui/icons-material/LightMode";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import MenuIcon from "@mui/icons-material/Menu";
+import { useState } from "react";
+import CloseIcon from "@mui/icons-material/Close";
 
-const pages = ["Home", "About", "Services", "Contact"];
+function Layout() {
+  const { authLoading, isSignedIn, profile, onSignin, onSignout } =
+    useGoogleLogin();
+  const { toggleColorMode } = useColorMode();
+  const theme = useTheme();
+  const [open, setOpen] = useState(false);
 
-export default function Layout() {
-  const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(
-    null
-  );
-
-  const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorElNav(event.currentTarget);
+  const toggleDrawer = (newOpen: boolean) => {
+    setOpen(newOpen);
   };
 
-  const handleCloseNavMenu = () => {
-    setAnchorElNav(null);
-  };
-
+  //
   return (
-    <Box>
-      <AppBar position="static">
-        <Toolbar>
-          {/* Left side: brand/logo */}
-          <Typography
-            variant="h6"
-            noWrap
-            component="a"
-            href="/"
-            sx={{
-              mr: 2,
-              display: { xs: "none", md: "flex" },
-              textDecoration: "none",
-              color: "inherit",
-            }}
-          >
-            MyApp
-          </Typography>
-
-          {/* Mobile Menu Icon */}
-          <Box sx={{ flexGrow: 1, display: { xs: "flex", md: "none" } }}>
-            <IconButton
-              size="large"
-              aria-label="menu"
-              aria-controls="menu-appbar"
-              aria-haspopup="true"
-              onClick={handleOpenNavMenu}
-              color="inherit"
-            >
-              {/* <MenuIcon /> */}
-            </IconButton>
-            <Menu
-              open
-              //   id="menu-appbar"
-              //   anchorEl={anchorElNav}
-              //   open={Boolean(anchorElNav)}
-              //   onClose={handleCloseNavMenu}
-              //   anchorOrigin={{
-              //     vertical: "bottom",
-              //     horizontal: "left",
-              //   }}
-              transformOrigin={{
-                vertical: "top",
-                horizontal: "left",
-              }}
-              sx={{ display: { xs: "block", md: "none" } }}
-            >
-              {pages.map((page) => (
-                <MenuItem key={page} onClick={handleCloseNavMenu}>
-                  <Typography textAlign="center">{page}</Typography>
-                </MenuItem>
-              ))}
-            </Menu>
-          </Box>
-
-          {/* Desktop Menu */}
-          {/* <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
-            {pages.map((page) => (
-              <Button
-                key={page}
-                onClick={handleCloseNavMenu}
-                sx={{ my: 2, color: "white", display: "block" }}
+    <Box
+      sx={{ width: "100%", minHeight: "inherit" }}
+      display={"flex"}
+      flexDirection={"column"}
+    >
+      <AppBar position="relative" sx={{ height: "75px" }}>
+        <Toolbar
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            height: "100%",
+          }}
+        >
+          <Box>
+            <Grid container spacing={3}>
+              <Grid size="auto">
+                <Box borderRadius={1} overflow={"hidden"}>
+                  <CardMedia
+                    component="img"
+                    sx={{ width: 50 }}
+                    image={`${process.env.PUBLIC_URL}/images/logo/projectsoft-logo.png`}
+                    alt="logo"
+                  />
+                </Box>
+              </Grid>
+              <Grid
+                size="grow"
+                // display={"none"}
+                alignItems={"center"}
+                sx={{ display: { xs: "none", sm: "none", md: "flex" } }}
               >
-                {page}
+                <Stack direction={"row"} alignItems={"center"} spacing={2}>
+                  <NavLink to={"/"}>
+                    <Typography color={"#fff"} margin={0} variant="h5">
+                      Home
+                    </Typography>
+                  </NavLink>
+                  <NavLink to={"/member"}>
+                    <Typography color={"#fff"} margin={0} variant="h5">
+                      Member
+                    </Typography>
+                  </NavLink>
+                </Stack>
+              </Grid>
+            </Grid>
+          </Box>
+          <Box display={"flex"} sx={{ gap: 1 }} alignItems={"center"}>
+            <Box display={"flex"} sx={{ gap: 1 }} alignItems={"center"}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    icon={
+                      <>
+                        <LightModeIcon />
+                      </>
+                    }
+                    checkedIcon={
+                      <>
+                        <DarkModeIcon />
+                      </>
+                    }
+                    checked={theme.palette.mode === "dark"}
+                    onChange={toggleColorMode}
+                  />
+                }
+                // label={theme.palette.mode === "dark" ? "Dark" : "Light"}
+                label={""}
+              />
+            </Box>
+            <Box
+              alignItems={"center"}
+              sx={{ display: { xs: "none", sm: "none", md: "flex" }, gap: 1 }}
+            >
+              {authLoading ? (
+                "Loading..."
+              ) : (
+                <>
+                  {isSignedIn ? (
+                    <>
+                      <Avatar />
+                      <Typography>{profile?.fullName}</Typography>
+                      <Button
+                        variant="contained"
+                        color="error"
+                        onClick={onSignout}
+                      >
+                        Logout
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        onClick={onSignin}
+                      >
+                        Signin with google
+                      </Button>
+                    </>
+                  )}
+                </>
+              )}
+            </Box>
+            <Box sx={{ display: { xs: "blobk", sm: "block", md: "none" } }}>
+              <Button
+                size="small"
+                variant="contained"
+                color="secondary"
+                onClick={() => toggleDrawer(true)}
+              >
+                <MenuIcon />
               </Button>
-            ))}
-          </Box> */}
+            </Box>
+          </Box>
         </Toolbar>
       </AppBar>
+      <Drawer
+        slotProps={{
+          paper: {
+            sx: {
+              width: "100%",
+              maxWidth: "400px",
+              boxSizing: "border-box",
+            },
+          },
+        }}
+        open={open}
+        onClose={() => toggleDrawer(false)}
+      >
+        <Box display={"flex"} justifyContent={"flex-end"}>
+          <IconButton onClick={() => toggleDrawer(false)}>
+            {/* {theme.direction === 'ltr' ? <ChevronLeftIcon /> : <ChevronRightIcon />} */}
+            <CloseIcon color="error" />
+          </IconButton>
+        </Box>
+        <Toolbar sx={{ display: "block", paddingTop: 2 }}>
+          <Box
+            alignItems={"center"}
+            sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}
+          >
+            {authLoading ? (
+              "Loading..."
+            ) : (
+              <>
+                {isSignedIn ? (
+                  <>
+                    <Avatar />
+                    <Typography>{profile?.fullName}</Typography>
+                    <Button
+                      variant="contained"
+                      color="error"
+                      onClick={onSignout}
+                    >
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      onClick={onSignin}
+                    >
+                      Signin with google
+                    </Button>
+                  </>
+                )}
+              </>
+            )}
+          </Box>
+          <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
+          <Stack direction={"column"} alignItems={"start"} spacing={2}>
+            <NavLink to={"/"}>
+              <Typography margin={0} variant="h5">
+                Home
+              </Typography>
+            </NavLink>
+            <NavLink to={"/member"}>
+              <Typography margin={0} variant="h5">
+                Member
+              </Typography>
+            </NavLink>
+          </Stack>
+        </Toolbar>
+      </Drawer>
+      <Box
+        component={"main"}
+        sx={(theme) => ({
+          flex: "auto",
+          padding: "24px",
+          backgroundColor: theme.palette.background.default,
+        })}
+      >
+        <Outlet />
+      </Box>
     </Box>
   );
 }
+
+export default Layout;

@@ -1,7 +1,21 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { gapi } from "gapi-script";
 import dayjs from "dayjs";
+import { useGoogleLogin } from "components/GoogleLoginProvider";
+import { getCellRange, getColumnLetter } from "helper/getColumnLetter";
+import {
+  Box,
+  Button,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
+} from "@mui/material";
+import { SelectChangeEvent } from "@mui/material/Select/SelectInput";
+import { TimePicker } from "@mui/x-date-pickers/TimePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
 interface SheetData {
   range: string;
@@ -10,10 +24,11 @@ interface SheetData {
 }
 
 function GoogleSheetData() {
+  const { auth2, authLoading, isSignedIn } = useGoogleLogin();
+  //
   const [sheetData, setSheetData] = useState<string[][]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [authLoaded, setAuthLoaded] = useState(false);
-  const [isSignedIn, setIsSignedIn] = useState(false);
+  const [updating, setUpdating] = useState(false);
   const [dateList, setDateList] = useState<string[]>([]);
   const [employeeList, setEmployeeList] = useState<string[]>([]);
   const [updateSheetsData, setUpdateSheetsData] = useState<{
@@ -23,97 +38,89 @@ function GoogleSheetData() {
     mark?: string;
   }>({ row: "3", column: "1", mark: "" });
 
-  // Function to get the cell range in format like A1, B1, ..., Z1, AA1, AB1, etc.
-  const getCellRange = (rowIndex: number, colIndex: number): string => {
-    const column = getColumnLetter(colIndex); // Get the column letter for the current index
-    return `${column}${rowIndex + 1}`; // Return the cell in format like A1, B1, C1, ..., AA1, AB1, etc.
-  };
+  // const initClient = () => {
+  //   gapi.client
+  //     .init({
+  //       apiKey: process.env.REACT_APP_API_KEY,
+  //       clientId: process.env.REACT_APP_GOOGLE_PRIVATE_KEY,
+  //       discoveryDocs: [
+  //         "https://sheets.googleapis.com/$discovery/rest?version=v4",
+  //       ],
+  //       scope: "https://www.googleapis.com/auth/spreadsheets",
+  //     })
+  //     .then(() => {
+  //       const authInstance = gapi.auth2.getAuthInstance();
+  //       setIsSignedIn(authInstance.isSignedIn.get());
 
-  // Helper function to convert column index to letter (supports multi-letter columns)
-  const getColumnLetter = (colIndex: number): string => {
-    let columnName = "";
-    while (colIndex >= 0) {
-      columnName = String.fromCharCode((colIndex % 26) + 65) + columnName; // Convert number to letter
-      colIndex = Math.floor(colIndex / 26) - 1; // Move to the next digit in base-26
-    }
-    return columnName;
-  };
+  //       authInstance.isSignedIn.listen(setIsSignedIn);
+  //       setAuthLoaded(true);
+  //     })
+  //     .catch((error: any) => {
+  //       console.error("Error initializing Google API client:", error);
+  //     });
+  // };
 
-  const initClient = () => {
-    gapi.client
-      .init({
-        apiKey: process.env.REACT_APP_API_KEY,
-        clientId: process.env.REACT_APP_GOOGLE_PRIVATE_KEY,
-        discoveryDocs: [
-          "https://sheets.googleapis.com/$discovery/rest?version=v4",
-        ],
-        scope: "https://www.googleapis.com/auth/spreadsheets",
-      })
-      .then(() => {
-        const authInstance = gapi.auth2.getAuthInstance();
-        setIsSignedIn(authInstance.isSignedIn.get());
+  // const handleSignIn = () => {
+  //   gapi.auth2.getAuthInstance().signIn();
+  // };
 
-        authInstance.isSignedIn.listen(setIsSignedIn);
-        setAuthLoaded(true);
-      })
-      .catch((error: any) => {
-        console.error("Error initializing Google API client:", error);
-      });
-  };
+  // const handleSignOut = () => {
+  //   gapi.auth2.getAuthInstance().signOut();
+  // };
 
-  const handleSignIn = () => {
-    gapi.auth2.getAuthInstance().signIn();
-  };
-
-  const handleSignOut = () => {
-    gapi.auth2.getAuthInstance().signOut();
-  };
-
-  const updateSheet = () => {
-    if (isSignedIn) {
+  const updateSheet = async () => {
+    if (isSignedIn && auth2) {
+      const user = auth2.currentUser.get();
+      const token = user.getAuthResponse().access_token;
+      const spreadsheetId = process.env.REACT_APP_SHEETS_ID;
+      const endpoint = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`;
       const columnDate = getColumnLetter(Number(updateSheetsData.column));
       const columnMark = getColumnLetter(Number(updateSheetsData.column) + 2);
-      const params = {
-        spreadsheetId: process.env.REACT_APP_SHEETS_ID,
-        // range: `April!${updateSheetsData.column}${updateSheetsData.row}`, // Define the range you want to update
-        // values: [[updateSheetsData.time]],
-        resource: {
-          data: [
-            {
-              range: `May!${columnDate}${updateSheetsData.row}`,
-              values: [[updateSheetsData.time]],
-            },
-            {
-              range: `May!${columnMark}${updateSheetsData.row}`,
-              values: [[updateSheetsData.mark]],
-            },
-          ],
-          valueInputOption: "USER_ENTERED",
-        },
+      console.log("updateSheetsData:", updateSheetsData);
+      const requestBody = {
+        valueInputOption: "USER_ENTERED", // or "RAW"
+        data: [
+          {
+            range: `May!${columnDate}${updateSheetsData.row}`,
+            values: [[updateSheetsData.time]],
+          },
+          {
+            range: `May!${columnMark}${updateSheetsData.row}`,
+            values: [[updateSheetsData.mark]],
+          },
+        ],
       };
 
-      const request =
-        gapi.client.sheets.spreadsheets.values.batchUpdate(params);
-      request.then(
-        (response: any) => {
-          getSheets();
-
-          alert("Sheet updated successfully");
+      setUpdating(true);
+      const response = await axios(endpoint, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-        (error: any) => {
-          console.error("Error updating the sheet", error);
-          alert("Error updating the sheet");
-        }
-      );
+        data: JSON.stringify(requestBody),
+      });
+
+      if (response.status === 200) {
+        await getSheets();
+
+        alert("Sheet updated successfully");
+      } else {
+        alert("Error updating the sheet");
+      }
+
+      setUpdating(false);
     }
   };
 
   const onChangeData = (
-    e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>
+    e:
+      | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+      | SelectChangeEvent
   ) => {
     setUpdateSheetsData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [e.target.name ?? ""]: e.target.value,
     }));
   };
 
@@ -164,7 +171,7 @@ function GoogleSheetData() {
   };
 
   useEffect(() => {
-    gapi.load("client:auth2", initClient);
+    // gapi.load("client:auth2", initClient);
     getSheets();
   }, []);
 
@@ -174,93 +181,163 @@ function GoogleSheetData() {
 
   return (
     <div>
-      <h1>Projectsoft Check-In :)</h1>
+      {/* <h1>Projectsoft Check-In :)</h1> */}
       <div className="form-update">
         <div className="form-group">
-          {!authLoaded ? (
+          {authLoading ? (
             <div>Loading...</div>
-          ) : isSignedIn ? (
-            <div>
-              <div className="form-group d-flex">
-                <p className="mt-auto mb-0 me-3">You are signed in!</p>
-                <button
-                  className="btn btn-danger btn-sm d-inline-block"
-                  onClick={handleSignOut}
+          ) : (
+            isSignedIn && (
+              // <div style={{ display: "flex" }}>
+              //   <div className="form-group">
+              //     <label className="form-label">วันที่</label>
+              //     <select
+              //       disabled
+              //       className="form-select"
+              //       name="row"
+              //       value={updateSheetsData.row}
+              //       onChange={onChangeData}
+              //     >
+              //       <option>select</option>
+              //       {dateList.map((date, index) => (
+              //         <option key={index} value={String(index + 3)}>
+              //           {date} ({getCellRange(index + 2, 0)})
+              //         </option>
+              //       ))}
+              //     </select>
+              //   </div>
+              //   <div className="form-group">
+              //     <label className="form-label">พนักงาน</label>
+              //     <select
+              //       className="form-select"
+              //       name="column"
+              //       value={updateSheetsData.column}
+              //       onChange={onChangeData}
+              //     >
+              //       <option>select</option>
+              //       {employeeList.map((employee, index) => (
+              //         <option key={index} value={String(index * 3 + 1)}>
+              //           {employee} ({getCellRange(0, index * 3 + 1)})
+              //         </option>
+              //       ))}
+              //     </select>
+              //   </div>
+              //   <div className="form-group">
+              //     <label className="form-label">เวลา</label>
+              //     <input
+              //       className="form-control"
+              //       type="time"
+              //       name="time"
+              //       value={updateSheetsData.time}
+              //       onChange={onChangeData}
+              //     />
+              //   </div>
+              //   <div className="form-group">
+              //     <label className="form-label">หมายเหตุ</label>
+              //     <input
+              //       className="form-control"
+              //       name="mark"
+              //       value={updateSheetsData.mark}
+              //       onChange={onChangeData}
+              //     />
+              //   </div>
+              //   <div className="form-group" style={{ display: "flex" }}>
+              //     <button
+              //       className="btn btn-primary"
+              //       style={{ marginTop: "auto" }}
+              //       onClick={updateSheet}
+              //     >
+              //       update
+              //     </button>
+              //   </div>
+              // </div>
+              <>
+                <Box
+                  display="flex"
+                  gap={2}
+                  flexWrap="wrap"
+                  alignItems={"center"}
                 >
-                  Sign Out
-                </button>
-              </div>
+                  {/* Date (Disabled Select) */}
+                  <FormControl disabled>
+                    <InputLabel id="date-label">วันที่</InputLabel>
+                    <Select
+                      labelId="date-label"
+                      name="row"
+                      value={updateSheetsData.row}
+                      onChange={onChangeData}
+                      label="วันที่"
+                    >
+                      <MenuItem value="">select</MenuItem>
+                      {dateList.map((date, index) => (
+                        <MenuItem key={index} value={String(index + 3)}>
+                          {date} ({getCellRange(index + 2, 0)})
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
 
-              <div style={{ display: "flex" }}>
-                <div className="form-group">
-                  <label className="form-label">วันที่</label>
-                  <select
-                    disabled
-                    className="form-select"
-                    name="row"
-                    value={updateSheetsData.row}
-                    onChange={onChangeData}
-                  >
-                    <option>select</option>
-                    {dateList.map((date, index) => (
-                      <option key={index} value={String(index + 3)}>
-                        {date} ({getCellRange(index + 2, 0)})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">พนักงาน</label>
-                  <select
-                    className="form-select"
-                    name="column"
-                    value={updateSheetsData.column}
-                    onChange={onChangeData}
-                  >
-                    <option>select</option>
-                    {employeeList.map((employee, index) => (
-                      <option key={index} value={String(index * 3 + 1)}>
-                        {employee} ({getCellRange(0, index * 3 + 1)})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">เวลา</label>
-                  <input
-                    className="form-control"
-                    type="time"
-                    name="time"
-                    value={updateSheetsData.time}
-                    onChange={onChangeData}
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">หมายเหตุ</label>
-                  <input
-                    className="form-control"
+                  {/* Employee Select */}
+                  <FormControl>
+                    <InputLabel id="employee-label">พนักงาน</InputLabel>
+                    <Select
+                      labelId="employee-label"
+                      name="column"
+                      value={updateSheetsData.column}
+                      onChange={onChangeData}
+                      label="พนักงาน"
+                    >
+                      <MenuItem value="">select</MenuItem>
+                      {employeeList.map((employee, index) => (
+                        <MenuItem key={index} value={String(index * 3 + 1)}>
+                          {employee} ({getCellRange(0, index * 3 + 1)})
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  {/* Time Input */}
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <TimePicker
+                      label="เวลา"
+                      ampm={false}
+                      timeSteps={{ minutes: 1 }}
+                      slotProps={{
+                        textField: {
+                          name: "time",
+                        },
+                      }}
+                      onChange={(newValue) => {
+                        setUpdateSheetsData((prev) => ({
+                          ...prev,
+                          time: dayjs(newValue).format("HH:mm"),
+                        }));
+                      }}
+                    />
+                  </LocalizationProvider>
+
+                  {/* Note Input */}
+                  <TextField
                     name="mark"
+                    label="หมายเหตุ"
                     value={updateSheetsData.mark}
                     onChange={onChangeData}
                   />
-                </div>
-                <div className="form-group" style={{ display: "flex" }}>
-                  <button
-                    className="btn btn-primary"
-                    style={{ marginTop: "auto" }}
-                    onClick={updateSheet}
-                  >
-                    update
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div>
-              <button className="btn btn-primary" onClick={handleSignIn}>
-                Sign In to Google
-              </button>
-            </div>
+
+                  {/* Update Button */}
+                  <Box display="flex" alignItems="flex-end">
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={updateSheet}
+                      loading={updating}
+                    >
+                      update
+                    </Button>
+                  </Box>
+                </Box>
+              </>
+            )
           )}
         </div>
       </div>

@@ -1,8 +1,11 @@
 import usePost from "./usePost";
 
 function useFetcher() {
-  const apiPost = usePost();
-  return { POST: apiPost };
+  const { apiPost, apiGet } = usePost();
+  return {
+    POST: apiPost,
+    GET: apiGet,
+  };
 }
 
 export default useFetcher;

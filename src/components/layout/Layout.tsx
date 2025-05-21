@@ -1,6 +1,6 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import logo from "./dino_logo.png";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState, useContext } from "react";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
@@ -9,10 +9,16 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import Avatar from "@mui/material/Avatar";
 import LogoutIcon from "@mui/icons-material/Logout";
+import MenuIcon from "@mui/icons-material/Menu";
+import Drawer from "@mui/material/Drawer";
+import Divider from "@mui/material/Divider";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemText from "@mui/material/ListItemText";
 import useFetcher from "../../hooks/useFetcher/useFetcher";
 import { useGoogleLogin } from "components/GoogleLoginProvider";
-import { useContext } from "react";
 import { GoogleLoginContext } from "../GoogleLoginProvider/GoogleLoginProvider";
+
 interface LayoutProps {
   onProfileLoad: (profileData: {
     fullName: string;
@@ -22,7 +28,6 @@ interface LayoutProps {
   }) => void;
 }
 
-declare type gapi = any;
 const navLinks = [
   { label: "Check-in", path: "/Checkin" },
   { label: "Schedule", path: "/Schedule" },
@@ -39,6 +44,8 @@ function Layout({ onProfileLoad }: LayoutProps) {
   const { POST } = useFetcher();
   const hasPostedAuth = useRef(false);
   const { setRoleId } = useContext(GoogleLoginContext);
+  const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     if (
@@ -68,7 +75,6 @@ function Layout({ onProfileLoad }: LayoutProps) {
       )
         .then((res) => {
           console.log("Authentication success:", res);
-
           const roleId = res?.role_id;
           if (roleId !== undefined) {
             setRoleId(roleId);
@@ -80,26 +86,73 @@ function Layout({ onProfileLoad }: LayoutProps) {
     }
   }, [signinStatus, profile, POST, onProfileLoad]);
 
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
+  const drawer = (
+    <Box sx={{ width: 250 }} role="presentation" onClick={handleDrawerToggle}>
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ p: 2 }}>
+        <img src={logo} alt="Logo" style={{ height: 40 }} />
+        <Typography variant="h6">Menu</Typography>
+      </Stack>
+      <Divider />
+      <List>
+        {navLinks.map(({ label, path }) => (
+          <ListItem
+            key={path}
+            onClick={() => navigate(path)}
+            component="button"
+          >
+            <ListItemText primary={label} />
+          </ListItem>
+        ))}
+      </List>
+    </Box>
+  );
+
   return (
     <>
-      <AppBar position="sticky" sx={{ backgroundColor: "#144da0", height: 80 }}>
-        <Toolbar sx={{ justifyContent: "space-between", height: "100%" }}>
-          <Stack
-            direction="row"
-            spacing={3}
-            alignItems="center"
-            sx={{ height: "100%" }}
-          >
+      <AppBar
+        position="sticky"
+        sx={{ backgroundColor: "#144da0", height: { xs: 64, sm: 80 } }}
+      >
+        <Toolbar
+          sx={{
+            justifyContent: "space-between",
+            height: "100%",
+            px: { xs: 1, sm: 3 },
+          }}
+        >
+          <Stack direction="row" spacing={2} alignItems="center">
+            {/* Hamburger menu for mobile */}
+            <IconButton
+              color="inherit"
+              aria-label="open drawer"
+              edge="start"
+              onClick={handleDrawerToggle}
+              sx={{ display: { sm: "none" } }}
+            >
+              <MenuIcon />
+            </IconButton>
+
+            {/* Logo */}
             <img
               src={logo}
               alt="Logo"
               style={{
-                height: "60px",
-                paddingLeft: "60px",
-                paddingRight: "60px",
+                height: "50px",
+                paddingLeft: 8,
+                paddingRight: 8,
               }}
             />
-            <Stack direction="row" spacing={3}>
+
+            {/* Nav links for desktop */}
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              sx={{ display: { xs: "none", sm: "flex" } }}
+            >
               {navLinks.map(({ label, path }) => (
                 <NavLink
                   key={path}
@@ -118,30 +171,57 @@ function Layout({ onProfileLoad }: LayoutProps) {
             </Stack>
           </Stack>
 
-          <Stack direction="row" spacing={2} alignItems="center">
+          {/* Right-side profile and auth */}
+          <Stack direction="row" spacing={1} alignItems="center">
             {!authLoaded ? (
-              <Typography color="white">Loading...</Typography>
+              <Typography color="white" variant="body2">
+                Loading...
+              </Typography>
             ) : signinStatus && profile ? (
               <>
-                <Avatar alt={profile.fullName} src={profile.profileURL} />
-                <Typography color="white">{profile.fullName}</Typography>
+                <Avatar
+                  alt={profile.fullName}
+                  src={profile.profileURL}
+                  sx={{ width: 32, height: 32 }}
+                />
+                <Typography
+                  color="white"
+                  variant="body2"
+                  sx={{ display: { xs: "none", sm: "block" } }}
+                >
+                  {profile.fullName}
+                </Typography>
                 <IconButton
                   onClick={onLogoutGoogle}
                   sx={{ bgcolor: "#f44336", color: "white" }}
+                  size="small"
                 >
-                  <LogoutIcon />
+                  <LogoutIcon fontSize="small" />
                 </IconButton>
               </>
             ) : (
-              <button className="btn btn-primary" onClick={onLoginGoogle}>
-                Sign In to Google
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={onLoginGoogle}
+              >
+                Sign In
               </button>
             )}
           </Stack>
         </Toolbar>
       </AppBar>
 
-      <Box component="main" sx={{ p: 2 }}>
+      {/* Drawer for mobile view */}
+      <Drawer
+        anchor="left"
+        open={mobileOpen}
+        onClose={handleDrawerToggle}
+        ModalProps={{ keepMounted: true }}
+      >
+        {drawer}
+      </Drawer>
+
+      <Box component="main" sx={{ p: { xs: 1, sm: 2 } }}>
         <Outlet />
       </Box>
     </>

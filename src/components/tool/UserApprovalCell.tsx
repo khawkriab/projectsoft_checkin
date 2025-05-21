@@ -1,110 +1,254 @@
-import { Box, Button, TableCell } from "@mui/material";
+import {
+  Grid,
+  Box,
+  Button,
+  TableCell,
+  Typography,
+  Stack,
+  Divider,
+} from "@mui/material";
 
+import { GoogleLoginContextProps } from "components/GoogleLoginProvider/GoogleLoginProvider";
+import dayjs from "dayjs";
+import { CheckInData, UserCheckIn } from "pages/Checkin/Checkin";
+import { Link } from "react-router-dom";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+
+dayjs.extend(customParseFormat);
 interface Props {
-  user: any;
+  date: string;
+  user: UserCheckIn;
   handleApprove: (checkinID: string | null, status: number) => void;
-  roleid: number | null;
-  checkinID: string | null;
+  roleId: GoogleLoginContextProps["roleId"];
 }
+const leaveTypeDescription = {
+  1: "ลาพักร้อน",
+  2: "ลาป่วย",
+  3: "ลากิจ",
+};
 
-const UserApprovalCell = ({
-  user,
-  handleApprove,
-  roleid,
-  checkinID,
-}: Props) => {
-  const getStatusBox = () => {
-    let bgcolor = "#42a5f5";
-    let label = "Unknown";
+const leaveTimeDescription = {
+  1: "ลาเช้า",
+  2: "ลาบ่าย",
+  3: "ลาทั้งวัน",
+};
 
-    switch (user.approvedStatus) {
-      case "Rejected":
-        bgcolor = "#ff5c5c";
-        label = "Rejected";
-        break;
-      case "Accepted":
-        bgcolor = "#77f277";
-        label = "Approved";
-        break;
-      case "Pending":
-        bgcolor = "#fbc02d";
-        label = "Pending";
-        break;
-    }
+const UserApprovalCell = ({ date, user, handleApprove, roleId }: Props) => {
+  const isAdmin = roleId === 1;
+  const isUser = roleId === 3;
 
-    return (
-      <Box
-        mt={1}
-        width={80}
-        height={30}
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        borderRadius="15px"
-        mx="auto"
-        bgcolor={bgcolor}
-        color="#fff"
-        fontSize="0.75rem"
-        fontWeight="bold"
-      >
-        {label}
-      </Box>
-    );
-  };
-
-  const isPendingAndNoId = user.approvedStatus === "Pending" && roleid === 1;
+  if (user.checkinTime === null) {
+    return null;
+  }
 
   return (
-    <TableCell
-      align="center"
-      sx={{
-        fontWeight: 500,
-        fontSize: "0.95rem",
-        borderRight: "1px solid #eee",
-        minWidth: "190px",
-      }}
-    >
-      {isPendingAndNoId ? (
-        <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
-          <Box textAlign="center">
-            <Box>{user.reason}</Box>
-            {["ลาป่วย", "ลากิจ", "ลางาน"].includes(user.reason) && (
-              <Box>{user.remark}</Box>
-            )}
-          </Box>
-
-          <Box display="flex" justifyContent="center" gap={1} mt={1}>
-            <Button
-              variant="contained"
-              size="small"
-              sx={{
-                backgroundColor: "#ffa53d",
-                color: "#fff",
-                "&:hover": { backgroundColor: "#e6952e" },
-              }}
-              onClick={() => handleApprove(checkinID, 0)}
-            >
-              Reject
-            </Button>
-            <Button
-              variant="contained"
-              size="small"
-              sx={{
-                backgroundColor: "#77f277",
-                color: "#fff",
-                "&:hover": { backgroundColor: "#49d649" },
-              }}
-              onClick={() => handleApprove(checkinID, 1)}
-            >
-              Accept
-            </Button>
-          </Box>
+    <Box>
+      {/* เข้างาน */}
+      {user.checkInData && (
+        <Box>
+          <Typography variant="subtitle2">
+            {"เข้างาน: "}
+            {user.checkInData?.where} {"- "}
+            {user?.status}
+          </Typography>
+          {user.checkInData?.remark && (
+            <Typography variant="subtitle2">
+              {/* remark */}
+              {"เหตุผล: "}
+              {user.checkInData?.remark}
+            </Typography>
+          )}
+          {isAdmin && user.checkInData?.checkInStatus === 99 && (
+            <Stack direction="row" spacing={2}>
+              {/* button */}
+              <Button size="small" variant="contained" color="success">
+                Approve
+              </Button>
+              <Button size="small" variant="contained" color="error">
+                Reject
+              </Button>
+              <Button size="small" variant="contained" color="warning">
+                Location
+              </Button>
+            </Stack>
+          )}
         </Box>
-      ) : (
-        getStatusBox()
       )}
-    </TableCell>
+
+      {user.checkInData && user.leaveData && (
+        <Divider
+          orientation="horizontal"
+          sx={{ borderColor: "gray", margin: 1 }}
+        />
+      )}
+
+      {/* ลา */}
+      {user.leaveData && (
+        <Box>
+          <Typography variant="subtitle2">
+            {"ลา: "}
+            {leaveTypeDescription[user.leaveData.leaveTypeId]} {"-"}
+            {leaveTimeDescription[user.leaveData.leaveTimeId]}
+          </Typography>
+          <Typography variant="subtitle2">
+            {/* remark */}
+            {"เหตุผล: "}
+            {user.leaveData?.remark}
+          </Typography>
+          {isAdmin && user.leaveData?.leaveStatus === 99 && (
+            <Stack direction="row" spacing={2}>
+              {/* button */}
+              <Button size="small" variant="contained" color="success">
+                Approve
+              </Button>
+              <Button size="small" variant="contained" color="error">
+                Reject
+              </Button>
+              <Button size="small" variant="contained" color="warning">
+                Location
+              </Button>
+            </Stack>
+          )}
+        </Box>
+      )}
+    </Box>
   );
+
+  // สำหรับ role อื่นๆ (เช่น staff)
+
+  // if (0) {
+  //   <Box>
+  //     <Box textAlign="center">
+  //       {"On-site"}
+  //       <br />
+  //       {user.status}
+  //     </Box>
+  //     <Box display="flex" gap={1}>
+  //       <Button
+  //         variant="contained"
+  //         size="small"
+  //         sx={{
+  //           backgroundColor: "#ff5c5c",
+  //           color: "#fff",
+  //           "&:hover": { backgroundColor: "#e04848" },
+  //           zIndex: 2,
+  //         }}
+  //         onClick={() => handleApprove(user.checkInData.checkInId, 0)}
+  //       >
+  //         Reject
+  //       </Button>
+  //       <Button
+  //         variant="contained"
+  //         size="small"
+  //         sx={{
+  //           backgroundColor: "#77f277",
+  //           color: "#fff",
+  //           "&:hover": { backgroundColor: "#49d649" },
+  //           zIndex: 2,
+  //         }}
+  //         onClick={() => handleApprove(user.checkInData.checkInId, 1)}
+  //       >
+  //         Approve
+  //       </Button>
+
+  //       {dayjs().isSame(dayjs(date, "DD/MM/YYYY"), "day") && (
+  //         <Button
+  //           variant="outlined"
+  //           size="small"
+  //           component={Link}
+  //           to={`/Map?userId=${user.userId}`}
+  //         >
+  //           Map
+  //         </Button>
+  //       )}
+  //     </Box>
+  //   </Box>;
+  // }
+
+  // Admin - Pending (approve/reject)
+  // if (isAdmin && user.approvedStatus === 99) {
+  //   const lateInfo = dayjs(user.checkinTime, "HH:mm:ss").isAfter(
+  //     dayjs("08:00:00", "HH:mm:ss")
+  //   )
+  //     ? `Late ${user.lateTime} HR`
+  //     : "On time";
+
+  //   const statusLabel =
+  //     user.attendanceStatus === 0
+  //       ? `Onsite${user.remark ? ` : ${user.remark}` : ""}`
+  //       : `WFH${user.remark ? ` : ${user.remark}` : ""}`;
+
+  //   return (
+  //     <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
+  //       <Box textAlign="center">
+  //         {statusLabel}
+  //         <br />
+  //         {lateInfo}
+  //       </Box>
+  //       <Box display="flex" gap={1}>
+  //         <Button
+  //           variant="contained"
+  //           size="small"
+  //           sx={{
+  //             backgroundColor: "#ff5c5c",
+  //             color: "#fff",
+  //             "&:hover": { backgroundColor: "#e04848" },
+  //           }}
+  //           onClick={() => handleApprove(checkinID, 0)}
+  //         >
+  //           Reject
+  //         </Button>
+  //         <Button
+  //           variant="contained"
+  //           size="small"
+  //           sx={{
+  //             backgroundColor: "#77f277",
+  //             color: "#fff",
+  //             "&:hover": { backgroundColor: "#49d649" },
+  //           }}
+  //           onClick={() => handleApprove(checkinID, 1)}
+  //         >
+  //           Approve
+  //         </Button>
+
+  //         {dayjs().isSame(dayjs(date, "DD/MM/YYYY"), "day") && (
+  //           <Button
+  //             variant="outlined"
+  //             size="small"
+  //             component={Link}
+  //             to={`/Map?userId=${user.userId}`}
+  //           >
+  //             Map
+  //           </Button>
+  //         )}
+  //       </Box>
+  //     </Box>
+  //   );
+  // }
+
+  // User หรือ Admin (Approved/Rejected)
+  // if (isUser || isAdmin) {
+  //   const lateInfo = dayjs(user.checkinTime, "HH:mm:ss").isBefore(
+  //     dayjs("08:00:00", "HH:mm:ss")
+  //   )
+  //     ? user.lateTime
+  //     : `Late ${user.lateTime} HR`;
+
+  //   const statusLabel =
+  //     user.attendanceStatus === 0
+  //       ? `Onsite${user.remark ? ` : ${user.remark}` : ""}`
+  //       : `WFH${user.remark ? ` : ${user.remark}` : ""}`;
+
+  //   return (
+  //     <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
+  //       <Box textAlign="center">
+  //         {statusLabel}
+  //         <br />
+  //         {lateInfo}
+  //       </Box>
+  //     </Box>
+  //   );
+  // }
 };
 
 export default UserApprovalCell;

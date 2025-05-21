@@ -37,6 +37,9 @@ import { GoogleLoginProvider } from "components/GoogleLoginProvider";
 */
 
 const theme = createTheme({
+  typography: {
+    fontSize: 14, // Default font size (in px)
+  },
   palette: {
     primary: {
       main: "#144da0",
@@ -64,11 +67,13 @@ const theme = createTheme({
     },
     MuiButton: {
       styleOverrides: {
-        root: {
-          borderRadius: 24,
-        },
         sizeMedium: {
           height: 40,
+          borderRadius: 24,
+        },
+        sizeSmall: {
+          fontSize: "12px",
+          height: 24,
         },
       },
     },

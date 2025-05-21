@@ -26,23 +26,38 @@ import { GoogleLoginContext } from "../../components/GoogleLoginProvider/GoogleL
 
 dayjs.locale("th");
 
-type UserCheckIn = {
-  approvedBy: string | null;
-  approvedStatus: string | null;
-  checkInId: string | null;
-  checkinTime: string | null;
-  lateTime: string | null;
+export type UserCheckIn = {
   userId: string;
-  userNickname: string;
-  reason: string;
+  userNickName: string;
+  checkinTime: string | null;
+  status: string | null;
+  checkInData: CheckInData;
+  leaveData: LeaveData;
+};
+
+export type CheckInData = {
+  checkInId: string;
+  checkInStatus: 0 | 1 | 99 | null; // 0:reject,1:approve , 99:pending
+  checkInDescription: "Approved" | "Rejected" | "Pending";
+  remark: string;
+  where: "Onsite" | "WFH";
+};
+
+export type LeaveData = {
+  leaveId: string;
+  leaveTypeId: 1 | 2 | 3; // 1 ลาพักร้อน , 2 ลาป่วย , 3 ลากิจ
+  leaveTimeId: 1 | 2 | 3; // 1 ลาเช้า , 2 ลาบ่าย , 3 ลาทั้งวัน
+  leaveStatus: 0 | 1 | 99 | null; // 0:reject,1:approve , 99:pending
+  leaveDescription: "Approved" | "Rejected" | "Pending";
   remark: string;
 };
 
 type DataCheckin = {
   date: string;
+  day: string;
+  weekendFlag: number;
   holidayFlag: number;
   holidayDescription: string;
-  xxxFlag: number;
   userCheckIn: UserCheckIn[];
 };
 
@@ -87,8 +102,10 @@ function Checkin() {
   const { profile } = useGoogleLogin();
   const { POST } = useFetcher();
 
+  const [attendanceStatus, setattendanceStatus] = useState();
   const [loading, setLoading] = useState(true);
   const [dataCheckin, setDataCheckin] = useState<DataCheckin[]>([]);
+
   const [reason, setReason] = useState("");
 
   const [locationData, setLocationData] = useState<LocationData>({
@@ -144,9 +161,10 @@ function Checkin() {
     ).catch((err) => {
       console.error("Approve Error:", err?.response?.data || err.message);
     });
+    fetchUsers();
   };
 
-  const onClickCheckin = async () => {
+  const onClickCheckin = async (wfh: number) => {
     if (!locationData.allowLocation) {
       alert("ยังไม่ได้รับอนุญาตให้เข้าถึงตำแหน่ง: " + locationData.errMassage);
       return;
@@ -154,9 +172,10 @@ function Checkin() {
 
     try {
       const response = await POST("/checkin/add", {
-        reason,
+        remarks: reason || null,
         latitude: locationData.lat,
         longitude: locationData.lng,
+        attendanceStatus: wfh,
       });
       fetchUsers();
       alert("เช็คอินสำเร็จ");
@@ -183,161 +202,213 @@ function Checkin() {
   if (loading) return <div>Loading...</div>;
 
   return (
-    <Box sx={{ display: "flex", width: "100%", justifyContent: "center" }}>
-      <Box sx={{ width: "100%", maxWidth: 1000 }}>
-        {/* Check-in Panel */}
-        <Grid container spacing={2} marginBottom={3}>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Grid container spacing={2} padding={2} alignItems="center">
-              <Grid size={{ xs: 12 }}>
-                <TimeCurrent />
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <TextField
-                  label="เหตุผลที่ work from home"
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  fullWidth
-                />
-              </Grid>
-            </Grid>
-          </Grid>
+    <Box
+      sx={{
+        width: "100%",
 
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Grid container spacing={2} padding={2} alignItems="center">
-              <Grid size={{ xs: 12 }}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  fullWidth
-                  onClick={onClickCheckin}
-                  disabled={!locationData.allowLocation}
-                  sx={{ borderRadius: "2rem" }}
-                >
-                  เช็คอินเข้างาน
-                </Button>
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  disabled={!reason || !locationData.allowLocation}
-                  fullWidth
-                  onClick={onClickCheckin}
-                  sx={{ borderRadius: "2rem" }}
-                >
-                  เช็คอิน WORK FROM HOME
-                </Button>
-              </Grid>
+        bgcolor: "white",
+        borderRadius: 2,
+
+        p: 3,
+      }}
+    >
+      {/* Check-in Panel */}
+      <Grid container spacing={3} marginBottom={4}>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Grid container spacing={2} padding={2} alignItems="center">
+            <Grid size={{ xs: 12 }}>
+              <TimeCurrent />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                label="เหตุผลที่ work from home หรือ มาสาย"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                fullWidth
+                size="medium"
+              />
             </Grid>
           </Grid>
         </Grid>
 
-        {/* Check-in Table */}
-        <TableContainer component={Paper} sx={{ overflowX: "auto" }}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell
-                  align="center"
-                  sx={{
-                    fontWeight: "bold",
-                    fontSize: "1rem",
-                    minWidth: 120,
-                    backgroundColor: "#144da0",
-                    borderRight: "1px solid #ccc",
-                  }}
-                >
-                  Name
-                </TableCell>
-                {dataCheckin[0]?.userCheckIn.map((user, index) => (
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Grid container spacing={2} padding={2} alignItems="center">
+            <Grid size={{ xs: 12 }}>
+              <Button
+                variant="contained"
+                color="primary"
+                fullWidth
+                onClick={() => onClickCheckin(0)}
+                disabled={!locationData.allowLocation}
+                sx={{ borderRadius: "2rem", py: 1.5, fontSize: "1rem" }}
+              >
+                เช็คอินเข้างาน
+              </Button>
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <Button
+                variant="outlined"
+                color="primary"
+                disabled={!reason || !locationData.allowLocation}
+                fullWidth
+                onClick={() => onClickCheckin(1)}
+                sx={{ borderRadius: "2rem", py: 1.5, fontSize: "1rem" }}
+              >
+                เช็คอิน WORK FROM HOME
+              </Button>
+            </Grid>
+          </Grid>
+        </Grid>
+      </Grid>
+
+      {/* Check-in Table */}
+      <TableContainer
+        component={Paper}
+        sx={{
+          maxHeight: 500,
+          overflowY: "auto",
+          overflowX: "auto",
+        }}
+      >
+        <Table stickyHeader sx={{ minWidth: 400 }}>
+          <TableHead>
+            <TableRow sx={{ zIndex: 20, position: "sticky", top: 0 }}>
+              <TableCell
+                align="center"
+                sx={{
+                  zIndex: 10,
+                  fontWeight: "bold",
+                  fontSize: "1rem",
+                  minWidth: 140,
+                  backgroundColor: "#144da0",
+                  borderRight: "1px solid #ccc",
+                  color: "white",
+                }}
+              >
+                Name
+              </TableCell>
+              {dataCheckin[0]?.userCheckIn?.map((user, index) => {
+                return (
                   <TableCell
                     key={`user-${index}`}
                     align="center"
                     colSpan={2}
                     sx={{
                       fontWeight: "bold",
-                      fontSize: "1rem",
-                      minWidth: 120,
+                      fontSize: "1.1rem",
+                      minWidth: 140,
                       backgroundColor: "#144da0",
                       borderRight:
                         index !== dataCheckin[0].userCheckIn.length - 1
                           ? "1px solid #ccc"
                           : "none",
+                      color: "white",
                     }}
                   >
-                    {user.userNickname}
+                    {user.userNickName}
                   </TableCell>
-                ))}
-              </TableRow>
+                );
+              })}
+            </TableRow>
 
-              <TableRow>
+            <TableRow sx={{ zIndex: 20, position: "sticky", top: 57 }}>
+              <TableCell
+                align="center"
+                sx={{
+                  fontWeight: "bold",
+                  fontSize: "1rem",
+                  backgroundColor: "#37b4d1",
+                  borderRight: "1px solid #eee",
+                  color: "white",
+                }}
+              >
+                Date
+              </TableCell>
+              {dataCheckin[0]?.userCheckIn.map((_, index) => (
+                <React.Fragment key={`subheader-${index}`}>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      fontWeight: 600,
+                      fontSize: "1rem",
+                      backgroundColor: "#37b4d1",
+                      borderLeft: "1px solid #ccc",
+                      color: "white",
+                      minWidth: 150,
+                    }}
+                  >
+                    Check-in Time
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      fontWeight: 600,
+                      fontSize: "1rem",
+                      backgroundColor: "#37b4d1",
+                      borderLeft: "1px solid #ccc",
+                      borderRight: "1px solid #ccc",
+                      color: "white",
+                      minWidth: 130,
+                    }}
+                  >
+                    Status
+                  </TableCell>
+                </React.Fragment>
+              ))}
+            </TableRow>
+          </TableHead>
+
+          <TableBody>
+            {dataCheckin.map((row) => (
+              <TableRow key={row.date} hover>
                 <TableCell
                   align="center"
                   sx={{
-                    fontWeight: "bold",
+                    fontWeight: 600,
                     fontSize: "1rem",
-                    backgroundColor: "#37b4d1",
+                    backgroundColor: "#f0f4f8",
                     borderRight: "1px solid #eee",
+                    minWidth: 140,
                   }}
                 >
-                  Date
+                  {row.date}
                 </TableCell>
-                {dataCheckin[0]?.userCheckIn.map((_, index) => (
-                  <React.Fragment key={`subheader-${index}`}>
+                {row.userCheckIn.map((user) => (
+                  <React.Fragment key={`${row.date}-${user.userId}`}>
                     <TableCell
                       align="center"
                       sx={{
-                        fontWeight: 500,
-                        fontSize: "0.95rem",
-                        backgroundColor: "#37b4d1",
+                        minWidth: 120,
+                        backgroundColor: "#fafafa",
                         borderRight: "1px solid #eee",
+                        fontSize: "0.95rem",
                       }}
                     >
-                      Check-in Time
+                      {user.checkinTime ?? ""}
                     </TableCell>
                     <TableCell
-                      align="center"
                       sx={{
                         fontWeight: 500,
                         fontSize: "0.95rem",
-                        backgroundColor: "#37b4d1",
-                        borderRight:
-                          index !== dataCheckin[0].userCheckIn.length - 1
-                            ? "1px solid #ccc"
-                            : "none",
+                        borderRight: "1px solid #eee",
+                        minWidth: 250,
+                        backgroundColor: "#fafafa",
                       }}
                     >
-                      Status
+                      <UserApprovalCell
+                        date={row.date}
+                        user={user}
+                        handleApprove={handleApprove}
+                        roleId={roleId}
+                      />
                     </TableCell>
                   </React.Fragment>
                 ))}
               </TableRow>
-            </TableHead>
-
-            <TableBody>
-              {dataCheckin.map((row) => (
-                <TableRow key={row.date}>
-                  <TableCell align="center">{row.date}</TableCell>
-                  {row.userCheckIn.map((user) => (
-                    <React.Fragment key={`${row.date}-${user.userId}`}>
-                      <TableCell align="center" sx={{ minWidth: 95 }}>
-                        {user.checkinTime || user.lateTime || "XX:XX"}
-                      </TableCell>
-                      <UserApprovalCell
-                        user={user}
-                        handleApprove={handleApprove}
-                        roleid={roleId}
-                        checkinID={user.checkInId}
-                      />
-                    </React.Fragment>
-                  ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Box>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </Box>
   );
 }

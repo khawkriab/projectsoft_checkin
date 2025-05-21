@@ -1,73 +1,138 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useFetcher } from "hooks/useFetcher";
+import { useSearchParams } from "react-router-dom";
+import dayjs from "dayjs";
+import "dayjs/locale/th";
 import {
   GoogleMap,
   useJsApiLoader,
-  Marker,
   InfoWindow,
+  OverlayView,
 } from "@react-google-maps/api";
 import { Paper, Typography } from "@mui/material";
 
-const containerStyle = {
-  width: "100%",
-  height: "400px",
+dayjs.locale("th");
+
+type Users = {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+  image: string;
 };
 
-const users = [
-  {
-    name: "OTTER",
-    lat: 16.439246,
-    lng: 102.808833,
-    image:
-      "https://wwfint.awsassets.panda.org/img/original/__iucn_osg_jpeg_1.jpg",
-  },
-  {
-    name: "OWL",
-    lat: 16.458621,
-    lng: 102.818272,
-    image: "https://baimai.org/wp-content/uploads/2024/06/3-1.jpg",
-  },
-  {
-    name: "CAT",
-    lat: 16.448272,
-    lng: 102.82927,
-    image:
-      "https://i.pinimg.com/236x/5c/bb/04/5cbb0499aa8a3149e20dc0c5b869a548.jpg",
-  },
-];
+const containerStyle = {
+  width: "100vw",
+  height: "100vh",
+};
 
 function Map() {
+  const { POST } = useFetcher();
   const [visibleIndex, setVisibleIndex] = useState<number | null>(null);
+  const [users, setUsers] = useState<Users[]>([]);
+  const [searchParams] = useSearchParams();
+  const userIdParam = searchParams.get("userId");
 
-  // ใช้ useJsApiLoader เพื่อโหลด Google Maps API
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: "AIzaSyBdt1dApGQpWou2IWmRkSF6W5Dqei8k8bc",
   });
 
-  if (!isLoaded) {
-    return <div>Loading...</div>; // รอให้โหลด API เสร็จก่อน
-  }
+  useEffect(() => {
+    if (isLoaded) {
+      getUserLocation();
+    }
+  }, [isLoaded]);
 
-  return (
+  const getUserLocation = async () => {
+    try {
+      const result = await POST("/checkin/getmap", {});
+      if (Array.isArray(result)) {
+        const formattedUsers = result
+          .filter(
+            (user: any) =>
+              user.latitude &&
+              user.longitude &&
+              !isNaN(parseFloat(user.latitude)) &&
+              !isNaN(parseFloat(user.longitude))
+          )
+          .map((user: any) => ({
+            id: user.user_id,
+            name: user.user_nickname,
+            lat: parseFloat(user.latitude),
+            lng: parseFloat(user.longitude),
+            image:
+              user.user_image_url ||
+              "https://www.svgrepo.com/show/382106/default-avatar.svg",
+          }));
+
+        // ถ้ามี userId ให้แสดงเฉพาะคนนั้น
+        if (userIdParam) {
+          const filtered = formattedUsers.filter((u) => u.id === userIdParam);
+          setUsers(filtered);
+        } else {
+          setUsers(formattedUsers);
+        }
+      } else {
+        console.error("รูปแบบข้อมูลผิด:", result);
+      }
+    } catch (error) {
+      console.error("โหลดข้อมูลล้มเหลว:", error);
+    }
+  };
+
+  return isLoaded ? (
     <GoogleMap
       mapContainerStyle={containerStyle}
-      center={{ lat: users[0].lat, lng: users[0].lng }}
-      zoom={10}
+      center={
+        users.length > 0
+          ? { lat: users[0].lat, lng: users[0].lng }
+          : { lat: 16.439246, lng: 102.808833 }
+      }
+      zoom={14}
+      options={{ gestureHandling: "greedy" }}
     >
       {users.map((user, index) => (
         <React.Fragment key={index}>
-          <Marker
+          <OverlayView
             position={{ lat: user.lat, lng: user.lng }}
-            onClick={() => setVisibleIndex(index)}
-            icon={{
-              url: user.image,
-              scaledSize: new window.google.maps.Size(60, 60),
-              origin: new window.google.maps.Point(0, 0),
-              anchor: new window.google.maps.Point(30, 0),
-            }}
-          />
+            mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+          >
+            <div
+              style={{
+                position: "relative",
+                transform: "translate(-50%, -100%)",
+                cursor: "pointer",
+              }}
+              onClick={() =>
+                setVisibleIndex(index === visibleIndex ? null : index)
+              }
+            >
+              <img
+                src="https://pngimg.com/uploads/google_maps_pin/google_maps_pin_PNG25.png"
+                style={{ width: 80, height: 80 }}
+                alt="pin"
+              />
+
+              <img
+                src={user.image}
+                style={{
+                  width: 50,
+                  height: 50,
+                  borderRadius: "50%",
+                  position: "absolute",
+                  top: 4.5,
+                  left: 15.2,
+                  border: "2px solid white",
+                }}
+                alt={user.name}
+              />
+            </div>
+          </OverlayView>
+
           {visibleIndex === index && (
             <InfoWindow
               position={{ lat: user.lat, lng: user.lng }}
+              onCloseClick={() => setVisibleIndex(null)}
               options={{ disableAutoPan: true }}
             >
               <Paper
@@ -94,6 +159,8 @@ function Map() {
         </React.Fragment>
       ))}
     </GoogleMap>
+  ) : (
+    <div>Loading map...</div>
   );
 }
 

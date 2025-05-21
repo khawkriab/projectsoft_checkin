@@ -54,6 +54,7 @@ function Register() {
       jobPosition: jobPosition,
       jobStatus: userType,
       userIdToken: profile?.token,
+      userImageUrl: profile?.profileURL,
     };
 
     //console.log("formData:", formData);

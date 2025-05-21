@@ -16,7 +16,7 @@ const TimeCurrent = () => {
 
   return (
     <Typography variant="h5" sx={{ whiteSpace: "pre-line" }}>
-      {`To Day: ${value.format("DD-MMMM-YYYY")} ${value.format("HH:mm:ss")}`}
+      {`To Day: ${value.format("DD MMMM YYYY")} ${value.format("HH:mm:ss")}`}
     </Typography>
   );
 };

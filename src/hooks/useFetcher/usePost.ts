@@ -1,12 +1,8 @@
 import { useGoogleLogin } from "components/GoogleLoginProvider";
-import {
+import { deviceDetect } from "react-device-detect";
 
-  deviceDetect,
-
-} from "react-device-detect";
-function usePost() {
+function useApi() {
   const { profile } = useGoogleLogin();
-  //console.log('profile:', profile?.token)
 
   const getPublicIP = async (): Promise<string> => {
     try {
@@ -35,22 +31,42 @@ function usePost() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "User-Device" : JSON.stringify(deviceDetect(undefined)),
+        "User-Device": JSON.stringify(deviceDetect(undefined)),
         ...(profile?.token ? { "user-id-token": profile.token } : {}),
-        
         ...options?.headers,
       },
       body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
-      throw new Error("Request failed");
+      throw new Error("POST request failed");
     }
 
     return await response.json();
   };
 
-  return apiPost;
+  const apiGet = async <T = any>(
+    url: string,
+    options?: { headers?: Record<string, string> }
+  ): Promise<T> => {
+    const response = await fetch("http://192.168.31.165:8000" + url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "User-Device": JSON.stringify(deviceDetect(undefined)),
+        ...(profile?.token ? { "user-id-token": profile.token } : {}),
+        ...options?.headers,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("GET request failed");
+    }
+
+    return await response.json();
+  };
+
+  return { apiPost, apiGet };
 }
 
-export default usePost;
+export default useApi;

@@ -9,14 +9,14 @@ type ProfileData = {
   email: string;
 };
 
-type GoogleLoginContextProps = {
+export type GoogleLoginContextProps = {
   profile: ProfileData | null;
   onLoginGoogle: () => void;
   onLogoutGoogle: () => void;
   signinStatus: boolean;
   authLoaded: boolean;
-  roleId: number | null;
-  setRoleId: (id: number) => void;
+  roleId: 1 | 2 | 3; // 1:admin , 2:staff , 3:member
+  setRoleId: (id: GoogleLoginContextProps["roleId"]) => void;
 };
 
 type GoogleLoninProviderProps = {
@@ -29,7 +29,7 @@ const GoogleLoginContext = createContext<GoogleLoginContextProps>({
   onLogoutGoogle: () => {},
   signinStatus: false,
   authLoaded: false,
-  roleId: null,
+  roleId: 3,
   setRoleId: () => {},
 });
 
@@ -37,12 +37,12 @@ function GoogleLoninProvider({ children }: GoogleLoninProviderProps) {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [authLoaded, setAuthLoaded] = useState(false);
-  const [roleId, setRoleId] = useState<number | null>(null);
+  const [roleId, setRoleId] = useState<GoogleLoginContextProps["roleId"]>(3);
 
   const handleSignOut = () => {
     gapi.auth2.getAuthInstance().signOut();
     setProfile(null);
-    setRoleId(null);
+    setRoleId(3);
   };
 
   const handleSignIn = () => {

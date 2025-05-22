@@ -1,21 +1,7 @@
 import axios from "axios";
 import { loadAuth2, loadGapiInsideDOM } from "gapi-script";
 import { createContext, useEffect, useState } from "react";
-
-type SheetData = {
-  range: string;
-  majorDimension: string;
-  values: string[][];
-};
-
-type Profile = {
-  id: string;
-  token: string;
-  fullName: string;
-  profileURL: string;
-  email: string;
-  role: "ADMIN" | "STAFF" | "USER";
-};
+import { Profile, SheetData } from "type.global";
 
 type GoogleLoginContextProps = {
   auth2: gapi.auth2.GoogleAuthBase | null;
@@ -24,6 +10,12 @@ type GoogleLoginContextProps = {
   authLoading: boolean;
   onSignin: () => void;
   onSignout: () => void;
+  getUserList: () => Promise<Profile[]>;
+  updateUser: (
+    auth2: gapi.auth2.GoogleAuthBase,
+    profile: Profile,
+    rowNumber: number
+  ) => Promise<any>;
 };
 
 export const GoogleLoginContext = createContext<GoogleLoginContextProps>({
@@ -33,7 +25,8 @@ export const GoogleLoginContext = createContext<GoogleLoginContextProps>({
   authLoading: true,
   onSignin: () => {},
   onSignout: () => {},
-});
+  getUserList: (() => {}) as GoogleLoginContextProps["getUserList"],
+} as GoogleLoginContextProps);
 
 function GoogleLoginProvider({ children }: { children: React.ReactNode }) {
   const [auth, setAuth] = useState<gapi.auth2.GoogleAuthBase | null>(null);
@@ -57,23 +50,39 @@ function GoogleLoginProvider({ children }: { children: React.ReactNode }) {
       data: [
         {
           range: `Member!A${rowNumber}`,
-          values: [[profile.id]],
+          values: [[profile.role]],
         },
         {
           range: `Member!B${rowNumber}`,
-          values: [[profile.email]],
+          values: [[profile.id]],
         },
         {
           range: `Member!C${rowNumber}`,
-          values: [[profile.fullName]],
+          values: [[profile.email]],
         },
         {
           range: `Member!D${rowNumber}`,
-          values: [[profile.profileURL]],
+          values: [[profile.fullName]],
         },
         {
           range: `Member!E${rowNumber}`,
-          values: [[profile.role]],
+          values: [[profile.name]],
+        },
+        {
+          range: `Member!F${rowNumber}`,
+          values: [[profile.phoneNumber]],
+        },
+        {
+          range: `Member!G${rowNumber}`,
+          values: [[profile.jobPosition]],
+        },
+        {
+          range: `Member!H${rowNumber}`,
+          values: [[profile.employmentType]],
+        },
+        {
+          range: `Member!I${rowNumber}`,
+          values: [[profile.profileURL]],
         },
       ],
     };
@@ -88,7 +97,8 @@ function GoogleLoginProvider({ children }: { children: React.ReactNode }) {
     });
 
     const result = await response.data;
-    console.log("result:", result);
+    // console.log("result:", result);
+    return result;
   };
   const getSetProfile = async (auth2: gapi.auth2.GoogleAuthBase) => {
     if (auth2.isSignedIn.get()) {
@@ -98,19 +108,20 @@ function GoogleLoginProvider({ children }: { children: React.ReactNode }) {
       const idToken = googleUser.getAuthResponse().id_token;
       const findUser = userList.find((f) => f.id === profile.getId());
 
-      const _profile = {
-        id: profile.getId(),
-        token: idToken,
-        fullName: profile.getName(),
-        profileURL: profile.getImageUrl(),
-        email: profile.getEmail(),
-        role: findUser?.role ?? "USER",
-      };
-      setProfile({ ..._profile });
-
-      if (!findUser) {
+      if (findUser) {
+        setProfile({ ...findUser });
+      } else {
         const rowCanUpdate = userList.filter((f) => !f.id);
-        updateUser(auth2, _profile, rowCanUpdate[0].rowNumber);
+        const _profile: Profile = {
+          id: profile.getId(),
+          token: idToken,
+          fullName: profile.getName(),
+          profileURL: profile.getImageUrl(),
+          email: profile.getEmail(),
+          role: "USER",
+        };
+        setProfile({ ..._profile });
+        updateUser(auth2, _profile, rowCanUpdate[0].sheetRowNumber ?? 0);
       }
     }
 
@@ -133,7 +144,7 @@ function GoogleLoginProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const getUserList = (): Promise<(Profile & { rowNumber: number })[]> => {
+  const getUserList: GoogleLoginContextProps["getUserList"] = () => {
     const sheetsId = "1MXTH-zKqVIT6hl_RZodU2e9ChGAYEzO-K7uqUms9sRs";
     const apiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/Member?key=${process.env.REACT_APP_API_KEY}`;
 
@@ -153,19 +164,21 @@ function GoogleLoginProvider({ children }: { children: React.ReactNode }) {
         });
         // console.log("normalizedData:", normalizedData);
 
-        const arr: (Profile & { rowNumber: number })[] = normalizedData
-          .slice(1)
-          .map((data, index) => {
-            return {
-              id: data[0],
-              email: data[1],
-              fullName: data[2],
-              profileURL: data[3],
-              role: data[4] as "ADMIN" | "STAFF" | "USER",
-              token: "",
-              rowNumber: index + 2,
-            };
-          });
+        const arr: Profile[] = normalizedData.slice(1).map((data, index) => {
+          return {
+            role: data[0] as "ADMIN" | "STAFF" | "USER",
+            id: data[1],
+            email: data[2],
+            fullName: data[3],
+            name: data[4],
+            phoneNumber: data[5],
+            jobPosition: data[6],
+            employmentType: data[7],
+            profileURL: data[8],
+            token: "",
+            sheetRowNumber: index + 2,
+          };
+        });
 
         return arr;
       })
@@ -186,26 +199,9 @@ function GoogleLoginProvider({ children }: { children: React.ReactNode }) {
 
     setAuth(auth2);
     getSetProfile(auth2);
-
-    // gapi.client
-    //   .init({
-    //     apiKey: process.env.REACT_APP_API_KEY,
-    //     clientId: process.env.REACT_APP_GOOGLE_PRIVATE_KEY,
-    //     discoveryDocs: [
-    //       "https://sheets.googleapis.com/$discovery/rest?version=v4",
-    //     ],
-    //     scope: "https://www.googleapis.com/auth/spreadsheets",
-    //   })
-    //   .then(() => {
-    //     getSetProfile();
-    //   })
-    //   .catch((error: any) => {
-    //     console.error("Error initializing Google API client:", error);
-    //   });
   };
 
   useEffect(() => {
-    // gapi.load("client:auth2", initClient);
     initClient();
   }, []);
 
@@ -219,6 +215,8 @@ function GoogleLoginProvider({ children }: { children: React.ReactNode }) {
         authLoading: authLoading,
         onSignin: onSignin,
         onSignout: onSignout,
+        getUserList: getUserList,
+        updateUser: updateUser,
       }}
     >
       {children}

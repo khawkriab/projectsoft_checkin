@@ -17,12 +17,31 @@ import {
 } from "@mui/material";
 import { useGoogleLogin } from "components/GoogleLoginProvider";
 import { useColorMode } from "components/ThemeProvider";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useState } from "react";
 import CloseIcon from "@mui/icons-material/Close";
+
+function MenuItem({ children, to }: { to: string; children: React.ReactNode }) {
+  const location = useLocation();
+
+  return (
+    <Box
+      sx={{
+        borderBottom: "3px solid #ffffff",
+        borderColor: location.pathname === to ? "#ffffff" : "transparent",
+      }}
+    >
+      <NavLink to={to} style={{ textDecoration: "none" }}>
+        <Typography color={"#fff"} margin={0} variant="h5">
+          {children}
+        </Typography>
+      </NavLink>
+    </Box>
+  );
+}
 
 function Layout() {
   const { authLoading, isSignedIn, profile, onSignin, onSignout } =
@@ -63,6 +82,7 @@ function Layout() {
                   />
                 </Box>
               </Grid>
+              {/* nav menu desktop */}
               <Grid
                 size="grow"
                 // display={"none"}
@@ -70,16 +90,9 @@ function Layout() {
                 sx={{ display: { xs: "none", sm: "none", md: "flex" } }}
               >
                 <Stack direction={"row"} alignItems={"center"} spacing={2}>
-                  <NavLink to={"/"}>
-                    <Typography color={"#fff"} margin={0} variant="h5">
-                      Home
-                    </Typography>
-                  </NavLink>
-                  <NavLink to={"/member"}>
-                    <Typography color={"#fff"} margin={0} variant="h5">
-                      Member
-                    </Typography>
-                  </NavLink>
+                  <MenuItem to={"/"}>Home</MenuItem>
+                  <MenuItem to={"/member"}>Member</MenuItem>
+                  <MenuItem to={"/register"}>Register</MenuItem>
                 </Stack>
               </Grid>
             </Grid>
@@ -89,24 +102,44 @@ function Layout() {
               <FormControlLabel
                 control={
                   <Switch
+                    sx={(theme) => ({
+                      width: 80,
+                      height: 34,
+                      padding: "10px 12px",
+                      "& .MuiSwitch-switchBase": {
+                        padding: 0,
+                        bottom: 0,
+                        backgroundColor: "#ffffff",
+                        "&.Mui-checked": {
+                          transform: "translateX(40px)",
+                          backgroundColor: "#ffffff",
+                          "&:hover": {
+                            backgroundColor: "#ffffff",
+                          },
+                        },
+                        "&:hover": {
+                          backgroundColor: "#ffffff",
+                        },
+                      },
+                    })}
                     icon={
-                      <>
+                      <IconButton size="small" color="primary">
                         <LightModeIcon />
-                      </>
+                      </IconButton>
                     }
                     checkedIcon={
-                      <>
+                      <IconButton size="small" color="primary">
                         <DarkModeIcon />
-                      </>
+                      </IconButton>
                     }
                     checked={theme.palette.mode === "dark"}
                     onChange={toggleColorMode}
                   />
                 }
-                // label={theme.palette.mode === "dark" ? "Dark" : "Light"}
                 label={""}
               />
             </Box>
+            {/* nav profile desktop */}
             <Box
               alignItems={"center"}
               sx={{ display: { xs: "none", sm: "none", md: "flex" }, gap: 1 }}
@@ -169,7 +202,6 @@ function Layout() {
       >
         <Box display={"flex"} justifyContent={"flex-end"}>
           <IconButton onClick={() => toggleDrawer(false)}>
-            {/* {theme.direction === 'ltr' ? <ChevronLeftIcon /> : <ChevronRightIcon />} */}
             <CloseIcon color="error" />
           </IconButton>
         </Box>

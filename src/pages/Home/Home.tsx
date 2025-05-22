@@ -8,6 +8,7 @@ import {
     Box,
     Button,
     FormControl,
+    Grid,
     InputLabel,
     MenuItem,
     Paper,
@@ -27,12 +28,29 @@ import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/MuiTable';
+import { deviceDetect } from 'react-device-detect';
+import { SheetData } from 'type.global';
 
-interface SheetData {
-    range: string;
-    majorDimension: string;
-    values: string[][];
-}
+type UserCheckinData = {
+    id: string;
+    date: string;
+    time: string;
+    name: string;
+    status: string;
+    sheetsColumn: string;
+    sheetsRowNumber: string;
+};
+
+type CheckinData = {
+    date: string;
+    data: UserCheckinData[];
+};
+type EmployeeData = {
+    id: string;
+    name: string;
+    sheetsColumn: string;
+    sheetsColumnNumber: string;
+};
 
 function Home() {
     const { auth2, authLoading, isSignedIn } = useGoogleLogin();
@@ -41,8 +59,10 @@ function Home() {
     const [loading, setLoading] = useState<boolean>(true);
     const [updating, setUpdating] = useState(false);
     const [dateList, setDateList] = useState<string[]>([]);
-    const [employeeList, setEmployeeList] = useState<string[]>([]);
+    const [employeeList, setEmployeeList] = useState<EmployeeData[]>([]);
     const [open, setOpen] = useState(false);
+    const [checkinDataList, setCheckinDataList] = useState<CheckinData[]>([]);
+
     const [updateSheetsData, setUpdateSheetsData] = useState<{
         row: string;
         column: string;
@@ -104,6 +124,7 @@ function Home() {
     };
 
     const onChangeData = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent) => {
+        console.log('e.target.value:', e.target.value);
         setUpdateSheetsData((prev) => ({
             ...prev,
             [e.target.name ?? '']: e.target.value,
@@ -134,18 +155,48 @@ function Home() {
                 const rowSelect = String(indexOfList + 3);
 
                 setSheetData(normalizedData); // Set the sheet data
+                console.log('normalizedData:', normalizedData);
                 setDateList([...dateListSheets]);
                 setUpdateSheetsData((prev) => ({ ...prev, row: rowSelect }));
 
                 // set employee
-                let arr: string[] = [];
-                normalizedData[0].slice(1).forEach((col) => {
+                let _employeeList: EmployeeData[] = [];
+                normalizedData[0].slice(1).forEach((col, index) => {
                     if (!col) return;
 
-                    arr.push(col);
+                    _employeeList.push({
+                        id: col.includes('(') ? col.substring(col.indexOf('(') + 1, col.length - 1) : '',
+                        name: col.includes('(') ? col.substring(0, col.indexOf('(')) : col,
+                        sheetsColumn: getColumnLetter(index + 1),
+                        sheetsColumnNumber: `${index + 1}`,
+                    });
                 });
 
-                setEmployeeList([...arr]);
+                setEmployeeList([..._employeeList]);
+                console.log('_employeeList:', _employeeList);
+
+                let n: CheckinData[] = [];
+
+                normalizedData.slice(2).forEach((f, indexF) => {
+                    n.push({
+                        date: f[0],
+                        data: [],
+                    });
+                    _employeeList.forEach((e, indexE) => {
+                        n[indexF].data.push({
+                            id: e.id,
+                            name: e.name,
+                            date: f[0],
+                            time: f[indexE * 3 + 1],
+                            status: `เข้างาน: ${f[indexE * 3 + 2]}${f[indexE * 3 + 3] ? `<br/>หมายเหตุ: ${f[indexE * 3 + 3]}` : ''}`,
+                            sheetsColumn: e.sheetsColumn,
+                            sheetsRowNumber: `${indexF + 3}`,
+                        });
+                    });
+                });
+                console.log('n:', n);
+
+                setCheckinDataList([...n]);
                 setLoading(false); // Set loading to false
             })
             .catch((err) => {
@@ -157,6 +208,7 @@ function Home() {
 
     useEffect(() => {
         getSheets();
+        console.log('deviceDetect:', deviceDetect(undefined));
     }, []);
 
     if (loading) {
@@ -172,75 +224,90 @@ function Home() {
                     isSignedIn && (
                         <Box component={'form'} onSubmit={updateSheet}>
                             <Box display='flex' gap={2} flexWrap='wrap' alignItems={'center'}>
-                                {/* Date (Disabled Select) */}
-                                <FormControl disabled>
-                                    <InputLabel id='date-label'>วันที่</InputLabel>
-                                    <Select
-                                        labelId='date-label'
-                                        name='row'
-                                        value={updateSheetsData.row}
-                                        onChange={onChangeData}
-                                        label='วันที่'
-                                    >
-                                        <MenuItem value=''>select</MenuItem>
-                                        {dateList.map((date, index) => (
-                                            <MenuItem key={index} value={String(index + 3)}>
-                                                {date} ({getCellRange(index + 2, 0)})
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-
-                                {/* Employee Select */}
-                                <FormControl>
-                                    <InputLabel id='employee-label'>พนักงาน</InputLabel>
-                                    <Select
-                                        labelId='employee-label'
-                                        name='column'
-                                        value={updateSheetsData.column}
-                                        onChange={onChangeData}
-                                        label='พนักงาน'
-                                    >
-                                        <MenuItem value=''>select</MenuItem>
-                                        {employeeList.map((employee, index) => (
-                                            <MenuItem key={index} value={String(index * 3 + 1)}>
-                                                {employee} ({getCellRange(0, index * 3 + 1)})
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-
-                                {/* Time Input */}
-                                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                    <TimePicker
-                                        label='เวลา'
-                                        ampm={false}
-                                        timeSteps={{ minutes: 1 }}
-                                        slotProps={{
-                                            textField: {
-                                                name: 'time',
-                                                required: true,
-                                                error: !updateSheetsData.time,
-                                            },
-                                        }}
-                                        onChange={(newValue) => {
-                                            setUpdateSheetsData((prev) => ({
-                                                ...prev,
-                                                time: dayjs(newValue).format('HH:mm'),
-                                            }));
-                                        }}
-                                    />
-                                </LocalizationProvider>
-
-                                {/* Note Input */}
-                                <TextField name='remark' label='หมายเหตุ' value={updateSheetsData.remark} onChange={onChangeData} />
-
-                                {/* Update Button */}
-                                <Box display='flex' alignItems='flex-end'>
-                                    <Button variant='contained' color='primary' type='submit' loading={updating}>
-                                        update
-                                    </Button>
-                                </Box>
+                                <Grid container spacing={2}>
+                                    {/* Date (Disabled Select) */}
+                                    <Grid size={{ xs: 12, sm: 6, md: 'auto' }}>
+                                        <FormControl disabled fullWidth>
+                                            <InputLabel id='date-label'>วันที่</InputLabel>
+                                            <Select
+                                                labelId='date-label'
+                                                name='row'
+                                                value={updateSheetsData.row}
+                                                onChange={onChangeData}
+                                                label='วันที่'
+                                            >
+                                                <MenuItem value=''>select</MenuItem>
+                                                {dateList.map((date, index) => (
+                                                    <MenuItem key={index} value={String(index + 3)}>
+                                                        {date} ({getCellRange(index + 2, 0)})
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                    </Grid>
+                                    {/* Employee Select */}
+                                    <Grid size={{ xs: 12, sm: 6, md: 'auto' }}>
+                                        <FormControl fullWidth>
+                                            <InputLabel id='employee-label'>พนักงาน</InputLabel>
+                                            <Select
+                                                labelId='employee-label'
+                                                name='column'
+                                                value={updateSheetsData.column}
+                                                onChange={onChangeData}
+                                                label='พนักงาน'
+                                            >
+                                                <MenuItem value=''>select</MenuItem>
+                                                {employeeList.map((employee, index) => (
+                                                    <MenuItem key={index} value={employee.sheetsColumnNumber}>
+                                                        {employee.name} {`(${employee.sheetsColumn})`}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                    </Grid>
+                                    {/* Time Input */}
+                                    <Grid size={{ xs: 12, sm: 6, md: 'auto' }}>
+                                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                            <TimePicker
+                                                label='เวลา'
+                                                ampm={false}
+                                                timeSteps={{ minutes: 1 }}
+                                                slotProps={{
+                                                    textField: {
+                                                        name: 'time',
+                                                        required: true,
+                                                        error: !updateSheetsData.time,
+                                                        fullWidth: true,
+                                                    },
+                                                }}
+                                                onChange={(newValue) => {
+                                                    setUpdateSheetsData((prev) => ({
+                                                        ...prev,
+                                                        time: dayjs(newValue).format('HH:mm'),
+                                                    }));
+                                                }}
+                                            />
+                                        </LocalizationProvider>
+                                    </Grid>
+                                    {/* Note Input */}
+                                    <Grid size={{ xs: 12, sm: 6, md: 'auto' }}>
+                                        <TextField
+                                            fullWidth
+                                            name='remark'
+                                            label='หมายเหตุ'
+                                            value={updateSheetsData.remark}
+                                            onChange={onChangeData}
+                                        />
+                                    </Grid>
+                                    {/* Update Button */}
+                                    <Grid size={{ xs: 12, sm: 6, md: 'auto' }}>
+                                        <Box display='flex' alignItems='center' height={'100%'}>
+                                            <Button size='large' variant='contained' color='primary' type='submit' loading={updating}>
+                                                update
+                                            </Button>
+                                        </Box>
+                                    </Grid>
+                                </Grid>
                             </Box>
                         </Box>
                     )
@@ -251,29 +318,67 @@ function Home() {
                     <Table>
                         <TableHead>
                             <TableHeadRow>
-                                <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{sheetData[0][0]}</TableHeadCell>
-                                {sheetData[0].length > 0 &&
-                                    sheetData[0]?.slice(1)?.map((col, index) => {
-                                        if (!col) return null;
-
-                                        return (
-                                            <TableHeadCell key={index} colSpan={3} align='center' sx={{ borderLeft: '1px solid #fff' }}>
-                                                {col}
-                                            </TableHeadCell>
-                                        );
-                                    })}
+                                <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'ชื่อพนักงาน'}</TableHeadCell>
+                                {employeeList.map((employee, index) => {
+                                    return (
+                                        <TableHeadCell key={index} colSpan={2} align='center' sx={{ borderLeft: '1px solid #fff' }}>
+                                            {employee.name}
+                                        </TableHeadCell>
+                                    );
+                                })}
                             </TableHeadRow>
                             <TableHeadRow>
-                                {sheetData[1].length > 0 &&
+                                <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'วันที่'}</TableHeadCell>
+                                {employeeList.map((_, index) => {
+                                    return (
+                                        <React.Fragment key={index}>
+                                            <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'เวลาเข้าทำงาน'}</TableHeadCell>
+                                            <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'สถานะ'}</TableHeadCell>
+                                        </React.Fragment>
+                                    );
+                                })}
+                                {/* {sheetData[1].length > 0 &&
                                     sheetData[1]?.map((col, index) => (
                                         <TableHeadCell key={index} sx={{ borderLeft: '1px solid #fff' }}>
                                             {col}
                                         </TableHeadCell>
-                                    ))}
+                                    ))} */}
                             </TableHeadRow>
                         </TableHead>
                         <TableBody>
-                            {sheetData.slice(2).map((row, rowIdx) => (
+                            {checkinDataList.map((row, rowIdx) => (
+                                <TableRow key={rowIdx}>
+                                    <TableBodyCell
+                                        sx={(theme) => ({
+                                            border: '1px solid',
+                                            borderLeftColor: theme.palette.secondary.contrastText,
+                                        })}
+                                    >
+                                        {row.date}
+                                    </TableBodyCell>
+                                    {row.data.map((u) => (
+                                        <React.Fragment key={u.name}>
+                                            <TableBodyCell
+                                                sx={(theme) => ({
+                                                    border: '1px solid',
+                                                    borderLeftColor: theme.palette.secondary.contrastText,
+                                                })}
+                                            >
+                                                {u.time}
+                                            </TableBodyCell>
+                                            <TableBodyCell
+                                                sx={(theme) => ({
+                                                    border: '1px solid',
+                                                    borderLeftColor: theme.palette.secondary.contrastText,
+                                                })}
+                                            >
+                                                <div dangerouslySetInnerHTML={{ __html: u.status }} />
+                                            </TableBodyCell>
+                                        </React.Fragment>
+                                    ))}
+                                </TableRow>
+                            ))}
+                            {/* {sheetData.slice(2).map((row, rowIdx) => (
                                 <TableRow key={rowIdx}>
                                     {row.map((cell, cellIdx) => (
                                         <TableBodyCell
@@ -287,7 +392,7 @@ function Home() {
                                         </TableBodyCell>
                                     ))}
                                 </TableRow>
-                            ))}
+                            ))} */}
                         </TableBody>
                     </Table>
                 </TableContainer>

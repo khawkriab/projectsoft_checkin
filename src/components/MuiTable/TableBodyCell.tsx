@@ -3,6 +3,7 @@ import { TableCell, TableCellProps } from '@mui/material';
 export function TableBodyCell({ children, ...props }: { children: React.ReactNode } & TableCellProps) {
     return (
         <TableCell
+            {...props}
             sx={[
                 (theme) => ({
                     whiteSpace: 'nowrap',
@@ -10,7 +11,6 @@ export function TableBodyCell({ children, ...props }: { children: React.ReactNod
                 }),
                 (theme) => ({ ...(typeof props?.sx === 'function' ? props.sx(theme) : props.sx) }),
             ]}
-            {...props}
         >
             {children}
         </TableCell>

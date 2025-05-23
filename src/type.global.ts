@@ -1,26 +1,36 @@
 export type SheetData = {
-  range: string;
-  majorDimension: string;
-  values: string[][];
+    range: string;
+    majorDimension: string;
+    values: string[][];
 };
 
 export type SheetInfo = {
-  sheetRowNumber?: number;
+    sheetRowNumber?: number;
 };
 
 export type EmployeeInfo = {
-  name?: string;
-  phoneNumber?: string;
-  jobPosition?: string;
-  employmentType?: string;
+    name?: string;
+    phoneNumber?: string;
+    jobPosition?: string;
+    employmentType?: string;
 };
 
 export type Profile = EmployeeInfo &
-  SheetInfo & {
+    SheetInfo & {
+        id: string;
+        token?: string;
+        fullName: string;
+        profileURL?: string;
+        email: string;
+        role: 'ADMIN' | 'STAFF' | 'USER';
+    };
+
+export type UserCheckInData = {
     id: string;
-    token?: string;
-    fullName: string;
-    profileURL?: string;
-    email: string;
-    role: "ADMIN" | "STAFF" | "USER";
-  };
+    time: string;
+    remark: string;
+    reason: string;
+    device: string;
+    location: string;
+    status: string;
+};

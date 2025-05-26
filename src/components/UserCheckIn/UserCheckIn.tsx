@@ -1,6 +1,5 @@
 import { Alert, Box, Button, Grid, Slide, Snackbar, TextField } from '@mui/material';
 import axios from 'axios';
-import { checkinFb } from 'components/firebase';
 import { useGoogleLogin } from 'components/GoogleLoginProvider';
 import dayjs from 'dayjs';
 import useLocation from 'hooks/useLocation';
@@ -22,78 +21,77 @@ function UserCheckIn({ getCheckin }: UserCheckInProps) {
     const [currentUserData, setCurrentUserData] = useState<UserCheckInData | null | undefined>(undefined);
     //
     const onCheckin = async (remark?: string) => {
-        checkinFb();
-        // if (auth2) {
-        //     const user = auth2.currentUser.get();
-        //     const token = user.getAuthResponse().access_token;
-        //     const sheetsId = '1fMqyQw-JCm6ykyOgnfP--CtldfxAG27BNaegLjcrNK4';
-        //     const endpoint = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values:batchUpdate`;
+        if (auth2) {
+            const user = auth2.currentUser.get();
+            const token = user.getAuthResponse().access_token;
+            const sheetsId = '1fMqyQw-JCm6ykyOgnfP--CtldfxAG27BNaegLjcrNK4';
+            const endpoint = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values:batchUpdate`;
 
-        //     const now = dayjs().utc().valueOf();
+            const now = dayjs().utc().valueOf();
 
-        //     const c = await getCheckin();
-        //     let rowNumber = c.length + 2; // add 2 because have header and data current
+            const c = await getCheckin();
+            let rowNumber = c.length + 2; // add 2 because have header and data current
 
-        //     // find row no data
-        //     if (c.length > 1) {
-        //         const findIndexOf = c.findIndex((f) => !f.id);
-        //         if (findIndexOf >= 0) {
-        //             rowNumber = findIndexOf + 1;
-        //         }
-        //     }
+            // find row no data
+            if (c.length > 1) {
+                const findIndexOf = c.findIndex((f) => !f.id);
+                if (findIndexOf >= 0) {
+                    rowNumber = findIndexOf + 1;
+                }
+            }
 
-        //     const requestBody = {
-        //         valueInputOption: 'USER_ENTERED', // or "RAW"
-        //         data: [
-        //             {
-        //                 range: `Today!A${rowNumber}`,
-        //                 values: [[user.getId()]],
-        //             },
-        //             {
-        //                 range: `Today!B${rowNumber}`,
-        //                 values: [[`${now}`]],
-        //             },
-        //             {
-        //                 range: `Today!C${rowNumber}`,
-        //                 values: [[remark ?? '']],
-        //             },
-        //             {
-        //                 range: `Today!D${rowNumber}`,
-        //                 values: [[reason]],
-        //             },
-        //             {
-        //                 range: `Today!E${rowNumber}`,
-        //                 values: [[JSON.stringify(deviceDetect(undefined))]],
-        //             },
-        //             {
-        //                 range: `Today!F${rowNumber}`,
-        //                 values: [[`[${lat},${lng}]`]],
-        //             },
-        //             {
-        //                 range: `Today!G${rowNumber}`,
-        //                 values: [['99']],
-        //             },
-        //         ],
-        //     };
+            const requestBody = {
+                valueInputOption: 'USER_ENTERED', // or "RAW"
+                data: [
+                    {
+                        range: `Today!A${rowNumber}`,
+                        values: [[user.getId()]],
+                    },
+                    {
+                        range: `Today!B${rowNumber}`,
+                        values: [[`${now}`]],
+                    },
+                    {
+                        range: `Today!C${rowNumber}`,
+                        values: [[remark ?? '']],
+                    },
+                    {
+                        range: `Today!D${rowNumber}`,
+                        values: [[reason]],
+                    },
+                    {
+                        range: `Today!E${rowNumber}`,
+                        values: [[JSON.stringify(deviceDetect(undefined))]],
+                    },
+                    {
+                        range: `Today!F${rowNumber}`,
+                        values: [[`[${lat},${lng}]`]],
+                    },
+                    {
+                        range: `Today!G${rowNumber}`,
+                        values: [['99']],
+                    },
+                ],
+            };
 
-        //     setUpdating(true);
-        //     const response = await axios(endpoint, {
-        //         method: 'POST',
-        //         headers: {
-        //             Authorization: `Bearer ${token}`,
-        //             'Content-Type': 'application/json',
-        //         },
-        //         data: JSON.stringify(requestBody),
-        //     });
+            setUpdating(true);
+            const response = await axios(endpoint, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                data: JSON.stringify(requestBody),
+            });
 
-        //     if (response.status === 200) {
-        //         await getCurrentData();
-        //         setOpen(true);
-        //     } else {
-        //         alert('Error updating the sheet');
-        //     }
-        //     setUpdating(false);
-        // }
+            if (response.status === 200) {
+                await getCurrentData();
+                setOpen(true);
+            } else {
+                alert('Error updating the sheet');
+            }
+            setUpdating(false);
+        }
     };
 
     const onCheckinWFH = (e: React.ChangeEvent<HTMLFormElement>) => {

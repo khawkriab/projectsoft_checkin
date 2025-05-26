@@ -134,7 +134,7 @@ function Home() {
                             status = remark;
                             remark = 'ลา';
                             absentFlag = 1;
-                        } else if (!time && !remark && dayjs(`${date}`, 'DD-MM-YYYY').isBefore(dayjs())) {
+                        } else if (!time && !remark && dayjs(`${date}`, 'DD-MM-YYYY').isBefore(dayjs().add(1, 'day'))) {
                             status = 'หาย';
                             lateFlag = 1;
                         }

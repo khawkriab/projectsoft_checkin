@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Slide, Snackbar } from '@mui/material';
+import { Alert, Box, Button, Grid, Slide, Snackbar, TextField } from '@mui/material';
 import axios from 'axios';
 import { useGoogleLogin } from 'components/GoogleLoginProvider';
 import dayjs from 'dayjs';
@@ -17,9 +17,10 @@ function UserCheckIn({ getCheckin }: UserCheckInProps) {
     //
     const [updating, setUpdating] = useState(false);
     const [open, setOpen] = useState(false);
-    const [currentUserData, setCurrentUserData] = useState<UserCheckInData | null>(null);
+    const [reason, setReason] = useState('');
+    const [currentUserData, setCurrentUserData] = useState<UserCheckInData | null | undefined>(undefined);
     //
-    const onCheckin = async () => {
+    const onCheckin = async (remark?: string) => {
         if (auth2) {
             const user = auth2.currentUser.get();
             const token = user.getAuthResponse().access_token;
@@ -29,7 +30,16 @@ function UserCheckIn({ getCheckin }: UserCheckInProps) {
             const now = dayjs().utc().valueOf();
 
             const c = await getCheckin();
-            const rowNumber = c.length + 2;
+            let rowNumber = c.length + 2; // add 2 because have header and data current
+
+            // find row no data
+            if (c.length > 1) {
+                const findIndexOf = c.findIndex((f) => !f.id);
+                if (findIndexOf >= 0) {
+                    rowNumber = findIndexOf + 1;
+                }
+            }
+
             const requestBody = {
                 valueInputOption: 'USER_ENTERED', // or "RAW"
                 data: [
@@ -43,7 +53,11 @@ function UserCheckIn({ getCheckin }: UserCheckInProps) {
                     },
                     {
                         range: `Today!C${rowNumber}`,
-                        values: [[`[${lat},${lng}]`]],
+                        values: [[remark ?? '']],
+                    },
+                    {
+                        range: `Today!D${rowNumber}`,
+                        values: [[reason]],
                     },
                     {
                         range: `Today!E${rowNumber}`,
@@ -51,7 +65,7 @@ function UserCheckIn({ getCheckin }: UserCheckInProps) {
                     },
                     {
                         range: `Today!F${rowNumber}`,
-                        values: [['latlng']],
+                        values: [[`[${lat},${lng}]`]],
                     },
                     {
                         range: `Today!G${rowNumber}`,
@@ -80,12 +94,19 @@ function UserCheckIn({ getCheckin }: UserCheckInProps) {
         }
     };
 
+    const onCheckinWFH = (e: React.ChangeEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        onCheckin('WFH');
+    };
+
     const getCurrentData = async () => {
         const res = await getCheckin();
         const findData = res.find((f) => f.id === profile?.id);
 
         if (findData) {
             setCurrentUserData({ ...findData });
+        } else {
+            setCurrentUserData(null);
         }
     };
 
@@ -122,9 +143,47 @@ function UserCheckIn({ getCheckin }: UserCheckInProps) {
                         </Box>
                     </>
                 )}
-                <Button disabled={!!currentUserData} loading={updating} variant='contained' color='error' onClick={onCheckin}>
-                    ลงชื่อเข้างาน
-                </Button>
+                {currentUserData === null && (
+                    <Grid container gap={2} alignItems={'center'} sx={{ width: '100%' }}>
+                        <Grid size={{ xs: 12, sm: 12, md: 7 }}>
+                            <Box component={'form'} onSubmit={onCheckinWFH}>
+                                <Grid container alignItems={'center'} gap={2} sx={{ width: '100%' }}>
+                                    <Grid size={{ xs: 12, sm: 'grow' }}>
+                                        <TextField
+                                            fullWidth
+                                            required
+                                            label='เหตุผลที่ work from home หรือ มาสาย'
+                                            value={reason}
+                                            onChange={(e) => setReason(e.target.value)}
+                                        />
+                                    </Grid>
+                                    <Grid flex={'none'}>
+                                        <Button
+                                            type='submit'
+                                            disabled={!!currentUserData}
+                                            loading={updating}
+                                            variant='outlined'
+                                            color='primary'
+                                        >
+                                            ลงชื่อเข้างาน WFH
+                                        </Button>
+                                    </Grid>
+                                </Grid>
+                            </Box>
+                        </Grid>
+                        <Grid flex={'auto'}>
+                            <Button
+                                disabled={!!currentUserData}
+                                loading={updating}
+                                variant='contained'
+                                color='error'
+                                onClick={() => onCheckin()}
+                            >
+                                ลงชื่อเข้างาน
+                            </Button>
+                        </Grid>
+                    </Grid>
+                )}
             </Box>
         </>
     );

@@ -87,7 +87,6 @@ function UpdateUserCheckIn({ dateList = [], employeeList = [], afterUndate = () 
         }
     };
     const updateSheets = async (sheetsData: SheetsForm) => {
-        console.log('sheetsData:', sheetsData);
         if (isSignedIn && auth2) {
             const user = auth2.currentUser.get();
             const token = user.getAuthResponse().access_token;

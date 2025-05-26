@@ -134,7 +134,7 @@ function Home() {
                             status = remark;
                             remark = 'ลา';
                             absentFlag = 1;
-                        } else if (!time && !remark && dayjs(`${date}`, 'DD-MM-YYYY').isBefore(dayjs().add(1, 'day'))) {
+                        } else if (!time && !remark && dayjs(`${date}`, 'DD-MM-YYYY').isBefore(dayjs().add(-1, 'day'))) {
                             status = 'หาย';
                             lateFlag = 1;
                         }
@@ -226,7 +226,8 @@ function Home() {
                                     getCheckin={getCheckin}
                                 />
                             )}
-                            {profile?.id && isAllowLocation && (isIOS || isAndroid) && isMobile && <UserCheckIn getCheckin={getCheckin} />}
+                            {/* {profile?.id && isAllowLocation && (isIOS || isAndroid) && isMobile && <UserCheckIn getCheckin={getCheckin} />} */}
+                            {profile?.id && <UserCheckIn getCheckin={getCheckin} />}
                         </>
                     )
                 )}

@@ -35,6 +35,7 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { UpdateUserCheckIn } from 'components/UpdateUserCheckIn';
 import { UserCheckIn } from 'components/UserCheckIn';
 import useLocation from 'hooks/useLocation';
+import { LocationChecker } from 'components/LocationChecker';
 
 dayjs.extend(customParseFormat);
 dayjs.extend(utc);
@@ -212,6 +213,7 @@ function Home() {
 
     return (
         <div>
+            <LocationChecker />
             <Box sx={{ marginBottom: 4 }}>
                 {authLoading ? (
                     <div>Loading...</div>

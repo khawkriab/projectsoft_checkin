@@ -23,6 +23,7 @@ import axios from 'axios';
 import dayjs from 'dayjs';
 import { EmployeeData, SheetsDate } from 'pages/Home/Home';
 import { UserCheckInData } from 'type.global';
+import { DesktopTimePicker, DigitalClock, MultiSectionDigitalClock } from '@mui/x-date-pickers';
 
 type SheetsForm = {
     row: string;
@@ -229,7 +230,7 @@ function UpdateUserCheckIn({ dateList = [], employeeList = [], afterUndate = () 
                         {/* Time Input */}
                         <Grid size={{ xs: 12, sm: 6, md: 'auto' }}>
                             <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                <TimePicker
+                                <DesktopTimePicker
                                     label='เวลา'
                                     ampm={false}
                                     timeSteps={{ minutes: 1 }}

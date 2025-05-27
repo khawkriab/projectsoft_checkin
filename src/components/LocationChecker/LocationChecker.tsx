@@ -26,7 +26,7 @@ function LocationChecker() {
                 const { latitude, longitude } = position.coords;
                 const current = { lat: latitude, lng: longitude };
                 setCurrentLocation(current);
-                const within = isWithinRadius(current, target, 100); // 50 meters
+                const within = isWithinRadius(current, target, 50); // 50 meters
                 setIsWithin(within);
             },
             (error) => {

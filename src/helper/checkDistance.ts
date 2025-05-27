@@ -19,9 +19,3 @@ function isWithinRadius(current: LatLng, target: LatLng, radiusInMeters: number)
 }
 
 export default isWithinRadius;
-// Usage
-// const current = { lat: 40.7128, lng: -74.006 }; // e.g., user's current location
-// const target = { lat: 40.7130, lng: -74.0062 }; // fixed point
-// const isNear = isWithinRadius(current, target, 50);
-
-// console.log("Within 50 meters?", isNear);

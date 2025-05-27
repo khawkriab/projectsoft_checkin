@@ -1,6 +1,6 @@
 import { Alert, Box, Button, Grid, Slide, Snackbar, TextField } from '@mui/material';
 import axios from 'axios';
-import { useGoogleLogin } from 'components/GoogleLoginProvider';
+import { useGoogleLogin } from 'components/common/GoogleLoginProvider';
 import dayjs from 'dayjs';
 import useLocation from 'hooks/useLocation';
 import { useEffect, useState } from 'react';
@@ -34,7 +34,7 @@ function UserCheckIn({ getCheckin }: UserCheckInProps) {
 
             // find row no data
             if (c.length > 1) {
-                const findIndexOf = c.findIndex((f) => !f.id);
+                const findIndexOf = c.findIndex((f) => !f.googleId);
                 if (findIndexOf >= 0) {
                     rowNumber = findIndexOf + 1;
                 }
@@ -101,7 +101,7 @@ function UserCheckIn({ getCheckin }: UserCheckInProps) {
 
     const getCurrentData = async () => {
         const res = await getCheckin();
-        const findData = res.find((f) => f.id === profile?.id);
+        const findData = res.find((f) => f.googleId === profile?.googleId);
 
         if (findData) {
             setCurrentUserData({ ...findData });

@@ -1,4 +1,4 @@
-export type LatLng = { lat: number; lng: number };
+import { LatLng } from 'type.global';
 
 function isWithinRadius(current: LatLng, target: LatLng, radiusInMeters: number): boolean {
     const toRad = (value: number) => (value * Math.PI) / 180;

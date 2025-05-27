@@ -1,9 +1,9 @@
 import { Route, Routes } from 'react-router-dom';
 import { Home } from './pages/Home';
-import { Layout } from 'components/Layout';
+import { Layout } from 'components/common/Layout';
 import { Member } from 'pages/Member';
 import { UserRegister } from 'pages/UserRegister';
-import { AddUser, UserList } from 'components/UserLIst';
+import { AddUser, UserList } from 'pages/UserLIst';
 
 function RoutesManagement() {
     return (

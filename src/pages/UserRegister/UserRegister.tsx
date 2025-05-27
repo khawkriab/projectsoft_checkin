@@ -15,22 +15,24 @@ import {
     SelectChangeEvent,
     Slide,
     Snackbar,
-    SnackbarCloseReason,
     TextField,
 } from '@mui/material';
-import { useGoogleLogin } from 'components/GoogleLoginProvider';
+import { db, signInWithGoogleGapi } from 'components/common/firebase/firebaseInitialize';
+import { useGoogleLogin } from 'components/common/GoogleLoginProvider';
+import { addDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { Profile } from 'type.global';
 
 function UserRegister() {
-    const { profile, updateUser, auth2 } = useGoogleLogin();
+    const { profile, auth2 } = useGoogleLogin();
     //
     const [open, setOpen] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isRegistered, setIsRegistered] = useState(true);
     const [formRegister, setFormRegister] = useState<Profile>({
         email: '',
         fullName: '',
-        id: '',
+        googleId: '',
         name: '',
         jobPosition: '',
         employmentType: '',
@@ -41,9 +43,13 @@ function UserRegister() {
     //
     const onSubmit = async (e: React.ChangeEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (formRegister.sheetRowNumber && auth2) {
+        // if (formRegister.sheetRowNumber && auth2 && profile?.token) {
+        if (profile?.token) {
             setIsLoading(true);
-            await updateUser(auth2, formRegister, formRegister.sheetRowNumber);
+            await signInWithGoogleGapi(profile.token);
+            await addDoc(collection(db, 'usersRegister'), formRegister);
+            await getDataCurrentUser();
+            // await updateUser(auth2, formRegister, formRegister.sheetRowNumber);
             setIsLoading(false);
             setOpen(true);
         }
@@ -52,17 +58,31 @@ function UserRegister() {
         setFormRegister((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     };
 
-    const handleClose = (event?: React.SyntheticEvent | Event, reason?: SnackbarCloseReason) => {
-        if (reason === 'clickaway') {
-            return;
-        }
+    const getDataCurrentUser = async () => {
+        if (profile) {
+            const usersRef = collection(db, 'usersRegister');
+            const q = query(usersRef, where('googleId', '==', profile.googleId));
 
-        setOpen(false);
+            const querySnapshot = await getDocs(q);
+
+            const matchedUsers = querySnapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            }));
+            if (matchedUsers.length > 0) {
+                setFormRegister((prev) => ({ ...prev, ...matchedUsers[0] }));
+            } else {
+                // prev data from google account
+                setFormRegister((prev) => ({ ...prev, ...profile }));
+            }
+            setIsRegistered(matchedUsers.length > 0);
+            setIsLoading(false);
+        }
     };
 
     useEffect(() => {
         if (profile) {
-            setFormRegister((prev) => ({ ...prev, ...profile }));
+            getDataCurrentUser();
         }
     }, [JSON.stringify(profile)]);
     //
@@ -174,17 +194,19 @@ function UserRegister() {
                         </Grid>
                     </Grid>
                     {/* footer */}
-                    <Box
-                        sx={{
-                            width: '100%',
-                            textAlign: 'right',
-                            marginTop: 6,
-                        }}
-                    >
-                        <Button loading={isLoading} type='submit' variant='contained' color='primary'>
-                            Register
-                        </Button>
-                    </Box>
+                    {!isRegistered && (
+                        <Box
+                            sx={{
+                                width: '100%',
+                                textAlign: 'right',
+                                marginTop: 6,
+                            }}
+                        >
+                            <Button loading={isLoading} type='submit' variant='contained' color='primary'>
+                                Register
+                            </Button>
+                        </Box>
+                    )}
                 </Box>
             </Box>
             <Snackbar
@@ -192,9 +214,9 @@ function UserRegister() {
                 slots={{ transition: Slide }}
                 open={open}
                 autoHideDuration={6000}
-                onClose={handleClose}
+                onClose={() => setOpen(false)}
             >
-                <Alert onClose={handleClose} severity='success' variant='filled' sx={{ width: '100%' }}>
+                <Alert onClose={() => setOpen(false)} severity='success' variant='filled' sx={{ width: '100%' }}>
                     User registered success!
                 </Alert>
             </Snackbar>

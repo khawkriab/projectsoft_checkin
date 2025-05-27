@@ -1,6 +1,6 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 import { initializeFirestore } from 'firebase/firestore';
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -25,3 +25,8 @@ export const auth = getAuth(app);
 export const db = initializeFirestore(app, {
     experimentalForceLongPolling: true,
 });
+export const signInWithGoogleGapi = async (idToken: string) => {
+    const credential = GoogleAuthProvider.credential(idToken);
+    const result = await signInWithCredential(auth, credential);
+    console.log('Signed in Firebase as:', result.user.email);
+};

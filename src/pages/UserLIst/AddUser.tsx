@@ -1,7 +1,7 @@
 // src/components/AddUser.tsx
 import React, { useState } from 'react';
 import { addDoc, collection } from 'firebase/firestore';
-import { db } from '../firebase/firebaseInitialize';
+import { db } from 'components/common/firebase/firebaseInitialize';
 
 export interface User {
     name: string;

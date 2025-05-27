@@ -18,7 +18,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { getCellRange, getColumnLetter } from 'helper/getColumnLetter';
 import { useEffect, useRef, useState } from 'react';
-import { useGoogleLogin } from 'components/GoogleLoginProvider';
+import { useGoogleLogin } from 'components/common/GoogleLoginProvider';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import { EmployeeData, SheetsDate } from 'pages/Home/Home';
@@ -135,7 +135,7 @@ function UpdateUserCheckIn({ dateList = [], employeeList = [], afterUndate = () 
         updateSheets(updateSheetsData);
     };
     const onApprove = (data: UserCheckInList) => {
-        const indexOf = checkinList.findIndex((f) => f.id === data.id);
+        const indexOf = checkinList.findIndex((f) => f.googleId === data.googleId);
         updateCheckin(
             {
                 row: updateSheetsData.row,
@@ -157,7 +157,7 @@ function UpdateUserCheckIn({ dateList = [], employeeList = [], afterUndate = () 
         const res = await getCheckin();
 
         const m: UserCheckInList[] = res.map((m) => {
-            const findData = employeeList.find((f) => f.id === m.id);
+            const findData = employeeList.find((f) => f.googleId === m.googleId);
 
             return { ...m, ...findData } as UserCheckInList;
         });
@@ -270,7 +270,7 @@ function UpdateUserCheckIn({ dateList = [], employeeList = [], afterUndate = () 
                 {checkinList
                     .filter((f) => f.status === '99')
                     .map((c) => (
-                        <Box key={c.id} sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, marginBottom: 2 }}>
+                        <Box key={c.googleId} sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, marginBottom: 2 }}>
                             <Box>ชื่อ: {c.name}</Box>
                             <Box>เวลาเข้างาน: {dayjs(Number(c.time)).format('DD-MM-YYYY HH:mm')}</Box>
                             <Button size='small' loading={updating} variant='contained' color='success' onClick={() => onApprove(c)}>

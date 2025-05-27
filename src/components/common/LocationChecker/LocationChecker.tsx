@@ -1,6 +1,7 @@
 import { GoogleMap, Marker, useLoadScript } from '@react-google-maps/api';
-import isWithinRadius, { LatLng } from 'helper/checkDistance';
+import isWithinRadius from 'helper/checkDistance';
 import { useEffect, useState } from 'react';
+import { LatLng } from 'type.global';
 
 const libraries = ['places'];
 const mapContainerStyle = {

@@ -17,7 +17,7 @@ export type EmployeeInfo = {
 
 export type Profile = EmployeeInfo &
     SheetInfo & {
-        id: string;
+        googleId: string;
         token?: string;
         fullName: string;
         profileURL?: string;
@@ -26,11 +26,16 @@ export type Profile = EmployeeInfo &
     };
 
 export type UserCheckInData = {
-    id: string;
+    name?: string;
+    googleId: string;
     time: string;
     remark: string;
     reason: string;
     device: string;
-    location: string;
-    status: string;
+    latlng: string | LatLng;
+    status: string | number;
+    createdAt?: Date;
+    createdBy?: string | number;
 };
+
+export type LatLng = { lat: number; lng: number };

@@ -1,7 +1,7 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
-import { useGoogleLogin } from 'components/GoogleLoginProvider';
+import { useGoogleLogin } from 'components/common/GoogleLoginProvider';
 import { getCellRange, getColumnLetter } from 'helper/getColumnLetter';
 import {
     Alert,
@@ -23,25 +23,20 @@ import {
     TableRow,
     TextField,
 } from '@mui/material';
-import { SelectChangeEvent } from '@mui/material/Select/SelectInput';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/MuiTable';
-import { deviceDetect, isAndroid, isIOS, isMobile } from 'react-device-detect';
+import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/MuiTable';
 import { SheetData, UserCheckInData } from 'type.global';
-import utc from 'dayjs/plugin/utc';
-import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { UpdateUserCheckIn } from 'components/UpdateUserCheckIn';
 import { UserCheckIn } from 'components/UserCheckIn';
 import useLocation from 'hooks/useLocation';
-import { LocationChecker } from 'components/LocationChecker';
+import { LocationChecker } from 'components/common/LocationChecker';
+import utc from 'dayjs/plugin/utc';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 
 dayjs.extend(customParseFormat);
 dayjs.extend(utc);
 
 type UserCheckinData = {
-    id: string;
+    googleId: string;
     date: string;
     time: string;
     name: string;
@@ -57,7 +52,7 @@ type CheckinData = {
 };
 export type SheetsDate = { date: string; sheetsRowNumber: string };
 export type EmployeeData = {
-    id: string;
+    googleId: string;
     name: string;
     sheetsColumn: string;
     sheetsColumnNumber: string;
@@ -105,7 +100,7 @@ function Home() {
                     if (!col) return;
 
                     _employeeList.push({
-                        id: col.includes('(') ? col.substring(col.indexOf('(') + 1, col.length - 1) : '',
+                        googleId: col.includes('(') ? col.substring(col.indexOf('(') + 1, col.length - 1) : '',
                         name: col.includes('(') ? col.substring(0, col.indexOf('(')) : col,
                         sheetsColumn: getColumnLetter(index + 1),
                         sheetsColumnNumber: `${index + 1}`,
@@ -141,7 +136,7 @@ function Home() {
                         }
 
                         n[indexF].data.push({
-                            id: e.id,
+                            googleId: e.googleId,
                             name: e.name,
                             date: f[0],
                             time: f[indexE * 3 + 1],
@@ -184,12 +179,12 @@ function Home() {
                 });
 
                 const n: UserCheckInData[] = normalizedData.slice(1).map((m) => ({
-                    id: m[0],
+                    googleId: m[0],
                     time: m[1],
                     remark: m[2],
                     reason: m[3],
                     device: m[4],
-                    location: m[5],
+                    latlng: m[5],
                     status: m[6],
                 }));
 
@@ -213,7 +208,7 @@ function Home() {
 
     return (
         <div>
-            <LocationChecker />
+            {/* <LocationChecker /> */}
             <Box sx={{ marginBottom: 4 }}>
                 {authLoading ? (
                     <div>Loading...</div>
@@ -229,7 +224,7 @@ function Home() {
                                 />
                             )}
                             {/* {profile?.id && isAllowLocation && (isIOS || isAndroid) && isMobile && <UserCheckIn getCheckin={getCheckin} />} */}
-                            {profile?.id && <UserCheckIn getCheckin={getCheckin} />}
+                            {profile?.googleId && <UserCheckIn getCheckin={getCheckin} />}
                         </>
                     )
                 )}

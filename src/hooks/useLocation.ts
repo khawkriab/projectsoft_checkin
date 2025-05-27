@@ -22,7 +22,7 @@ function logError(error: GeolocationPositionError) {
 function useLocation(continueAfterTimeout = true) {
     const [locationData, setLocationData] = useState({ isAllowLocation: false, lat: 0, lng: 0 });
     //
-    const getLocation = (continueAfterTimeout: boolean) => {
+    const getLocation = (continueAfterTimeout?: boolean) => {
         return new Promise<{ isAllowLocation: boolean; lat: number; lng: number }>((resolve) => {
             let hasAllowAfterTimeout = false;
             let result = { isAllowLocation: false, lat: 0, lng: 0 };
@@ -71,7 +71,7 @@ function useLocation(continueAfterTimeout = true) {
         init();
     }, []);
 
-    return locationData;
+    return { ...locationData, getLocation: getLocation };
 }
 
 export default useLocation;

@@ -15,8 +15,13 @@ export type EmployeeInfo = {
     employmentType?: string;
 };
 
+export type FirebaseQuery = {
+    id?: string;
+};
+
 export type Profile = EmployeeInfo &
-    SheetInfo & {
+    SheetInfo &
+    FirebaseQuery & {
         googleId: string;
         token?: string;
         fullName: string;

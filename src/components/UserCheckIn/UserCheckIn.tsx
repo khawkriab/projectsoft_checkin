@@ -1,20 +1,14 @@
 import { Alert, Box, Button, Grid, Slide, Snackbar, TextField } from '@mui/material';
-import axios from 'axios';
-import { db, signInWithGoogleGapi } from 'components/common/firebase/firebaseInitialize';
+import { addUserCheckinToday, getCheckinToday } from 'components/common/firebase/firebaseApi/checkinApi';
 import { useGoogleLogin } from 'components/common/GoogleLoginProvider';
 import dayjs from 'dayjs';
-import { addDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import useLocation from 'hooks/useLocation';
 import { useEffect, useState } from 'react';
 import { deviceDetect } from 'react-device-detect';
 import { UserCheckInData } from 'type.global';
 
-type UserCheckInProps = {
-    getCheckin: () => Promise<UserCheckInData[]>;
-};
-
-function UserCheckIn({ getCheckin }: UserCheckInProps) {
-    const { profile, auth2 } = useGoogleLogin();
+function UserCheckIn() {
+    const { profile } = useGoogleLogin();
     const { lat, lng } = useLocation();
     //
     const [updating, setUpdating] = useState(false);
@@ -23,75 +17,10 @@ function UserCheckIn({ getCheckin }: UserCheckInProps) {
     const [currentUserData, setCurrentUserData] = useState<UserCheckInData | null | undefined>(undefined);
     //
     const onCheckin = async (remark?: string) => {
-        if (auth2 && profile?.token) {
-            const user = auth2.currentUser.get();
-            const token = user.getAuthResponse().access_token;
-            const sheetsId = '1fMqyQw-JCm6ykyOgnfP--CtldfxAG27BNaegLjcrNK4';
-            const endpoint = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values:batchUpdate`;
-
+        if (profile?.token) {
             const now = dayjs().utc().valueOf();
 
-            const c = await getCheckin();
-            let rowNumber = c.length + 2; // add 2 because have header and data current
-
-            // find row no data
-            if (c.length > 1) {
-                const findIndexOf = c.findIndex((f) => !f.googleId);
-                if (findIndexOf >= 0) {
-                    rowNumber = findIndexOf + 1;
-                }
-            }
-
-            const requestBody = {
-                valueInputOption: 'USER_ENTERED', // or "RAW"
-                data: [
-                    {
-                        range: `Today!A${rowNumber}`,
-                        values: [[user.getId()]],
-                    },
-                    {
-                        range: `Today!B${rowNumber}`,
-                        values: [[`${now}`]],
-                    },
-                    {
-                        range: `Today!C${rowNumber}`,
-                        values: [[remark ?? '']],
-                    },
-                    {
-                        range: `Today!D${rowNumber}`,
-                        values: [[reason]],
-                    },
-                    {
-                        range: `Today!E${rowNumber}`,
-                        values: [[JSON.stringify(deviceDetect(undefined))]],
-                    },
-                    {
-                        range: `Today!F${rowNumber}`,
-                        values: [[`[${lat},${lng}]`]],
-                    },
-                    {
-                        range: `Today!G${rowNumber}`,
-                        values: [['99']],
-                    },
-                ],
-            };
-
             setUpdating(true);
-            // const response = await axios(endpoint, {
-            //     method: 'POST',
-            //     headers: {
-            //         Authorization: `Bearer ${token}`,
-            //         'Content-Type': 'application/json',
-            //     },
-            //     data: JSON.stringify(requestBody),
-            // });
-
-            // if (response.status === 200) {
-            //     await getCheckinTody();
-            //     setOpen(true);
-            // } else {
-            //     alert('Error updating the sheet');
-            // }
 
             const payload: UserCheckInData = {
                 googleId: profile?.googleId,
@@ -103,9 +32,8 @@ function UserCheckIn({ getCheckin }: UserCheckInProps) {
                 latlng: { lat, lng },
                 status: 99,
             };
-            await signInWithGoogleGapi(profile.token);
-            await addDoc(collection(db, 'checkinToday'), payload);
-            await getCheckinTody();
+            await addUserCheckinToday(profile.token, payload);
+            await getUserCheckinToday();
             setOpen(true);
 
             setUpdating(false);
@@ -117,28 +45,19 @@ function UserCheckIn({ getCheckin }: UserCheckInProps) {
         onCheckin('WFH');
     };
 
-    const getCheckinTody = async () => {
-        // const res = await getCheckin();
-        // const findData = res.find((f) => f.googleId === profile?.googleId);
-        const usersRef = collection(db, 'checkinToday');
-        const q = query(usersRef, where('googleId', '==', profile?.googleId));
+    const getUserCheckinToday = async () => {
+        try {
+            const res = await getCheckinToday(profile?.googleId ?? '');
 
-        const querySnapshot = await getDocs(q);
-
-        const matchedUsers = querySnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...(doc.data() as UserCheckInData),
-        }));
-
-        if (matchedUsers.length > 0) {
-            setCurrentUserData({ ...matchedUsers[0] });
-        } else {
+            setCurrentUserData({ ...res });
+        } catch (error) {
+            console.error('error:', error);
             setCurrentUserData(null);
         }
     };
 
     useEffect(() => {
-        getCheckinTody();
+        getUserCheckinToday();
     }, []);
     //
     return (

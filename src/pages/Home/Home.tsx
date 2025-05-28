@@ -224,7 +224,7 @@ function Home() {
                                 />
                             )}
                             {/* {profile?.id && isAllowLocation && (isIOS || isAndroid) && isMobile && <UserCheckIn getCheckin={getCheckin} />} */}
-                            {profile?.googleId && <UserCheckIn getCheckin={getCheckin} />}
+                            {profile?.googleId && <UserCheckIn />}
                         </>
                     )
                 )}

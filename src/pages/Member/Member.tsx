@@ -1,12 +1,11 @@
-import { Box, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
-import { db, signInWithGoogleGapi } from 'components/common/firebase/firebaseInitialize';
+import { Box, Button, Paper, Table, TableBody, TableContainer, TableHead, TableRow } from '@mui/material';
+import { addUsersList, getUsersList, getUsersRegisterList } from 'components/common/firebase/firebaseApi/checkinApi';
 import { useGoogleLogin } from 'components/common/GoogleLoginProvider';
 import { TableBodyCell, TableHeadCell } from 'components/common/MuiTable';
-import { addDoc, collection, deleteDoc, doc, getDocs } from 'firebase/firestore';
 import { useEffect, useMemo, useState } from 'react';
 import { Profile } from 'type.global';
 
-type MemberType = Profile & { status?: 'WAITING' | 'APPROVE'; id: string };
+type MemberType = Profile;
 
 function Member() {
     const { profile } = useGoogleLogin();
@@ -15,39 +14,25 @@ function Member() {
     const onApprove = async (user: MemberType) => {
         if (!profile?.token) return;
 
-        await signInWithGoogleGapi(profile.token);
-        await addDoc(collection(db, 'usersList'), {
-            googleId: user.googleId,
-            fullName: user.fullName,
-            profileURL: user.profileURL,
-            email: user.email,
-            role: user.role,
-            name: user.name,
-            phoneNumber: user.phoneNumber,
-            jobPosition: user.jobPosition,
-            employmentType: user.employmentType,
-        });
-        await deleteDoc(doc(db, 'usersRegister', user.id));
+        await addUsersList(profile.token, user);
         getUserList();
     };
     const getUserList = async () => {
         // const arr = await getUserList();
         // setMemberList([...arr]);
-        const querySnapshot = await getDocs(collection(db, 'usersList'));
-        const usersData: MemberType[] = querySnapshot.docs.map((doc) => ({
-            ...(doc.data() as MemberType),
-            id: doc.id,
+        const res = await getUsersList();
+        const usersData: MemberType[] = res.map((doc) => ({
+            ...doc,
             status: 'APPROVE',
         }));
 
         setMemberList([...usersData]);
 
         if (profile?.role === 'ADMIN') {
-            const queryRegist = await getDocs(collection(db, 'usersRegister'));
-            const usersRegist: MemberType[] = queryRegist.docs.map((doc) => ({
-                ...(doc.data() as MemberType),
+            const queryRegist = await getUsersRegisterList();
+            const usersRegist: MemberType[] = queryRegist.map((doc) => ({
+                ...doc,
                 status: 'WAITING',
-                id: doc.id,
             }));
 
             setMemberList((prev) => [...prev, ...usersRegist]);

@@ -17,14 +17,13 @@ import {
     Snackbar,
     TextField,
 } from '@mui/material';
-import { db, signInWithGoogleGapi } from 'components/common/firebase/firebaseInitialize';
+import { addUsersRegister, getUsersRegister } from 'components/common/firebase/firebaseApi/checkinApi';
 import { useGoogleLogin } from 'components/common/GoogleLoginProvider';
-import { addDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { Profile } from 'type.global';
 
 function UserRegister() {
-    const { profile, auth2 } = useGoogleLogin();
+    const { profile } = useGoogleLogin();
     //
     const [open, setOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -43,13 +42,10 @@ function UserRegister() {
     //
     const onSubmit = async (e: React.ChangeEvent<HTMLFormElement>) => {
         e.preventDefault();
-        // if (formRegister.sheetRowNumber && auth2 && profile?.token) {
         if (profile?.token) {
             setIsLoading(true);
-            await signInWithGoogleGapi(profile.token);
-            await addDoc(collection(db, 'usersRegister'), formRegister);
+            await addUsersRegister(profile.token, formRegister);
             await getDataCurrentUser();
-            // await updateUser(auth2, formRegister, formRegister.sheetRowNumber);
             setIsLoading(false);
             setOpen(true);
         }
@@ -60,22 +56,17 @@ function UserRegister() {
 
     const getDataCurrentUser = async () => {
         if (profile) {
-            const usersRef = collection(db, 'usersRegister');
-            const q = query(usersRef, where('googleId', '==', profile.googleId));
+            try {
+                const res = await getUsersRegister(profile.googleId);
 
-            const querySnapshot = await getDocs(q);
-
-            const matchedUsers = querySnapshot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-            }));
-            if (matchedUsers.length > 0) {
-                setFormRegister((prev) => ({ ...prev, ...matchedUsers[0] }));
-            } else {
+                setFormRegister((prev) => ({ ...prev, ...res }));
+                setIsRegistered(true);
+            } catch (error) {
+                console.error('error:', error);
                 // prev data from google account
                 setFormRegister((prev) => ({ ...prev, ...profile }));
             }
-            setIsRegistered(matchedUsers.length > 0);
+
             setIsLoading(false);
         }
     };

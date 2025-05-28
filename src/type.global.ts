@@ -23,6 +23,7 @@ export type Profile = EmployeeInfo &
         profileURL?: string;
         email: string;
         role: 'ADMIN' | 'STAFF' | 'USER';
+        status?: 'APPROVE' | 'WAITING' | 'NO_REGIST';
     };
 
 export type UserCheckInData = {

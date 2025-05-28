@@ -1,7 +1,9 @@
 import axios from 'axios';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { loadAuth2, loadGapiInsideDOM } from 'gapi-script';
 import { createContext, useEffect, useState } from 'react';
 import { Profile, SheetData } from 'type.global';
+import { db } from '../firebase/firebaseInitialize';
 
 type GoogleLoginContextProps = {
     auth2: gapi.auth2.GoogleAuthBase | null;
@@ -95,11 +97,25 @@ function GoogleLoginProvider({ children }: { children: React.ReactNode }) {
     const getSetProfile = async (auth2: gapi.auth2.GoogleAuthBase) => {
         try {
             if (auth2.isSignedIn.get()) {
-                const userList = await getUserList();
                 const googleUser = auth2.currentUser.get();
                 const profile = googleUser.getBasicProfile();
+                const usersRef = collection(db, 'usersList');
+                const q = query(usersRef, where('googleId', '==', profile.getId()));
+
+                const querySnapshot = await getDocs(q);
+
+                const matchedUsers = querySnapshot.docs.map((doc) => ({
+                    id: doc.id,
+                    ...(doc.data() as Profile),
+                }));
+
+                // console.log('matchedUsers:', matchedUsers);
+
+                // const userList = await getUserList();
+                // const googleUser = auth2.currentUser.get();
+                // const profile = googleUser.getBasicProfile();
                 const idToken = googleUser.getAuthResponse().id_token;
-                const findUser = userList.find((f) => f.googleId === profile.getId());
+                // const findUser = userList.find((f) => f.googleId === profile.getId());
                 let _profile: Profile = {
                     googleId: profile.getId(),
                     token: idToken,
@@ -107,14 +123,15 @@ function GoogleLoginProvider({ children }: { children: React.ReactNode }) {
                     profileURL: profile.getImageUrl(),
                     email: profile.getEmail(),
                     role: 'USER',
+                    status: 'NO_REGIST',
                 };
-                if (findUser) {
-                    setProfile({ ..._profile, ...findUser, token: _profile.token });
+                if (matchedUsers.length > 0) {
+                    setProfile({ ..._profile, ...matchedUsers[0], status: 'APPROVE', token: _profile.token });
                 } else {
-                    const rowCanUpdate = userList.filter((f) => !f.googleId);
+                    // const rowCanUpdate = userList.filter((f) => !f.googleId);
 
                     setProfile({ ..._profile });
-                    updateUser(auth2, _profile, rowCanUpdate[0].sheetRowNumber ?? 0);
+                    // updateUser(auth2, _profile, rowCanUpdate[0].sheetRowNumber ?? 0);
                 }
             }
 

@@ -1,7 +1,9 @@
 import { Alert, Box, Button, Grid, Slide, Snackbar, TextField } from '@mui/material';
 import axios from 'axios';
+import { db, signInWithGoogleGapi } from 'components/common/firebase/firebaseInitialize';
 import { useGoogleLogin } from 'components/common/GoogleLoginProvider';
 import dayjs from 'dayjs';
+import { addDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import useLocation from 'hooks/useLocation';
 import { useEffect, useState } from 'react';
 import { deviceDetect } from 'react-device-detect';
@@ -12,7 +14,7 @@ type UserCheckInProps = {
 };
 
 function UserCheckIn({ getCheckin }: UserCheckInProps) {
-    const { profile, auth2, authLoading, isSignedIn } = useGoogleLogin();
+    const { profile, auth2 } = useGoogleLogin();
     const { lat, lng } = useLocation();
     //
     const [updating, setUpdating] = useState(false);
@@ -21,7 +23,7 @@ function UserCheckIn({ getCheckin }: UserCheckInProps) {
     const [currentUserData, setCurrentUserData] = useState<UserCheckInData | null | undefined>(undefined);
     //
     const onCheckin = async (remark?: string) => {
-        if (auth2) {
+        if (auth2 && profile?.token) {
             const user = auth2.currentUser.get();
             const token = user.getAuthResponse().access_token;
             const sheetsId = '1fMqyQw-JCm6ykyOgnfP--CtldfxAG27BNaegLjcrNK4';
@@ -75,21 +77,37 @@ function UserCheckIn({ getCheckin }: UserCheckInProps) {
             };
 
             setUpdating(true);
-            const response = await axios(endpoint, {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                data: JSON.stringify(requestBody),
-            });
+            // const response = await axios(endpoint, {
+            //     method: 'POST',
+            //     headers: {
+            //         Authorization: `Bearer ${token}`,
+            //         'Content-Type': 'application/json',
+            //     },
+            //     data: JSON.stringify(requestBody),
+            // });
 
-            if (response.status === 200) {
-                await getCurrentData();
-                setOpen(true);
-            } else {
-                alert('Error updating the sheet');
-            }
+            // if (response.status === 200) {
+            //     await getCheckinTody();
+            //     setOpen(true);
+            // } else {
+            //     alert('Error updating the sheet');
+            // }
+
+            const payload: UserCheckInData = {
+                googleId: profile?.googleId,
+                name: profile?.name,
+                time: String(now),
+                remark: remark ?? '',
+                reason: reason,
+                device: deviceDetect(undefined),
+                latlng: { lat, lng },
+                status: 99,
+            };
+            await signInWithGoogleGapi(profile.token);
+            await addDoc(collection(db, 'checkinToday'), payload);
+            await getCheckinTody();
+            setOpen(true);
+
             setUpdating(false);
         }
     };
@@ -99,19 +117,28 @@ function UserCheckIn({ getCheckin }: UserCheckInProps) {
         onCheckin('WFH');
     };
 
-    const getCurrentData = async () => {
-        const res = await getCheckin();
-        const findData = res.find((f) => f.googleId === profile?.googleId);
+    const getCheckinTody = async () => {
+        // const res = await getCheckin();
+        // const findData = res.find((f) => f.googleId === profile?.googleId);
+        const usersRef = collection(db, 'checkinToday');
+        const q = query(usersRef, where('googleId', '==', profile?.googleId));
 
-        if (findData) {
-            setCurrentUserData({ ...findData });
+        const querySnapshot = await getDocs(q);
+
+        const matchedUsers = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...(doc.data() as UserCheckInData),
+        }));
+
+        if (matchedUsers.length > 0) {
+            setCurrentUserData({ ...matchedUsers[0] });
         } else {
             setCurrentUserData(null);
         }
     };
 
     useEffect(() => {
-        getCurrentData();
+        getCheckinTody();
     }, []);
     //
     return (
@@ -136,10 +163,10 @@ function UserCheckIn({ getCheckin }: UserCheckInProps) {
                                 padding: '2px 4px',
                                 borderRadius: 1,
                                 color: theme.palette.success.contrastText,
-                                backgroundColor: currentUserData.status === '99' ? '#ff6f00' : theme.palette.success.main,
+                                backgroundColor: Number(currentUserData.status) === 99 ? '#ff6f00' : theme.palette.success.main,
                             })}
                         >
-                            สถานะ: {currentUserData.status === '99' ? 'รอ' : 'อนุมัติแล้ว'}
+                            สถานะ: {Number(currentUserData.status) === 99 ? 'รอ' : 'อนุมัติแล้ว'}
                         </Box>
                     </>
                 )}

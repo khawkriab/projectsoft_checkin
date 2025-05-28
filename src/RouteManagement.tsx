@@ -4,6 +4,7 @@ import { Layout } from 'components/common/Layout';
 import { Member } from 'pages/Member';
 import { UserRegister } from 'pages/UserRegister';
 import { AddUser, UserList } from 'pages/UserLIst';
+import { CreateMonthCalendar } from 'pages/CreateMonthCalendar';
 
 function RoutesManagement() {
     return (
@@ -14,6 +15,7 @@ function RoutesManagement() {
                 <Route path='/register' element={<UserRegister />} />
                 <Route path='/add-user' element={<AddUser />} />
                 <Route path='/user-list' element={<UserList />} />
+                <Route path='/create-calendar' element={<CreateMonthCalendar />} />
             </Route>
         </Routes>
     );

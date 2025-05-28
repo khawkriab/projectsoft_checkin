@@ -119,3 +119,13 @@ export const addUserCheckinToday = (googleToken: string, payload: UserCheckInDat
         resolve('success');
     });
 };
+export const createCheckinCalendar = (googleToken: string, payload: { date: string; userCheckinList: [] }[]) => {
+    return new Promise<string>(async (resolve, reject) => {
+        await signInWithGoogleGapi(googleToken);
+
+        const all = payload.map((d) => addDoc(collection(db, 'checkinCalendar'), d));
+        await Promise.all(all);
+
+        resolve('success');
+    });
+};

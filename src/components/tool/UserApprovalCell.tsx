@@ -18,7 +18,8 @@ dayjs.extend(customParseFormat);
 interface Props {
   date: string;
   user: UserCheckIn;
-  handleApprove: (checkinID: string | null, status: number) => void;
+  ApproveWork: (checkInId: string | null, status: number) => void;
+  ApproveLeave: (ApproveLeave: string | null, status: number) => void;
   roleId: GoogleLoginContextProps["roleId"];
 }
 const leaveTypeDescription = {
@@ -33,8 +34,15 @@ const leaveTimeDescription = {
   3: "ลาทั้งวัน",
 };
 
-const UserApprovalCell = ({ date, user, handleApprove, roleId }: Props) => {
+const UserApprovalCell = ({
+  date,
+  user,
+  ApproveWork,
+  ApproveLeave,
+  roleId,
+}: Props) => {
   const isAdmin = roleId === 1;
+  const isStaff = roleId === 2;
   const isUser = roleId === 3;
 
   if (user.checkinTime === null) {
@@ -58,18 +66,39 @@ const UserApprovalCell = ({ date, user, handleApprove, roleId }: Props) => {
               {user.checkInData?.remark}
             </Typography>
           )}
-          {isAdmin && user.checkInData?.checkInStatus === 99 && (
-            <Stack direction="row" spacing={2}>
+          {(isAdmin || isStaff) && user.checkInData?.checkInStatus === 99 && (
+            <Stack direction="row" spacing={1}>
               {/* button */}
-              <Button size="small" variant="contained" color="success">
+
+              <Button
+                size="small"
+                variant="contained"
+                color="success"
+                onClick={() => ApproveWork(user.checkInData.checkInId, 1)}
+              >
                 Approve
               </Button>
-              <Button size="small" variant="contained" color="error">
+
+              <Button
+                size="small"
+                variant="contained"
+                color="error"
+                onClick={() => ApproveWork(user.checkInData.checkInId, 0)}
+              >
                 Reject
               </Button>
-              <Button size="small" variant="contained" color="warning">
-                Location
-              </Button>
+
+              {dayjs().isSame(dayjs(date, "YYYY/MM/DD"), "day") && (
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="info"
+                  component={Link}
+                  to={`/Map?userId=${user.userId}`}
+                >
+                  Location
+                </Button>
+              )}
             </Stack>
           )}
         </Box>
@@ -95,18 +124,37 @@ const UserApprovalCell = ({ date, user, handleApprove, roleId }: Props) => {
             {"เหตุผล: "}
             {user.leaveData?.remark}
           </Typography>
-          {isAdmin && user.leaveData?.leaveStatus === 99 && (
-            <Stack direction="row" spacing={2}>
+          {(isAdmin || isStaff) && user.leaveData?.leaveStatus === 99 && (
+            <Stack direction="row" spacing={1}>
               {/* button */}
-              <Button size="small" variant="contained" color="success">
+              <Button
+                size="small"
+                variant="contained"
+                color="success"
+                onClick={() => ApproveLeave(user.leaveData.leaveId, 1)}
+              >
                 Approve
               </Button>
-              <Button size="small" variant="contained" color="error">
+              <Button
+                size="small"
+                variant="contained"
+                color="error"
+                onClick={() => ApproveLeave(user.leaveData.leaveId, 0)}
+              >
                 Reject
               </Button>
-              <Button size="small" variant="contained" color="warning">
-                Location
-              </Button>
+
+              {dayjs().isSame(dayjs(date, "YYYY-MM-DD"), "day") && (
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="warning"
+                  component={Link}
+                  to={`/Map?userId=${user.userId}`}
+                >
+                  Location
+                </Button>
+              )}
             </Stack>
           )}
         </Box>

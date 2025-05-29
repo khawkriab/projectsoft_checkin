@@ -23,6 +23,7 @@ import { useFetcher } from "hooks/useFetcher";
 import TimeCurrent from "../../components/tool/TimeCurrent";
 import UserApprovalCell from "../../components/tool/UserApprovalCell";
 import { GoogleLoginContext } from "../../components/GoogleLoginProvider/GoogleLoginProvider";
+import LocationChecker from "components/tool/LocationChecker";
 
 dayjs.locale("th");
 
@@ -68,39 +69,12 @@ type LocationData = {
   allowLocation: boolean;
 };
 
-// Custom Table Cell
-function CustomTableCell({ children, ...arg }: TableCellProps) {
-  return (
-    <TableCell {...arg} sx={{ borderLeft: "1px solid #dddddd", ...arg.sx }}>
-      {children}
-    </TableCell>
-  );
-}
-
-// Custom Table Header Cell
-function CustomTableCellHeader({ children, ...arg }: TableCellProps) {
-  return (
-    <TableCell
-      {...arg}
-      sx={{
-        borderLeft: "1px solid #dddddd",
-        fontWeight: 500,
-        fontSize: 24,
-        [`&.${tableCellClasses.head}`]: {
-          backgroundColor: "secondary.main",
-        },
-        ...arg.sx,
-      }}
-    >
-      {children}
-    </TableCell>
-  );
-}
-
 function Checkin() {
   const { roleId } = useContext(GoogleLoginContext);
-  const { profile } = useGoogleLogin();
+  const { profile, signinStatus } = useGoogleLogin();
+  console.log("signinStatus:", signinStatus);
   const { POST } = useFetcher();
+  const [inRange, setInRange] = useState(false);
 
   const [attendanceStatus, setattendanceStatus] = useState();
   const [loading, setLoading] = useState(true);
@@ -117,36 +91,9 @@ function Checkin() {
 
   useEffect(() => {
     fetchUsers();
-
-    if (!navigator.geolocation) {
-      setLocationData((prev) => ({
-        ...prev,
-        errMassage: "เบราว์เซอร์ไม่รองรับการใช้งานตำแหน่ง",
-        allowLocation: false,
-      }));
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocationData({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-          errMassage: "",
-          allowLocation: true,
-        });
-      },
-      (error) => {
-        setLocationData((prev) => ({
-          ...prev,
-          errMassage: error.message,
-          allowLocation: false,
-        }));
-      }
-    );
   }, []);
 
-  const handleApprove = (checkInId: string | null, approved_status: number) => {
+  const ApproveWork = (checkInId: string | null, approved_status: number) => {
     POST(
       "/approve/checkin",
       {
@@ -156,6 +103,24 @@ function Checkin() {
       {
         headers: {
           "user-id": checkInId ?? "",
+        },
+      }
+    ).catch((err) => {
+      console.error("Approve Error:", err?.response?.data || err.message);
+    });
+    fetchUsers();
+  };
+
+  const ApproveLeave = (leaveId: string | null, approved_status: number) => {
+    POST(
+      "/approve/leaverequests",
+      {
+        leaveId,
+        approved_status,
+      },
+      {
+        headers: {
+          "user-id": leaveId ?? "",
         },
       }
     ).catch((err) => {
@@ -212,6 +177,23 @@ function Checkin() {
         p: 3,
       }}
     >
+      <LocationChecker
+        onLocationUpdate={({
+          isWithin,
+          location,
+          allowLocation,
+          errMassage,
+        }) => {
+          setInRange(isWithin);
+          setLocationData({
+            lat: location.lat,
+            lng: location.lng,
+            allowLocation,
+            errMassage,
+          });
+        }}
+      />
+
       {/* Check-in Panel */}
       <Grid container spacing={3} marginBottom={4}>
         <Grid size={{ xs: 12, md: 6 }}>
@@ -239,7 +221,8 @@ function Checkin() {
                 color="primary"
                 fullWidth
                 onClick={() => onClickCheckin(0)}
-                disabled={!locationData.allowLocation}
+                disabled={!inRange}
+                //
                 sx={{ borderRadius: "2rem", py: 1.5, fontSize: "1rem" }}
               >
                 เช็คอินเข้างาน
@@ -249,7 +232,9 @@ function Checkin() {
               <Button
                 variant="outlined"
                 color="primary"
-                disabled={!reason || !locationData.allowLocation}
+                disabled={
+                  !reason || !locationData.allowLocation || !signinStatus
+                }
                 fullWidth
                 onClick={() => onClickCheckin(1)}
                 sx={{ borderRadius: "2rem", py: 1.5, fontSize: "1rem" }}
@@ -398,7 +383,8 @@ function Checkin() {
                       <UserApprovalCell
                         date={row.date}
                         user={user}
-                        handleApprove={handleApprove}
+                        ApproveWork={ApproveWork}
+                        ApproveLeave={ApproveLeave}
                         roleId={roleId}
                       />
                     </TableCell>

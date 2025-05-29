@@ -74,7 +74,6 @@ function Layout({ onProfileLoad }: LayoutProps) {
         }
       )
         .then((res) => {
-          console.log("Authentication success:", res);
           const roleId = res?.role_id;
           if (roleId !== undefined) {
             setRoleId(roleId);

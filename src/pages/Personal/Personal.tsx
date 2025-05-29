@@ -52,75 +52,77 @@ function Personal() {
   }, []);
 
   return (
-    <div style={{ padding: 24 }}>
-      <Box marginBottom={3}>
-        <Divider
-          textAlign="left"
-          sx={{
-            color: "#144ad0",
-            fontSize: { xs: 20, md: 28 },
-            width: "100%",
-          }}
-        >
-          Personal
-        </Divider>
-      </Box>
-      <Grid container spacing={3}>
-        {dataUser.map((user) => (
-          <Grid size={{ xs: 12, md: 6 }} key={user.userId}>
-            <Card
-              sx={{
-                display: "flex",
-                boxShadow: 3,
-                borderRadius: 3,
-                alignItems: "center",
-                bgcolor: "#f9f9f9",
-                transition: "transform 0.3s ease",
-                "&:hover": {
-                  transform: "scale(1.03)",
-                  boxShadow: 6,
-                },
-              }}
-            >
-              <CardMedia
-                component="img"
+    <Box sx={{ display: "flex", justifyContent: "center", width: "100%" }}>
+      <Box sx={{ width: "100%", maxWidth: 1400 }}>
+        <Box marginBottom={3}>
+          <Divider
+            textAlign="left"
+            sx={{
+              color: "#144ad0",
+              fontSize: { xs: 20, md: 28 },
+              width: "100%",
+            }}
+          >
+            Personal
+          </Divider>
+        </Box>
+        <Grid container spacing={3}>
+          {dataUser.map((user) => (
+            <Grid size={{ xs: 12, md: 6 }} key={user.userId}>
+              <Card
                 sx={{
-                  width: 150,
-                  height: 150,
-                  objectFit: "cover",
-                  borderRadius: "12px",
-                  margin: 1,
-                  backgroundColor: "#fff",
+                  display: "flex",
+                  boxShadow: 3,
+                  borderRadius: 3,
+                  alignItems: "center",
+                  bgcolor: "#f9f9f9",
+                  transition: "transform 0.3s ease",
+                  "&:hover": {
+                    transform: "scale(1.03)",
+                    boxShadow: 6,
+                  },
                 }}
-                image={user.userImg || logo}
-                alt={user.userNickname}
-              />
-              <CardContent sx={{ flex: 1, padding: 2 }}>
-                <Typography variant="h6" fontWeight="bold" gutterBottom>
-                  {user.userFullname}
-                </Typography>
-                <Typography
-                  variant="subtitle2"
-                  color="text.secondary"
-                  gutterBottom
-                >
-                  {user.userJobPosition} ({user.userJobStatus})
-                </Typography>
-                <Typography variant="body2" color="text.primary">
-                  <strong>Nickname:</strong> {user.userNickname}
-                </Typography>
-                <Typography variant="body2" color="text.primary">
-                  <strong>Phone:</strong> {user.userPhone}
-                </Typography>
-                <Typography variant="body2" color="text.primary">
-                  <strong>Email:</strong> {user.userEmail}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-    </div>
+              >
+                <CardMedia
+                  component="img"
+                  sx={{
+                    width: 150,
+                    height: 150,
+                    objectFit: "cover",
+                    borderRadius: "12px",
+                    margin: 1,
+                    backgroundColor: "#fff",
+                  }}
+                  image={user.userImg || logo}
+                  alt={user.userNickname}
+                />
+                <CardContent sx={{ flex: 1, padding: 2 }}>
+                  <Typography variant="h6" fontWeight="bold" gutterBottom>
+                    {user.userFullname}
+                  </Typography>
+                  <Typography
+                    variant="subtitle2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    {user.userJobPosition} ({user.userJobStatus})
+                  </Typography>
+                  <Typography variant="body2" color="text.primary">
+                    <strong>Nickname:</strong> {user.userNickname}
+                  </Typography>
+                  <Typography variant="body2" color="text.primary">
+                    <strong>Phone:</strong> {user.userPhone}
+                  </Typography>
+                  <Typography variant="body2" color="text.primary">
+                    <strong>Email:</strong> {user.userEmail}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
+    </Box>
   );
 }
 

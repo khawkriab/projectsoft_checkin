@@ -10,10 +10,8 @@ import {
     SelectChangeEvent,
     Slide,
     Snackbar,
-    SnackbarCloseReason,
     TextField,
 } from '@mui/material';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { getCellRange, getColumnLetter } from 'helper/getColumnLetter';
@@ -23,7 +21,8 @@ import axios from 'axios';
 import dayjs from 'dayjs';
 import { EmployeeData, SheetsDate } from 'pages/Home/Home';
 import { UserCheckInData } from 'type.global';
-import { DesktopTimePicker, DigitalClock, MultiSectionDigitalClock } from '@mui/x-date-pickers';
+import { DesktopTimePicker } from '@mui/x-date-pickers';
+import { getCheckinTodayList } from 'components/common/firebase/firebaseApi/checkinApi';
 
 type SheetsForm = {
     row: string;
@@ -154,15 +153,17 @@ function UpdateUserCheckIn({ dateList = [], employeeList = [], afterUndate = () 
         }));
     };
     const getCheckinData = async (employeeList: EmployeeData[]) => {
-        const res = await getCheckin();
+        // const res = await getCheckin();
+        const res = await getCheckinTodayList();
+        console.log('res:', res);
 
-        const m: UserCheckInList[] = res.map((m) => {
-            const findData = employeeList.find((f) => f.googleId === m.googleId);
+        // const m: UserCheckInList[] = res.map((m) => {
+        //     const findData = employeeList.find((f) => f.googleId === m.googleId);
 
-            return { ...m, ...findData } as UserCheckInList;
-        });
+        //     return { ...m, ...findData } as UserCheckInList;
+        // });
 
-        setCheckinList([...m]);
+        // setCheckinList([...m]);
     };
     useEffect(() => {
         if (employeeList.length > 0) {

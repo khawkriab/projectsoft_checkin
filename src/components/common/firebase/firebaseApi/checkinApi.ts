@@ -111,6 +111,22 @@ export const getCheckinToday = (googleId: string) => {
         }
     });
 };
+export const getCheckinTodayList = () => {
+    return new Promise<UserCheckInData[]>(async (resolve, reject) => {
+        const querySnapshot = await getDocs(collection(db, 'checkinToday'));
+
+        const res = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...(doc.data() as UserCheckInData),
+        }));
+
+        if (res.length > 0) {
+            resolve(res);
+        } else {
+            resolve([]);
+        }
+    });
+};
 export const addUserCheckinToday = (googleToken: string, payload: UserCheckInData) => {
     return new Promise<string>(async (resolve, reject) => {
         await signInWithGoogleGapi(googleToken);
@@ -127,5 +143,16 @@ export const createCheckinCalendar = (googleToken: string, payload: { date: stri
         await Promise.all(all);
 
         resolve('success');
+    });
+};
+export const getCheckinCalendar = () => {
+    return new Promise<{ date: string; userCheckinList: [] }[]>(async (resolve, reject) => {
+        const querySnapshot = await getDocs(collection(db, 'checkinCalendar'));
+        const res: { date: string; userCheckinList: [] }[] = querySnapshot.docs.map((doc) => ({
+            ...(doc.data() as { date: string; userCheckinList: [] }),
+            id: doc.id,
+        }));
+
+        resolve(res);
     });
 };

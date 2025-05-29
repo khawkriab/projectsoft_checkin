@@ -2,27 +2,8 @@ import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import { useGoogleLogin } from 'components/common/GoogleLoginProvider';
-import { getCellRange, getColumnLetter } from 'helper/getColumnLetter';
-import {
-    Alert,
-    Box,
-    Button,
-    FormControl,
-    Grid,
-    InputLabel,
-    MenuItem,
-    Paper,
-    Select,
-    Slide,
-    Snackbar,
-    SnackbarCloseReason,
-    Table,
-    TableBody,
-    TableContainer,
-    TableHead,
-    TableRow,
-    TextField,
-} from '@mui/material';
+import { getColumnLetter } from 'helper/getColumnLetter';
+import { Box, Paper, Table, TableBody, TableContainer, TableHead, TableRow } from '@mui/material';
 import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/MuiTable';
 import { SheetData, UserCheckInData } from 'type.global';
 import { UpdateUserCheckIn } from 'components/UpdateUserCheckIn';
@@ -199,7 +180,7 @@ function Home() {
 
     useEffect(() => {
         getSheets();
-        getCheckin();
+        // getCheckin();
     }, []);
 
     if (loading) {

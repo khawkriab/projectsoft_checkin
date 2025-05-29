@@ -2,10 +2,13 @@ import { Badge, Box, Button } from '@mui/material';
 import { DateCalendar, LocalizationProvider, PickersDay, PickersDayProps } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
-import { createCheckinCalendar } from 'components/common/firebase/firebaseApi/checkinApi';
+import { createCheckinCalendar, getCheckinCalendar } from 'components/common/firebase/firebaseApi/checkinApi';
 import { useGoogleLogin } from 'components/common/GoogleLoginProvider';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+
+dayjs.extend(customParseFormat);
 
 function ServerDay(props: PickersDayProps & { highlightedDays?: number[] }) {
     const { highlightedDays = [], day, outsideCurrentMonth, ...other } = props;
@@ -35,6 +38,14 @@ function CreateMonthCalendar() {
         await createCheckinCalendar(profile?.token ?? '', m as any);
         alert('success');
     };
+
+    useEffect(() => {
+        const init = async () => {
+            const res = await getCheckinCalendar();
+            setHighlightedDays([...res.map((d) => dayjs(d.date, 'D-MM-YYYY').get('date'))]);
+        };
+        init();
+    }, []);
     //
     return (
         <Box>

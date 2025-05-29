@@ -8,7 +8,7 @@ const ThemeContext = createContext({ toggleColorMode: () => {} });
 export const useColorMode = () => useContext(ThemeContext);
 
 export const ThemeWrapper = ({ children }: { children: React.ReactNode }) => {
-    const [mode, setMode] = useState<PaletteMode>('light');
+    const [mode, setMode] = useState<PaletteMode>('dark');
 
     const colorMode = useMemo(
         () => ({

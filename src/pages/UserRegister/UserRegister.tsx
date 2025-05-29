@@ -30,9 +30,9 @@ function UserRegister() {
     const [isRegistered, setIsRegistered] = useState(true);
     const [formRegister, setFormRegister] = useState<Profile>({
         email: '',
+        name: '',
         fullName: '',
         googleId: '',
-        name: '',
         jobPosition: '',
         employmentType: '',
         phoneNumber: '',
@@ -57,10 +57,12 @@ function UserRegister() {
     const getDataCurrentUser = async () => {
         if (profile) {
             try {
-                const res = await getUsersRegister(profile.googleId);
-
+                const res = await getUsersRegister(profile.email);
                 setFormRegister((prev) => ({ ...prev, ...res }));
-                setIsRegistered(true);
+
+                if (profile.status !== 'NO_REGIST') {
+                    setIsRegistered(true);
+                }
             } catch (error) {
                 console.error('error:', error);
                 // prev data from google account
@@ -121,11 +123,13 @@ function UserRegister() {
                         </Grid>
                         <Grid size={{ xs: 12, md: 6 }}>
                             <TextField
+                                required
                                 fullWidth
                                 label='Full Name'
                                 variant='outlined'
-                                disabled
+                                // disabled
                                 name='fullName'
+                                error={!formRegister.fullName}
                                 value={formRegister.fullName}
                                 onChange={onChangeText}
                             />

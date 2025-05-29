@@ -1,19 +1,19 @@
 import { Profile, UserCheckInData } from 'type.global';
 import { db, signInWithGoogleGapi } from '../firebaseInitialize';
-import { addDoc, collection, deleteDoc, doc, getDocs, query, where } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore';
 
 export const addUsersRegister = (googleToken: string, payload: Profile) => {
     return new Promise<string>(async (resolve) => {
         await signInWithGoogleGapi(googleToken);
-        await addDoc(collection(db, 'usersRegister'), payload);
+        await addDoc(collection(db, 'usersList'), { ...payload, status: 'WAITING' });
 
         resolve('success');
     });
 };
-export const getUsersRegister = (googleId: string) => {
+export const getUsersRegister = (email: string) => {
     return new Promise<Profile>(async (resolve, reject) => {
-        const usersRef = collection(db, 'usersRegister');
-        const q = query(usersRef, where('googleId', '==', googleId));
+        const usersRef = collection(db, 'usersList');
+        const q = query(usersRef, where('email', '==', email));
 
         const querySnapshot = await getDocs(q);
 
@@ -75,18 +75,23 @@ export const addUsersList = (googleToken: string, payload: Profile) => {
         if (!payload?.id) reject('no id');
 
         await signInWithGoogleGapi(googleToken);
-        await addDoc(collection(db, 'usersList'), {
-            googleId: payload.googleId,
-            fullName: payload.fullName,
-            profileURL: payload.profileURL,
-            email: payload.email,
-            role: payload.role,
-            name: payload.name,
-            phoneNumber: payload.phoneNumber,
-            jobPosition: payload.jobPosition,
-            employmentType: payload.employmentType,
-        });
-        await deleteDoc(doc(db, 'usersRegister', payload.id ?? ''));
+        await setDoc(
+            doc(db, 'usersList', payload.id ?? ''),
+            {
+                googleId: payload.googleId,
+                fullName: payload.fullName,
+                profileURL: payload.profileURL,
+                email: payload.email,
+                role: payload.role,
+                name: payload.name,
+                phoneNumber: payload.phoneNumber,
+                jobPosition: payload.jobPosition,
+                employmentType: payload.employmentType,
+                status: 'APPROVE',
+            },
+            { merge: true }
+        );
+        // await deleteDoc(doc(db, 'usersRegister', payload.id ?? ''));
 
         resolve('success');
     });

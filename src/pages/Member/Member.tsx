@@ -23,7 +23,6 @@ function Member() {
         const res = await getUsersList();
         const usersData: MemberType[] = res.map((doc) => ({
             ...doc,
-            status: 'APPROVE',
         }));
 
         setMemberList([...usersData]);
@@ -43,7 +42,7 @@ function Member() {
     }, [JSON.stringify(profile)]);
 
     const dataList = useMemo(() => {
-        return memberList.filter((f) => f.googleId);
+        return memberList.filter((f) => f.email);
     }, [memberList.toString()]);
 
     return (
@@ -68,7 +67,7 @@ function Member() {
                     </TableHead>
                     <TableBody>
                         {dataList.map((u) => (
-                            <TableRow key={u.googleId}>
+                            <TableRow key={u.email}>
                                 <TableBodyCell>{u.fullName}</TableBodyCell>
                                 <TableBodyCell>{u.name}</TableBodyCell>
                                 <TableBodyCell>{u.email}</TableBodyCell>
@@ -82,9 +81,13 @@ function Member() {
                                             <Button size='small' variant='contained' color='success'>
                                                 Registered
                                             </Button>
-                                        ) : (
+                                        ) : u.status === 'WAITING' ? (
                                             <Button size='small' variant='contained' color='warning' onClick={() => onApprove(u)}>
                                                 Approve
+                                            </Button>
+                                        ) : (
+                                            <Button size='small' variant='contained' color='error'>
+                                                No Regiester
                                             </Button>
                                         )}
                                     </TableBodyCell>

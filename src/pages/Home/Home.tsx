@@ -51,7 +51,7 @@ function Home() {
     //
     const getSheets = async () => {
         // API URL and your API key
-        const apiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${process.env.REACT_APP_SHEETS_ID}/values/May?key=${process.env.REACT_APP_API_KEY}`;
+        const apiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${process.env.REACT_APP_SHEETS_ID}/values/June?key=${process.env.REACT_APP_API_KEY}`;
 
         // Fetch data from Google Sheets
         axios

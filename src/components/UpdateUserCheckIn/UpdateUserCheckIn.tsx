@@ -99,11 +99,11 @@ function UpdateUserCheckIn({ dateList = [], employeeList = [], afterUndate = () 
                 valueInputOption: 'USER_ENTERED', // or "RAW"
                 data: [
                     {
-                        range: `May!${columnDate}${sheetsData.row}`,
+                        range: `June!${columnDate}${sheetsData.row}`,
                         values: [[sheetsData.time]],
                     },
                     {
-                        range: `May!${columnMark}${sheetsData.row}`,
+                        range: `June!${columnMark}${sheetsData.row}`,
                         values: [[sheetsData.remark]],
                     },
                 ],

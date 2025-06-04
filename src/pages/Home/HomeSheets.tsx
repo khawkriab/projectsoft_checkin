@@ -5,11 +5,8 @@ import { useGoogleLogin } from 'components/common/GoogleLoginProvider';
 import { getColumnLetter } from 'helper/getColumnLetter';
 import { Box, Paper, Table, TableBody, TableContainer, TableHead, TableRow } from '@mui/material';
 import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/MuiTable';
-import { SheetData, UserCheckInData } from 'type.global';
+import { SheetData } from 'type.global';
 import { UpdateUserCheckIn } from 'components/UpdateUserCheckIn';
-import { UserCheckIn } from 'components/UserCheckIn';
-import useLocation from 'hooks/useLocation';
-import { LocationChecker } from 'components/common/LocationChecker';
 import utc from 'dayjs/plugin/utc';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 
@@ -41,7 +38,6 @@ export type EmployeeData = {
 
 function Home() {
     const { profile, auth2, authLoading, isSignedIn } = useGoogleLogin();
-    const { isAllowLocation, lat, lng } = useLocation();
     //
     const [loading, setLoading] = useState<boolean>(true);
     const [dateList, setDateList] = useState<SheetsDate[]>([]);
@@ -140,47 +136,8 @@ function Home() {
             });
     };
 
-    const getCheckin = async () => {
-        const sheetsId = '1fMqyQw-JCm6ykyOgnfP--CtldfxAG27BNaegLjcrNK4';
-        const apiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/Today?key=${process.env.REACT_APP_API_KEY}`;
-
-        // Fetch data from Google Sheets
-        return axios
-            .get<SheetData>(apiUrl)
-            .then((response) => {
-                const data = response.data.values;
-                const maxLength = data[0].length;
-                const normalizedData = data.map((row) => {
-                    const rowCopy = [...row];
-                    // Add empty strings for missing columns to match the first row length
-                    while (rowCopy.length < maxLength) {
-                        rowCopy.push('');
-                    }
-                    return rowCopy;
-                });
-
-                const n: UserCheckInData[] = normalizedData.slice(1).map((m) => ({
-                    googleId: m[0],
-                    time: m[1],
-                    remark: m[2],
-                    reason: m[3],
-                    device: m[4],
-                    latlng: m[5],
-                    status: m[6],
-                }));
-
-                return n;
-            })
-            .catch((err) => {
-                console.error('err:', err);
-
-                return [];
-            });
-    };
-
     useEffect(() => {
         getSheets();
-        // getCheckin();
     }, []);
 
     if (loading) {
@@ -197,15 +154,8 @@ function Home() {
                     isSignedIn && (
                         <>
                             {(profile?.role === 'ADMIN' || profile?.role === 'STAFF') && (
-                                <UpdateUserCheckIn
-                                    dateList={dateList}
-                                    employeeList={employeeList}
-                                    afterUndate={getSheets}
-                                    getCheckin={getCheckin}
-                                />
+                                <UpdateUserCheckIn dateList={dateList} employeeList={employeeList} afterUndate={getSheets} />
                             )}
-                            {/* {profile?.id && isAllowLocation && (isIOS || isAndroid) && isMobile && <UserCheckIn getCheckin={getCheckin} />} */}
-                            {profile?.googleId && <UserCheckIn />}
                         </>
                     )
                 )}

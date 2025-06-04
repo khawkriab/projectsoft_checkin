@@ -36,7 +36,7 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "cross-env FAST_REFRESH=false react-scripts start",
+    "start": "env-cmd -f .env.test cross-env FAST_REFRESH=false react-scripts start",
     "build": "react-scripts build",
     "deploy": "gh-pages -d build",
     "test": "react-scripts test",
@@ -57,6 +57,7 @@
   "devDependencies": {
     "@types/bootstrap": "^5.2.10",
     "@types/gapi": "^0.0.47",
-    "@types/gapi.auth2": "^0.0.61"
+    "@types/gapi.auth2": "^0.0.61",
+    "env-cmd": "^10.1.0"
   }
 }

@@ -31,9 +31,9 @@ function CreateMonthCalendar() {
     //
 
     const onCreateCalendar = async () => {
-        const selectMonth = dayjs().set('months', month).set('years', years);
+        const selectMonth = dayjs().set('months', month).set('years', years).format('YYYY-MM');
         const n = highlightedDays.sort((a, b) => a - b);
-        const m = n.map((d) => ({ date: selectMonth.format(`${d}-MM-YYYY`), userCheckinList: [] }));
+        const m = n.map((d) => ({ date: `${selectMonth}-${d}`, userCheckinList: [] }));
 
         await createCheckinCalendar(profile?.token ?? '', m as any);
         alert('success');

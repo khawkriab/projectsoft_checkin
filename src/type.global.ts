@@ -31,9 +31,10 @@ export type Profile = EmployeeInfo &
         status?: 'APPROVE' | 'WAITING' | 'NO_REGIST';
     };
 
-export type UserCheckInData = {
+export type UserCheckInData = FirebaseQuery & {
     name?: string;
     googleId: string;
+    email?: string;
     time: string;
     remark: string;
     reason: string;
@@ -45,3 +46,5 @@ export type UserCheckInData = {
 };
 
 export type LatLng = { lat: number; lng: number };
+export type UserCheckinList = Pick<UserCheckInData, 'email' | 'googleId' | 'reason' | 'remark' | 'time'>;
+export type CheckinCalendar = FirebaseQuery & { date: string; userCheckinList: UserCheckinList[] };

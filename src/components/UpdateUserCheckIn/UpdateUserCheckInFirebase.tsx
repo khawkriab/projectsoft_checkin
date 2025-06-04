@@ -19,28 +19,29 @@ import { useEffect, useRef, useState } from 'react';
 import { useGoogleLogin } from 'components/common/GoogleLoginProvider';
 import axios from 'axios';
 import dayjs from 'dayjs';
-import { EmployeeData, SheetsDate } from 'pages/Home/Home';
-import { UserCheckInData } from 'type.global';
+import { EmployeeData, SheetsDate } from 'pages/Home/HomeSheets';
+import { CheckinCalendar, Profile, UserCheckInData, UserCheckinList } from 'type.global';
 import { DesktopTimePicker } from '@mui/x-date-pickers';
-import { getCheckinTodayList } from 'components/common/firebase/firebaseApi/checkinApi';
+import { getCheckinCalendar, getCheckinTodayList, updateUserCheckin } from 'components/common/firebase/firebaseApi/checkinApi';
 
-type SheetsForm = {
-    row: string;
-    columnNumber: string;
+type FormData = {
+    dateId: string;
+    userId: string;
     time?: string;
     remark?: string;
 };
 
 type UpdateUserCheckInProps = {
-    dateList: SheetsDate[];
-    employeeList: EmployeeData[];
+    dateList: CheckinCalendar[];
+    userList: Profile[];
     afterUndate: () => Promise<void> | void;
-    getCheckin: () => Promise<UserCheckInData[]>;
+    getCheckin?: () => Promise<UserCheckInData[]>;
 };
 
-type UserCheckInList = UserCheckInData & EmployeeData;
+// type UserCheckInList = UserCheckInData & EmployeeData;
+type UserCheckInList = UserCheckInData;
 
-function UpdateUserCheckIn({ dateList = [], employeeList = [], afterUndate = () => {}, getCheckin }: UpdateUserCheckInProps) {
+function UpdateUserCheckInFirebase({ dateList = [], userList = [], afterUndate = () => {}, getCheckin }: UpdateUserCheckInProps) {
     const { profile, auth2, authLoading, isSignedIn } = useGoogleLogin();
     //
     const timer = useRef<NodeJS.Timeout>(undefined);
@@ -48,143 +49,75 @@ function UpdateUserCheckIn({ dateList = [], employeeList = [], afterUndate = () 
     const [updating, setUpdating] = useState(false);
     const [open, setOpen] = useState(false);
     const [checkinList, setCheckinList] = useState<UserCheckInList[]>([]);
-    const [updateSheetsData, setUpdateSheetsData] = useState<SheetsForm>({ row: '3', columnNumber: '1', remark: '' });
+    const [updateData, setUpdateData] = useState<FormData>({ dateId: '3', userId: '', remark: '' });
     //
-    const updateCheckin = async (data: SheetsForm, rowNumber: number) => {
-        if (auth2) {
-            const user = auth2.currentUser.get();
-            const token = user.getAuthResponse().access_token;
-            const sheetsId = '1fMqyQw-JCm6ykyOgnfP--CtldfxAG27BNaegLjcrNK4';
-            const endpoint = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values:batchUpdate`;
 
-            const requestBody = {
-                valueInputOption: 'USER_ENTERED', // or "RAW"
-                data: [
-                    {
-                        range: `Today!G${rowNumber}`,
-                        values: [['1']],
-                    },
-                ],
-            };
-
-            setUpdating(true);
-            const response = await axios(endpoint, {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                data: JSON.stringify(requestBody),
-            });
-
-            if (response.status === 200) {
-                getCheckinData(employeeList);
-                updateSheets(data);
-            } else {
-                alert('Error updating the sheet');
-                setUpdating(false);
-            }
-        }
-    };
-    const updateSheets = async (sheetsData: SheetsForm) => {
-        if (isSignedIn && auth2) {
-            const user = auth2.currentUser.get();
-            const token = user.getAuthResponse().access_token;
-            const spreadsheetId = process.env.REACT_APP_SHEETS_ID;
-            const endpoint = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`;
-            const columnDate = getColumnLetter(Number(sheetsData.columnNumber));
-            const columnMark = getColumnLetter(Number(sheetsData.columnNumber) + 2);
-
-            const requestBody = {
-                valueInputOption: 'USER_ENTERED', // or "RAW"
-                data: [
-                    {
-                        range: `May!${columnDate}${sheetsData.row}`,
-                        values: [[sheetsData.time]],
-                    },
-                    {
-                        range: `May!${columnMark}${sheetsData.row}`,
-                        values: [[sheetsData.remark]],
-                    },
-                ],
-            };
-
-            setUpdating(true);
-            const response = await axios(endpoint, {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                data: JSON.stringify(requestBody),
-            });
-
-            if (response.status === 200) {
-                await afterUndate();
-
-                setOpen(true);
-            } else {
-                alert('Error updating the sheet');
-            }
-            setUpdating(false);
-        }
+    const updateCheckin = async (payload: { dateId: string; userId: string; userCheckinList: UserCheckinList[] }) => {
+        await updateUserCheckin(payload.dateId, payload.userId, payload.userCheckinList);
     };
     const onSubmit = async (e: React.ChangeEvent<HTMLFormElement>) => {
         e.preventDefault();
-        updateSheets(updateSheetsData);
+        const u = userList.find((f) => f.id === updateData.userId);
+        const d = dateList.find((f) => f.id === updateData.dateId);
+        if (u && d) {
+            updateCheckin({
+                dateId: updateData.dateId,
+                userId: u?.id ?? '',
+                userCheckinList: [
+                    ...(d?.userCheckinList ?? []),
+                    {
+                        remark: updateData.remark ?? '',
+                        time: updateData.time ?? '',
+                        email: u?.email,
+                        googleId: u?.googleId ?? '',
+                        reason: '',
+                    },
+                ],
+            });
+        }
     };
-    const onApprove = (data: UserCheckInList) => {
-        const indexOf = checkinList.findIndex((f) => f.googleId === data.googleId);
-        updateCheckin(
-            {
-                row: updateSheetsData.row,
-                columnNumber: data.sheetsColumnNumber,
-                remark: data.remark,
-                time: dayjs(Number(data.time)).format('HH:mm'),
-            },
-            indexOf + 2
-        );
+    const onApprove = async (data: UserCheckInList) => {
+        const today = dayjs().format('YYYY-MM-D');
+        const cc = dateList.find((f) => f.date === today);
+
+        if (cc) {
+            await updateUserCheckin(cc.id as string, data.id as string, [
+                ...cc.userCheckinList,
+                {
+                    email: data.email,
+                    googleId: data.googleId,
+                    reason: data.reason,
+                    remark: data.remark,
+                    time: data.time,
+                },
+            ]);
+
+            setOpen(true);
+        }
     };
 
     const onChangeData = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent) => {
-        setUpdateSheetsData((prev) => ({
+        setUpdateData((prev) => ({
             ...prev,
             [e.target.name ?? '']: e.target.value,
         }));
     };
-    const getCheckinData = async (employeeList: EmployeeData[]) => {
-        // const res = await getCheckin();
+    const getCheckinData = async () => {
+        // get all
         const res = await getCheckinTodayList();
-        console.log('res:', res);
 
-        // const m: UserCheckInList[] = res.map((m) => {
-        //     const findData = employeeList.find((f) => f.googleId === m.googleId);
-
-        //     return { ...m, ...findData } as UserCheckInList;
-        // });
-
-        // setCheckinList([...m]);
+        setCheckinList([...res.filter((f) => dayjs(Number(f.time)).isSame(dayjs(), 'day'))]);
     };
     useEffect(() => {
-        if (employeeList.length > 0) {
-            getCheckinData(employeeList);
-
-            timer.current = setTimeout(() => {
-                getCheckinData(employeeList);
-            }, 6000 * 5);
-        }
-
-        return () => {
-            clearInterval(timer.current);
-        };
-    }, [JSON.stringify(employeeList)]);
+        getCheckinData();
+    }, []);
 
     useEffect(() => {
         if (dateList.length > 0) {
-            const currentDate = dayjs().format('DD-MM-YYYY');
+            const currentDate = dayjs().format('D-MM-YYYY');
             const findData = dateList.find((f) => f.date === currentDate);
             if (findData) {
-                setUpdateSheetsData((prev) => ({ ...prev, row: findData.sheetsRowNumber }));
+                setUpdateData((prev) => ({ ...prev, row: findData.id ?? '' }));
             }
         }
     }, [JSON.stringify(dateList)]);
@@ -198,11 +131,11 @@ function UpdateUserCheckIn({ dateList = [], employeeList = [], afterUndate = () 
                         <Grid size={{ xs: 12, sm: 6, md: 'auto' }}>
                             <FormControl disabled fullWidth>
                                 <InputLabel id='date-label'>วันที่</InputLabel>
-                                <Select labelId='date-label' name='row' value={updateSheetsData.row} onChange={onChangeData} label='วันที่'>
+                                <Select labelId='date-label' name='dateId' value={updateData.dateId} onChange={onChangeData} label='วันที่'>
                                     <MenuItem value=''>select</MenuItem>
                                     {dateList.map((d, index) => (
-                                        <MenuItem key={index} value={d.sheetsRowNumber}>
-                                            {d.date} ({getCellRange(index + 2, 0)})
+                                        <MenuItem key={index} value={d.id}>
+                                            {d.date}
                                         </MenuItem>
                                     ))}
                                 </Select>
@@ -214,15 +147,15 @@ function UpdateUserCheckIn({ dateList = [], employeeList = [], afterUndate = () 
                                 <InputLabel id='employee-label'>พนักงาน</InputLabel>
                                 <Select
                                     labelId='employee-label'
-                                    name='columnNumber'
-                                    value={updateSheetsData.columnNumber}
+                                    name='userId'
+                                    value={updateData.userId}
                                     onChange={onChangeData}
                                     label='พนักงาน'
                                 >
                                     <MenuItem value=''>select</MenuItem>
-                                    {employeeList.map((employee, index) => (
-                                        <MenuItem key={index} value={employee.sheetsColumnNumber}>
-                                            {employee.name} {`(${employee.sheetsColumn})`}
+                                    {userList.map((u, index) => (
+                                        <MenuItem key={index} value={u.id}>
+                                            {u.name}
                                         </MenuItem>
                                     ))}
                                 </Select>
@@ -239,12 +172,12 @@ function UpdateUserCheckIn({ dateList = [], employeeList = [], afterUndate = () 
                                         textField: {
                                             name: 'time',
                                             required: true,
-                                            error: !updateSheetsData.time,
+                                            error: !updateData.time,
                                             fullWidth: true,
                                         },
                                     }}
                                     onChange={(newValue) => {
-                                        setUpdateSheetsData((prev) => ({
+                                        setUpdateData((prev) => ({
                                             ...prev,
                                             time: dayjs(newValue).format('HH:mm'),
                                         }));
@@ -254,7 +187,7 @@ function UpdateUserCheckIn({ dateList = [], employeeList = [], afterUndate = () 
                         </Grid>
                         {/* Note Input */}
                         <Grid size={{ xs: 12, sm: 6, md: 'auto' }}>
-                            <TextField fullWidth name='remark' label='หมายเหตุ' value={updateSheetsData.remark} onChange={onChangeData} />
+                            <TextField fullWidth name='remark' label='หมายเหตุ' value={updateData.remark} onChange={onChangeData} />
                         </Grid>
                         {/* Update Button */}
                         <Grid size={{ xs: 12, sm: 6, md: 'auto' }}>
@@ -269,7 +202,7 @@ function UpdateUserCheckIn({ dateList = [], employeeList = [], afterUndate = () 
             </Box>
             <Box marginTop={2}>
                 {checkinList
-                    .filter((f) => f.status === '99')
+                    .filter((f) => f.status === 99)
                     .map((c) => (
                         <Box key={c.googleId} sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, marginBottom: 2 }}>
                             <Box>ชื่อ: {c.name}</Box>
@@ -295,4 +228,4 @@ function UpdateUserCheckIn({ dateList = [], employeeList = [], afterUndate = () 
     );
 }
 
-export default UpdateUserCheckIn;
+export default UpdateUserCheckInFirebase;

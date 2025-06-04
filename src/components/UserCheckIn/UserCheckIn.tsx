@@ -1,11 +1,13 @@
-import { Alert, Box, Button, Grid, Slide, Snackbar, TextField } from '@mui/material';
-import { addUserCheckinToday, getCheckinToday } from 'components/common/firebase/firebaseApi/checkinApi';
+import { Alert, AlertColor, Box, Button, Grid, Slide, Snackbar, TextField } from '@mui/material';
+import { addUserCheckinToday, deleteOldCheckin, getCheckinToday } from 'components/common/firebase/firebaseApi/checkinApi';
 import { useGoogleLogin } from 'components/common/GoogleLoginProvider';
 import dayjs from 'dayjs';
+import isWithinRadius from 'helper/checkDistance';
+import getLocation from 'helper/getLocation';
 import useLocation from 'hooks/useLocation';
 import { useEffect, useState } from 'react';
 import { deviceDetect } from 'react-device-detect';
-import { UserCheckInData } from 'type.global';
+import { LatLng, UserCheckInData } from 'type.global';
 
 function UserCheckIn() {
     const { profile } = useGoogleLogin();
@@ -14,6 +16,11 @@ function UserCheckIn() {
     const [updating, setUpdating] = useState(false);
     const [open, setOpen] = useState(false);
     const [reason, setReason] = useState('');
+    const [alertOptions, setAlertOptions] = useState({
+        message: '',
+        color: '',
+        open: false,
+    });
     const [currentUserData, setCurrentUserData] = useState<UserCheckInData | null | undefined>(undefined);
     //
     const onCheckin = async (remark?: string) => {
@@ -24,6 +31,7 @@ function UserCheckIn() {
 
             const payload: UserCheckInData = {
                 googleId: profile?.googleId,
+                email: profile.email,
                 name: profile?.name,
                 time: String(now),
                 remark: remark ?? '',
@@ -34,7 +42,13 @@ function UserCheckIn() {
             };
             await addUserCheckinToday(profile.token, payload);
             await getUserCheckinToday();
-            setOpen(true);
+
+            setAlertOptions((prev) => ({
+                ...prev,
+                message: 'updated successfully',
+                color: 'success',
+                open: true,
+            }));
 
             setUpdating(false);
         }
@@ -44,14 +58,41 @@ function UserCheckIn() {
         e.preventDefault();
         onCheckin('WFH');
     };
+    const onCheckinOnArea = async () => {
+        const target: LatLng = { lat: 16.455647329319532, lng: 102.81962779039188 };
+        const currentLocation = await getLocation();
+        const within = isWithinRadius(currentLocation, target, 50);
+
+        if (!currentLocation.isAllowLocation) {
+            return setAlertOptions((prev) => ({
+                ...prev,
+                message: 'not allow location',
+                color: 'error',
+                open: true,
+            }));
+        }
+        if (!within) {
+            return setAlertOptions((prev) => ({
+                ...prev,
+                message: 'not in area',
+                color: 'error',
+                open: true,
+            }));
+        }
+        onCheckin();
+    };
 
     const getUserCheckinToday = async () => {
         try {
             const res = await getCheckinToday(profile?.googleId ?? '');
 
-            setCurrentUserData({ ...res });
+            if (dayjs(Number(res.time)).isSame(dayjs(), 'day')) {
+                setCurrentUserData({ ...res });
+            } else {
+                await deleteOldCheckin(res.id);
+                setCurrentUserData(null);
+            }
         } catch (error) {
-            console.error('error:', error);
             setCurrentUserData(null);
         }
     };
@@ -65,12 +106,31 @@ function UserCheckIn() {
             <Snackbar
                 anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
                 slots={{ transition: Slide }}
-                open={open}
+                open={alertOptions.open}
                 autoHideDuration={6000}
-                onClose={() => setOpen(false)}
+                onClose={() =>
+                    setAlertOptions((prev) => ({
+                        ...prev,
+                        message: '',
+                        color: '',
+                        open: false,
+                    }))
+                }
             >
-                <Alert onClose={() => setOpen(false)} severity='success' variant='filled' sx={{ width: '100%' }}>
-                    Sheet updated successfully
+                <Alert
+                    onClose={() =>
+                        setAlertOptions((prev) => ({
+                            ...prev,
+                            message: '',
+                            color: '',
+                            open: false,
+                        }))
+                    }
+                    severity={alertOptions.color as AlertColor}
+                    variant='filled'
+                    sx={{ width: '100%' }}
+                >
+                    {alertOptions.message}
                 </Alert>
             </Snackbar>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, marginBottom: 2 }}>
@@ -98,7 +158,7 @@ function UserCheckIn() {
                                         <TextField
                                             fullWidth
                                             required
-                                            label='เหตุผลที่ work from home หรือ มาสาย'
+                                            label='เหตุผลที่ work from home'
                                             value={reason}
                                             onChange={(e) => setReason(e.target.value)}
                                         />
@@ -123,7 +183,7 @@ function UserCheckIn() {
                                 loading={updating}
                                 variant='contained'
                                 color='error'
-                                onClick={() => onCheckin()}
+                                onClick={() => onCheckinOnArea()}
                             >
                                 ลงชื่อเข้างาน
                             </Button>

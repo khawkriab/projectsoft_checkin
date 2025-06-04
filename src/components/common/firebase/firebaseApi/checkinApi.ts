@@ -1,6 +1,10 @@
-import { Profile, UserCheckInData } from 'type.global';
+import { CheckinCalendar, FirebaseQuery, Profile, UserCheckInData, UserCheckinList } from 'type.global';
 import { db, signInWithGoogleGapi } from '../firebaseInitialize';
 import { addDoc, collection, deleteDoc, doc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore';
+
+type StandardResponse<T = any> = T & {
+    id: string;
+};
 
 export const addUsersRegister = (googleToken: string, payload: Profile) => {
     return new Promise<string>(async (resolve) => {
@@ -98,7 +102,7 @@ export const addUsersList = (googleToken: string, payload: Profile) => {
 };
 
 export const getCheckinToday = (googleId: string) => {
-    return new Promise<UserCheckInData>(async (resolve, reject) => {
+    return new Promise<StandardResponse<UserCheckInData>>(async (resolve, reject) => {
         const usersRef = collection(db, 'checkinToday');
         const q = query(usersRef, where('googleId', '==', googleId));
 
@@ -114,6 +118,13 @@ export const getCheckinToday = (googleId: string) => {
         } else {
             reject('not found data');
         }
+    });
+};
+export const deleteOldCheckin = (id: string) => {
+    return new Promise<string>(async (resolve, reject) => {
+        await deleteDoc(doc(db, 'checkinToday', id));
+
+        resolve('success');
     });
 };
 export const getCheckinTodayList = () => {
@@ -151,13 +162,22 @@ export const createCheckinCalendar = (googleToken: string, payload: { date: stri
     });
 };
 export const getCheckinCalendar = () => {
-    return new Promise<{ date: string; userCheckinList: [] }[]>(async (resolve, reject) => {
+    return new Promise<CheckinCalendar[]>(async (resolve, reject) => {
         const querySnapshot = await getDocs(collection(db, 'checkinCalendar'));
-        const res: { date: string; userCheckinList: [] }[] = querySnapshot.docs.map((doc) => ({
-            ...(doc.data() as { date: string; userCheckinList: [] }),
+        const res: CheckinCalendar[] = querySnapshot.docs.map((doc) => ({
+            ...(doc.data() as CheckinCalendar),
             id: doc.id,
         }));
 
         resolve(res);
+    });
+};
+export const updateUserCheckin = (cId: string, uId: string, payload: UserCheckinList[]) => {
+    return new Promise<{ date: string; userCheckinList: UserCheckinList[] }>(async (resolve, reject) => {
+        const querySnapshot = await updateDoc(doc(db, 'checkinCalendar', cId), { userCheckinList: payload });
+        await updateDoc(doc(db, 'checkinToday', uId), { status: 1 });
+        console.log('querySnapshot:', querySnapshot);
+
+        resolve({ date: 'string', userCheckinList: [] });
     });
 };

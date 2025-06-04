@@ -87,7 +87,7 @@ function Layout() {
                                 <Stack direction={'row'} alignItems={'center'} spacing={2}>
                                     <MenuItem to={'/'}>Home</MenuItem>
                                     <MenuItem to={'/member'}>Member</MenuItem>
-                                    <MenuItem to={'/register'}>Register</MenuItem>
+                                    {profile?.googleId && <MenuItem to={'/register'}>Register</MenuItem>}
                                 </Stack>
                             </Grid>
                         </Grid>

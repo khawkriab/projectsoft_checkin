@@ -18,7 +18,7 @@ import { isAndroid, isIOS, isMobile } from 'react-device-detect';
 dayjs.extend(customParseFormat);
 dayjs.extend(utc);
 
-type CheckinDataList = Omit<CheckinCalendar, 'userCheckinList'> & {
+export type CheckinDataList = Omit<CheckinCalendar, 'userCheckinList'> & {
     userCheckinList: (
         | (UserCheckinList & Profile & { statusText: string; absentFlag: number; lateFlag: number; timeText: string })
         | null
@@ -117,8 +117,12 @@ function Home() {
                 ) : (
                     isSignedIn && (
                         <>
-                            {profile?.googleId && (isIOS || isAndroid) && isMobile && <UserCheckIn />}
-                            {/* {profile?.email && process.env.REACT_APP_ENV === 'test' && <UserCheckIn />} */}
+                            {profile?.googleId && (isIOS || isAndroid) && isMobile && (
+                                <UserCheckIn checkinToday={checkinDataList.find((f) => f.date === dayjs().format('DD-MM-YYYY'))} />
+                            )}
+                            {/* {profile?.email && process.env.REACT_APP_ENV === 'test' && (
+                                <UserCheckIn checkinToday={checkinDataList.find((f) => f.date === dayjs().format('DD-MM-YYYY'))} />
+                            )} */}
                             {(profile?.role === 'ADMIN' || profile?.role === 'STAFF') && (
                                 <UpdateUserCheckInFirebase
                                     dateList={checkinDataList as CheckinCalendar[]}

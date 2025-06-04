@@ -11,10 +11,12 @@ function Member() {
     const { profile } = useGoogleLogin();
     const [memberList, setMemberList] = useState<MemberType[]>([]);
     //
+
     const onApprove = async (user: MemberType) => {
         if (!profile?.token) return;
 
         await addUsersList(profile.token, user);
+
         getUserList();
     };
     const getUserList = async () => {
@@ -27,15 +29,15 @@ function Member() {
 
         setMemberList([...usersData]);
 
-        if (profile?.role === 'ADMIN') {
-            const queryRegist = await getUsersRegisterList();
-            const usersRegist: MemberType[] = queryRegist.map((doc) => ({
-                ...doc,
-                status: 'WAITING',
-            }));
+        // if (profile?.role === 'ADMIN') {
+        //     const queryRegist = await getUsersRegisterList();
+        //     const usersRegist: MemberType[] = queryRegist.map((doc) => ({
+        //         ...doc,
+        //         status: 'WAITING',
+        //     }));
 
-            setMemberList((prev) => [...prev, ...usersRegist]);
-        }
+        //     setMemberList((prev) => [...prev, ...usersRegist]);
+        // }
     };
     useEffect(() => {
         if (profile) getUserList();
@@ -62,7 +64,12 @@ function Member() {
                             <TableHeadCell>Job Position</TableHeadCell>
                             <TableHeadCell>Employee Type</TableHeadCell>
                             <TableHeadCell>Role</TableHeadCell>
-                            {profile?.role === 'ADMIN' && <TableHeadCell>Register Status</TableHeadCell>}
+                            {profile?.role === 'ADMIN' && (
+                                <>
+                                    <TableHeadCell>allowFindLocation</TableHeadCell>
+                                    <TableHeadCell>Register Status</TableHeadCell>
+                                </>
+                            )}
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -76,21 +83,24 @@ function Member() {
                                 <TableBodyCell>{u.employmentType}</TableBodyCell>
                                 <TableBodyCell>{u.role}</TableBodyCell>
                                 {profile?.role === 'ADMIN' && (
-                                    <TableBodyCell>
-                                        {u.status === 'APPROVE' ? (
-                                            <Button size='small' variant='contained' color='success'>
-                                                Registered
-                                            </Button>
-                                        ) : u.status === 'WAITING' ? (
-                                            <Button size='small' variant='contained' color='warning' onClick={() => onApprove(u)}>
-                                                Approve
-                                            </Button>
-                                        ) : (
-                                            <Button size='small' variant='contained' color='error'>
-                                                No Regiester
-                                            </Button>
-                                        )}
-                                    </TableBodyCell>
+                                    <>
+                                        <TableBodyCell>{u.allowFindLocation}</TableBodyCell>
+                                        <TableBodyCell>
+                                            {u.status === 'APPROVE' ? (
+                                                <Button size='small' variant='contained' color='success'>
+                                                    Registered
+                                                </Button>
+                                            ) : u.status === 'WAITING' ? (
+                                                <Button size='small' variant='contained' color='warning' onClick={() => onApprove(u)}>
+                                                    Approve
+                                                </Button>
+                                            ) : (
+                                                <Button size='small' variant='contained' color='error'>
+                                                    No Regiester
+                                                </Button>
+                                            )}
+                                        </TableBodyCell>
+                                    </>
                                 )}
                             </TableRow>
                         ))}

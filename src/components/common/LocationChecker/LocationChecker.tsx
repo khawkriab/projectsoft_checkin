@@ -10,6 +10,7 @@ type LocationCheckerProps = BoxProps & {
     onMatchTarget: (isWithin: boolean) => void;
     onErrorLocation: (message: string) => void;
 };
+const target: LatLng = { lat: 16.455647329319532, lng: 102.81962779039188 };
 
 const libraries = ['places'];
 const mapContainerStyle = {
@@ -40,8 +41,6 @@ function LocationChecker({
 }: LocationCheckerProps) {
     const watchId = useRef<number>(0);
     const [currentLocation, setCurrentLocation] = useState<LatLng | null>(null);
-    const [startCheckLocation, setStartCheckLocation] = useState(checkAvail);
-    const [isWithin, setIsWithin] = useState(false);
     const { isLoaded, loadError } = useLoadScript({
         googleMapsApiKey: 'AIzaSyBdt1dApGQpWou2IWmRkSF6W5Dqei8k8bc',
         libraries: libraries as any,
@@ -49,10 +48,9 @@ function LocationChecker({
 
     // Target point
     // 16.455647329319532, 102.81962779039188
-    const target: LatLng = { lat: 16.455647329319532, lng: 102.81962779039188 };
 
     useEffect(() => {
-        if (checkAvail || showMaps) {
+        if (checkAvail) {
             watchId.current = navigator.geolocation.watchPosition(
                 (position) => {
                     console.log('watchPosition');
@@ -65,7 +63,6 @@ function LocationChecker({
                 },
                 (error) => {
                     console.error('Error getting location:', error);
-                    onMatchTarget(false);
                     onErrorLocation(logError(error));
                 },
                 {
@@ -77,7 +74,7 @@ function LocationChecker({
         }
 
         return () => navigator.geolocation.clearWatch(watchId.current);
-    }, [checkAvail, showMaps]);
+    }, [checkAvail]);
 
     if (loadError) return <div>Error loading maps</div>;
     if (!isLoaded) return <div>Loading Maps...</div>;

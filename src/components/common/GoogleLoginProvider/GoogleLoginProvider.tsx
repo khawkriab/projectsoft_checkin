@@ -12,6 +12,7 @@ type GoogleLoginContextProps = {
     onSignin: () => void;
     onSignout: () => void;
     getUserList: () => Promise<Profile[]>;
+    updateProfile: (auth2: gapi.auth2.GoogleAuthBase) => Promise<void>;
     updateUser: (auth2: gapi.auth2.GoogleAuthBase, profile: Profile, rowNumber: number) => Promise<any>;
 };
 
@@ -32,7 +33,7 @@ function GoogleLoginProvider({ children }: { children: React.ReactNode }) {
     const [authLoading, setAuthLoading] = useState(true);
     //
 
-    const updateUser = async (auth2: gapi.auth2.GoogleAuthBase, profile: Profile, rowNumber: number) => {
+    const updateUserSheets = async (auth2: gapi.auth2.GoogleAuthBase, profile: Profile, rowNumber: number) => {
         const googleUser = auth2.currentUser.get();
         const token = googleUser.getAuthResponse().access_token;
         const sheetsId = '1MXTH-zKqVIT6hl_RZodU2e9ChGAYEzO-K7uqUms9sRs';
@@ -140,7 +141,7 @@ function GoogleLoginProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
-    const getUserList: GoogleLoginContextProps['getUserList'] = () => {
+    const getUserSheetsList: GoogleLoginContextProps['getUserList'] = () => {
         const sheetsId = '1MXTH-zKqVIT6hl_RZodU2e9ChGAYEzO-K7uqUms9sRs';
         const apiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/Member?key=${process.env.REACT_APP_API_KEY}`;
 
@@ -198,6 +199,7 @@ function GoogleLoginProvider({ children }: { children: React.ReactNode }) {
             getSetProfile(auth2);
         } catch (error) {
             console.error('error:', error);
+            setAuthLoading(false);
         }
     };
 
@@ -215,8 +217,9 @@ function GoogleLoginProvider({ children }: { children: React.ReactNode }) {
                 authLoading: authLoading,
                 onSignin: onSignin,
                 onSignout: onSignout,
-                getUserList: getUserList,
-                updateUser: updateUser,
+                updateProfile: getSetProfile,
+                getUserList: getUserSheetsList,
+                updateUser: updateUserSheets,
             }}
         >
             {children}

@@ -48,6 +48,22 @@ export const addUsersRegister = (googleToken: string, payload: Profile) => {
         resolve('success');
     });
 };
+
+export const usersUpdateAllowLocation = (googleToken: string, uId: string, allowFindLocation: number) => {
+    return new Promise<string>(async (resolve) => {
+        await signInWithGoogleGapi(googleToken);
+
+        await setDoc(
+            doc(db, 'usersList', uId),
+            {
+                allowFindLocation: allowFindLocation,
+            },
+            { merge: true }
+        );
+
+        resolve('success');
+    });
+};
 export const getUsersRegister = (email: string) => {
     return new Promise<Profile>(async (resolve, reject) => {
         const usersRef = collection(db, 'usersList');
@@ -112,26 +128,31 @@ export const addUsersList = (googleToken: string, payload: Profile) => {
     return new Promise<string>(async (resolve, reject) => {
         if (!payload?.id) reject('no id');
 
-        await signInWithGoogleGapi(googleToken);
-        await setDoc(
-            doc(db, 'usersList', payload.id ?? ''),
-            {
-                googleId: payload.googleId,
-                fullName: payload.fullName,
-                profileURL: payload.profileURL,
-                email: payload.email,
-                role: payload.role,
-                name: payload.name,
-                phoneNumber: payload.phoneNumber,
-                jobPosition: payload.jobPosition,
-                employmentType: payload.employmentType,
-                status: 'APPROVE',
-            },
-            { merge: true }
-        );
-        // await deleteDoc(doc(db, 'usersRegister', payload.id ?? ''));
+        try {
+            await signInWithGoogleGapi(googleToken);
+            await setDoc(
+                doc(db, 'usersList', payload.id ?? ''),
+                {
+                    googleId: payload.googleId,
+                    fullName: payload.fullName,
+                    profileURL: payload.profileURL ?? '',
+                    email: payload.email,
+                    role: payload.role,
+                    name: payload.name,
+                    phoneNumber: payload.phoneNumber,
+                    jobPosition: payload.jobPosition,
+                    employmentType: payload.employmentType,
+                    allowFindLocation: 0,
+                    status: 'APPROVE',
+                },
+                { merge: true }
+            );
+            // await deleteDoc(doc(db, 'usersRegister', payload.id ?? ''));
 
-        resolve('success');
+            resolve('success');
+        } catch (error) {
+            reject(error);
+        }
     });
 };
 

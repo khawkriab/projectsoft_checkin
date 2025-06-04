@@ -138,7 +138,7 @@ function UpdateUserCheckInFirebase({ dateList = [], userList = [], afterUndate =
 
     useEffect(() => {
         if (dateList.length > 0) {
-            const currentDate = dayjs('2025-06-04').format('DD-MM-YYYY');
+            const currentDate = dayjs().format('DD-MM-YYYY');
             const findData = dateList.find((f) => f.date === currentDate);
             if (findData) {
                 setUpdateData((prev) => ({ ...prev, dateId: findData.id ?? '' }));
@@ -152,10 +152,7 @@ function UpdateUserCheckInFirebase({ dateList = [], userList = [], afterUndate =
                 <Grid container spacing={2} marginTop={3}>
                     {/* Date (Disabled Select) */}
                     <Grid size={{ xs: 12, sm: 6, md: 'grow' }}>
-                        <FormControl
-                            // disabled
-                            fullWidth
-                        >
+                        <FormControl disabled fullWidth>
                             <InputLabel id='date-label'>วันที่</InputLabel>
                             <Select labelId='date-label' name='dateId' value={updateData.dateId} onChange={onChangeData} label='วันที่'>
                                 {dateList.map((d) => (
@@ -211,7 +208,7 @@ function UpdateUserCheckInFirebase({ dateList = [], userList = [], afterUndate =
                         </LocalizationProvider>
                     </Grid>
                     {/* Note Input */}
-                    <Grid size={{ xs: 12, sm: 6, md: 'auto' }}>
+                    <Grid size={{ xs: 12, sm: 6, md: 'grow' }}>
                         <TextField fullWidth name='remark' label='หมายเหตุ' value={updateData.remark} onChange={onChangeData} />
                     </Grid>
                     {/* Update Button */}
@@ -266,7 +263,7 @@ function UpdateUserCheckInFirebase({ dateList = [], userList = [], afterUndate =
                 onClose={() => setOpen(false)}
             >
                 <Alert onClose={() => setOpen(false)} severity='success' variant='filled' sx={{ width: '100%' }}>
-                    Sheet updated successfully
+                    updated successfully
                 </Alert>
             </Snackbar>
         </>

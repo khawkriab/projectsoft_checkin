@@ -22,6 +22,7 @@ export type FirebaseQuery = {
 export type Profile = EmployeeInfo &
     SheetInfo &
     FirebaseQuery & {
+        allowFindLocation?: number;
         googleId: string;
         token?: string;
         fullName: string;

@@ -36,6 +36,7 @@ function UserRegister() {
         jobPosition: '',
         employmentType: '',
         phoneNumber: '',
+        allowFindLocation: 0,
         role: 'USER',
     });
 

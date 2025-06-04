@@ -1,7 +1,15 @@
+import { Box, BoxProps, Button } from '@mui/material';
 import { GoogleMap, Marker, useLoadScript } from '@react-google-maps/api';
 import isWithinRadius from 'helper/checkDistance';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { LatLng } from 'type.global';
+
+type LocationCheckerProps = BoxProps & {
+    showMaps?: boolean;
+    checkAvail?: boolean;
+    onMatchTarget: (isWithin: boolean) => void;
+    onErrorLocation: (message: string) => void;
+};
 
 const libraries = ['places'];
 const mapContainerStyle = {
@@ -9,8 +17,30 @@ const mapContainerStyle = {
     height: '400px',
 };
 
-function LocationChecker() {
+function logError(error: GeolocationPositionError) {
+    switch (error.code) {
+        case error.PERMISSION_DENIED:
+            return 'User denied the request for Geolocation.';
+        case error.POSITION_UNAVAILABLE:
+            return 'Location information is unavailable.';
+        case error.TIMEOUT:
+            return 'The request to get user location timed out.';
+        default:
+            return 'An unknown error';
+    }
+}
+
+function LocationChecker({
+    checkAvail = false,
+    showMaps,
+    children,
+    onErrorLocation = () => {},
+    onMatchTarget = () => {},
+    ...props
+}: LocationCheckerProps) {
+    const watchId = useRef<number>(0);
     const [currentLocation, setCurrentLocation] = useState<LatLng | null>(null);
+    const [startCheckLocation, setStartCheckLocation] = useState(checkAvail);
     const [isWithin, setIsWithin] = useState(false);
     const { isLoaded, loadError } = useLoadScript({
         googleMapsApiKey: 'AIzaSyBdt1dApGQpWou2IWmRkSF6W5Dqei8k8bc',
@@ -22,47 +52,53 @@ function LocationChecker() {
     const target: LatLng = { lat: 16.455647329319532, lng: 102.81962779039188 };
 
     useEffect(() => {
-        const watchId = navigator.geolocation.watchPosition(
-            (position) => {
-                const { latitude, longitude } = position.coords;
-                const current = { lat: latitude, lng: longitude };
-                setCurrentLocation(current);
-                const within = isWithinRadius(current, target, 50); // 50 meters
-                setIsWithin(within);
-            },
-            (error) => {
-                console.error('Error getting location:', error);
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0,
-            }
-        );
+        if (checkAvail || showMaps) {
+            watchId.current = navigator.geolocation.watchPosition(
+                (position) => {
+                    console.log('watchPosition');
+                    const { latitude, longitude } = position.coords;
+                    const current = { lat: latitude, lng: longitude };
+                    setCurrentLocation(current);
+                    const within = isWithinRadius(current, target, 50); // 50 meters
+                    // setIsWithin(within);
+                    onMatchTarget(within);
+                },
+                (error) => {
+                    console.error('Error getting location:', error);
+                    onMatchTarget(false);
+                    onErrorLocation(logError(error));
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 1000,
+                    maximumAge: 0,
+                }
+            );
+        }
 
-        return () => navigator.geolocation.clearWatch(watchId);
-    }, []);
+        return () => navigator.geolocation.clearWatch(watchId.current);
+    }, [checkAvail, showMaps]);
 
     if (loadError) return <div>Error loading maps</div>;
     if (!isLoaded) return <div>Loading Maps...</div>;
 
     return (
-        <div>
-            <h3>Real-Time Location Checker</h3>
-            {currentLocation && (
+        <>
+            {currentLocation && checkAvail && (
                 <>
-                    <p>
+                    {/* <p>
                         Your Location: {currentLocation.lat.toFixed(6)}, {currentLocation.lng.toFixed(6)}
                         <br />
                         Within 100m of target: <strong>{isWithin ? 'Yes' : 'No'}</strong>
-                    </p>
-                    <GoogleMap mapContainerStyle={mapContainerStyle} zoom={17} center={target}>
+                    </p> */}
+                    <GoogleMap mapContainerStyle={mapContainerStyle} zoom={17} center={currentLocation}>
                         <Marker position={target} label='Target' />
                         {currentLocation && <Marker position={currentLocation} label='You' />}
                     </GoogleMap>
                 </>
             )}
-        </div>
+            <Box {...props}>{children}</Box>
+        </>
     );
 }
 

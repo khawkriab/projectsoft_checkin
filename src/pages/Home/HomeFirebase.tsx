@@ -10,9 +10,10 @@ import { UserCheckIn } from 'components/UserCheckIn';
 import useLocation from 'hooks/useLocation';
 import { LocationChecker } from 'components/common/LocationChecker';
 import utc from 'dayjs/plugin/utc';
-import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { getCheckinCalendar, getUsersList } from 'components/common/firebase/firebaseApi/checkinApi';
 import UpdateUserCheckInFirebase from 'components/UpdateUserCheckIn/UpdateUserCheckInFirebase';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+import { isAndroid, isIOS, isMobile } from 'react-device-detect';
 
 dayjs.extend(customParseFormat);
 dayjs.extend(utc);
@@ -25,7 +26,7 @@ type CheckinDataList = Omit<CheckinCalendar, 'userCheckinList'> & {
 };
 
 function Home() {
-    const { profile, auth2, authLoading, isSignedIn } = useGoogleLogin();
+    const { profile, authLoading, isSignedIn } = useGoogleLogin();
     //
     const [loading, setLoading] = useState<boolean>(true);
     const [userList, setUserList] = useState<Profile[]>([]);
@@ -35,46 +36,57 @@ function Home() {
     const getCheckin = async (uList: Profile[]) => {
         const c = await getCheckinCalendar();
 
-        if (uList) {
+        if (uList.length > 0) {
             const m: CheckinDataList[] = c.map((d) => {
-                let u: CheckinDataList['userCheckinList'] = [];
+                let checkinData: CheckinDataList['userCheckinList'] = [];
+                const isBeforeDay = dayjs(d.date).isBefore(dayjs().add(-1, 'day'));
+
                 uList.forEach((ul) => {
-                    const cu = d.userCheckinList.find((f) => f.email === ul.email);
-                    if (cu) {
-                        let timeText = cu.time ? dayjs(Number(cu.time)).format('HH:mm') : '';
-                        let remark = cu.remark;
+                    const userCheckin = d.userCheckinList.find((f) => f?.email === ul.email);
+
+                    if (userCheckin) {
+                        // time: HH:mm
+                        let timeText = userCheckin?.time ? userCheckin.time : '';
+                        let remark = userCheckin?.remark ?? '';
                         let statusText = 'ตรงเวลา';
                         let absentFlag = 0;
                         let lateFlag = 0;
 
-                        if (
-                            timeText &&
-                            dayjs(`${d.date} ${timeText}`, 'DD-MM-YYYY H:mm').isAfter(dayjs(`${d.date} 8:00`, 'YYYY-MM-D H:mm'))
-                        ) {
-                            statusText = `สาย ${statusText} ชั่วโมง`;
+                        if (timeText && dayjs(`${d.date} ${timeText}`).isAfter(dayjs(`${d.date} 08:00`))) {
+                            statusText = `สาย ${dayjs(`${d.date} ${timeText}`).diff(dayjs(`${d.date} 08:00`), 'minutes')} นาที`;
                             lateFlag = 1;
                         } else if (!timeText && remark.includes('ลา')) {
                             statusText = remark;
                             remark = 'ลา';
                             absentFlag = 1;
-                        } else if (!timeText && !remark && dayjs(`${d.date}`, 'DD-MM-YYYY').isBefore(dayjs().add(-1, 'day'))) {
-                            statusText = 'หาย';
-                            lateFlag = 1;
                         }
-
-                        u.push({ ...ul, ...cu, statusText, absentFlag, lateFlag, timeText });
+                        checkinData.push({ ...ul, ...userCheckin, statusText, absentFlag, lateFlag, timeText });
+                    } else if (ul?.email && isBeforeDay) {
+                        checkinData.push({
+                            ...ul,
+                            email: ul.email,
+                            googleId: ul.googleId,
+                            statusText: 'หาย',
+                            absentFlag: 0,
+                            lateFlag: 1,
+                            timeText: '',
+                            remark: '',
+                            reason: '',
+                            time: '',
+                        });
                     } else {
-                        u.push(null);
+                        checkinData.push(null);
                     }
                 });
 
                 return {
-                    date: dayjs(d.date).format('D-MM-YYYY'),
-                    userCheckinList: u,
+                    id: d.id,
+                    date: dayjs(d.date).format('DD-MM-YYYY'),
+                    userCheckinList: checkinData,
                 };
             });
 
-            setCheckinDataList([...m.sort((a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf())]);
+            setCheckinDataList([...m]);
         }
 
         setLoading(false);
@@ -89,9 +101,7 @@ function Home() {
             getCheckin(res);
         };
 
-        if (process.env.REACT_APP_ENV === 'test') {
-            init();
-        }
+        init();
     }, []);
 
     if (loading) {
@@ -107,16 +117,16 @@ function Home() {
                 ) : (
                     isSignedIn && (
                         <>
+                            {profile?.googleId && (isIOS || isAndroid) && isMobile && <UserCheckIn />}
+                            {/* {profile?.email && process.env.REACT_APP_ENV === 'test' && <UserCheckIn />} */}
                             {(profile?.role === 'ADMIN' || profile?.role === 'STAFF') && (
                                 <UpdateUserCheckInFirebase
                                     dateList={checkinDataList as CheckinCalendar[]}
                                     userList={userList}
-                                    afterUndate={() => {}}
+                                    afterUndate={() => getCheckin(userList)}
                                     // getCheckin={getCheckin}
                                 />
                             )}
-                            {/* {profile?.id && isAllowLocation && (isIOS || isAndroid) && isMobile && <UserCheckIn getCheckin={getCheckin} />} */}
-                            {profile?.email && process.env.REACT_APP_ENV === 'test' && <UserCheckIn />}
                         </>
                     )
                 )}
@@ -169,7 +179,7 @@ function Home() {
                                             >
                                                 {u?.timeText}
                                                 <Box display={'inline-block'} color={'#ff6f00'} fontWeight={700}>
-                                                    {u?.timeText && ' - '}
+                                                    {u?.timeText && u?.remark && ' - '}
                                                     {u?.remark}
                                                 </Box>
                                             </TableBodyCell>

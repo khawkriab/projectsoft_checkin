@@ -74,7 +74,7 @@ function UserRegister() {
                     status: res.status,
                 }));
 
-                if (profile.status !== 'NO_REGIST') {
+                if (res.status !== 'NO_REGIST') {
                     setIsRegistered(true);
                 }
             } catch (error) {
@@ -94,6 +94,7 @@ function UserRegister() {
                     role: profile.role,
                     status: profile.status,
                 }));
+                setIsRegistered(false);
             }
 
             setIsLoading(false);

@@ -1,6 +1,6 @@
 // ThemeContext.tsx
 import React, { createContext, useMemo, useState, useContext } from 'react';
-import { createTheme, ThemeProvider, CssBaseline } from '@mui/material';
+import { createTheme, ThemeProvider, CssBaseline, ThemeOptions } from '@mui/material';
 import { PaletteMode } from '@mui/material';
 
 const ThemeContext = createContext({ toggleColorMode: () => {} });
@@ -19,33 +19,53 @@ export const ThemeWrapper = ({ children }: { children: React.ReactNode }) => {
         []
     );
 
-    const themeColor = {
+    const themeConfigMode: Record<string, ThemeOptions> = {
         dark: {
-            primary: {
-                main: '#002884',
-                light: '#757ce8',
-                dark: '#002884',
-                contrastText: '#fff',
-            },
-            secondary: {
-                light: '#ffffff',
-                main: '#ffffff',
-                dark: '#ffffff',
-                contrastText: '#fff',
+            palette: {
+                mode: 'dark',
+                primary: {
+                    main: '#002884',
+                    light: '#757ce8',
+                    dark: '#002884',
+                    contrastText: '#fff',
+                },
+                secondary: {
+                    light: '#ffffff',
+                    main: '#ffffff',
+                    dark: '#ffffff',
+                    contrastText: '#000',
+                },
             },
         },
         light: {
-            primary: {
-                main: '#144da0',
-                light: '#757ce8',
-                dark: '#002884',
-                contrastText: '#fff',
+            palette: {
+                mode: 'light',
+                primary: {
+                    main: '#144da0',
+                    light: '#757ce8',
+                    dark: '#002884',
+                    contrastText: '#fff',
+                },
+                secondary: {
+                    light: '#ffffff',
+                    main: '#ffffff',
+                    dark: '#ffffff',
+                    contrastText: '#444',
+                },
             },
-            secondary: {
-                light: '#ffffff',
-                main: '#ffffff',
-                dark: '#ffffff',
-                contrastText: '#444',
+            components: {
+                MuiButton: {
+                    styleOverrides: {
+                        outlinedSecondary: {
+                            borderColor: '#144da0',
+                            color: '#144da0',
+                            '&:hover': {
+                                color: '#fff',
+                                backgroundColor: '#144da0',
+                            },
+                        },
+                    },
+                },
             },
         },
     };
@@ -53,10 +73,6 @@ export const ThemeWrapper = ({ children }: { children: React.ReactNode }) => {
     const theme = useMemo(
         () =>
             createTheme({
-                palette: {
-                    mode,
-                    ...themeColor[mode],
-                },
                 components: {
                     MuiTextField: {
                         defaultProps: {
@@ -67,6 +83,7 @@ export const ThemeWrapper = ({ children }: { children: React.ReactNode }) => {
                             },
                         },
                     },
+                    ...themeConfigMode[mode]['components'],
                     // MuiTableCell: {
                     //     styleOverrides: {
                     //         root: ({ theme }) => ({
@@ -74,6 +91,9 @@ export const ThemeWrapper = ({ children }: { children: React.ReactNode }) => {
                     //         }),
                     //     },
                     // },
+                },
+                palette: {
+                    ...themeConfigMode[mode]['palette'],
                 },
             }),
         [mode]

@@ -1,20 +1,25 @@
 import { Alert, AlertColor, Box, Button, Grid, Slide, Snackbar, TextField } from '@mui/material';
 import { addUserCheckinToday, deleteOldCheckin, getCheckinToday } from 'components/common/firebase/firebaseApi/checkinApi';
 import { useGoogleLogin } from 'components/common/GoogleLoginProvider';
+import { LocationChecker } from 'components/common/LocationChecker';
 import dayjs from 'dayjs';
 import isWithinRadius from 'helper/checkDistance';
 import getLocation from 'helper/getLocation';
 import useLocation from 'hooks/useLocation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { deviceDetect } from 'react-device-detect';
 import { LatLng, UserCheckInData } from 'type.global';
+
+const target: LatLng = { lat: 16.455647329319532, lng: 102.81962779039188 };
 
 function UserCheckIn() {
     const { profile } = useGoogleLogin();
     const { lat, lng } = useLocation();
     //
+    const timer = useRef<NodeJS.Timeout>(undefined);
+    //
     const [updating, setUpdating] = useState(false);
-    const [open, setOpen] = useState(false);
+    const [findingLocation, setFindingLocation] = useState(false);
     const [reason, setReason] = useState('');
     const [alertOptions, setAlertOptions] = useState({
         message: '',
@@ -49,37 +54,39 @@ function UserCheckIn() {
                 color: 'success',
                 open: true,
             }));
-
-            setUpdating(false);
         }
+        setUpdating(false);
     };
 
     const onCheckinWFH = (e: React.ChangeEvent<HTMLFormElement>) => {
         e.preventDefault();
         onCheckin('WFH');
     };
-    const onCheckinOnArea = async () => {
-        const target: LatLng = { lat: 16.455647329319532, lng: 102.81962779039188 };
-        const currentLocation = await getLocation();
-        const within = isWithinRadius(currentLocation, target, 50);
 
-        if (!currentLocation.isAllowLocation) {
-            return setAlertOptions((prev) => ({
-                ...prev,
-                message: 'not allow location',
-                color: 'error',
-                open: true,
-            }));
-        }
-        if (!within) {
-            return setAlertOptions((prev) => ({
-                ...prev,
-                message: 'not in area',
-                color: 'error',
-                open: true,
-            }));
-        }
-        onCheckin();
+    const onCheckinOnArea = async () => {
+        setFindingLocation(true);
+        // clearInterval(timer.current);
+        // const currentLocation = await getLocation();
+        // const within = isWithinRadius(currentLocation, target, 50);
+        // if (!currentLocation.isAllowLocation) {
+        //     setUpdating(false);
+        //     return setAlertOptions((prev) => ({
+        //         ...prev,
+        //         message: 'not allow location',
+        //         color: 'error',
+        //         open: true,
+        //     }));
+        // }
+        // if (!within) {
+        //     // setFindingLocation(true);
+        //     return setAlertOptions((prev) => ({
+        //         ...prev,
+        //         message: 'not in area',
+        //         color: 'error',
+        //         open: true,
+        //     }));
+        // }
+        // onCheckin();
     };
 
     const getUserCheckinToday = async () => {
@@ -133,7 +140,29 @@ function UserCheckIn() {
                     {alertOptions.message}
                 </Alert>
             </Snackbar>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, marginBottom: 2 }}>
+
+            <LocationChecker
+                checkAvail={findingLocation}
+                sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, marginBottom: 2, marginTop: 2 }}
+                onErrorLocation={(m) => {
+                    setAlertOptions((prev) => ({
+                        ...prev,
+                        message: m,
+                        color: 'error',
+                        open: true,
+                    }));
+                }}
+                onMatchTarget={() => {
+                    // setAlertOptions((prev) => ({
+                    //     ...prev,
+                    //     message: 'in area',
+                    //     color: 'success',
+                    //     open: true,
+                    // }));
+                    // setFindingLocation(false);
+                }}
+            >
+                {/* <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, marginBottom: 2, marginTop: 2 }}> */}
                 {currentUserData && profile?.role === 'USER' && (
                     <>
                         <Box>เวลาเข้างาน: {dayjs(Number(currentUserData.time)).format('DD-MM-YYYY HH:mm')}</Box>
@@ -150,7 +179,7 @@ function UserCheckIn() {
                     </>
                 )}
                 {currentUserData === null && (
-                    <Grid container gap={2} alignItems={'center'} sx={{ width: '100%' }}>
+                    <Grid container gap={2} alignItems={'center'} width={'100%'}>
                         <Grid size={{ xs: 12, sm: 12, md: 7 }}>
                             <Box component={'form'} onSubmit={onCheckinWFH}>
                                 <Grid container alignItems={'center'} gap={2} sx={{ width: '100%' }}>
@@ -166,10 +195,11 @@ function UserCheckIn() {
                                     <Grid flex={'none'}>
                                         <Button
                                             type='submit'
+                                            size='large'
                                             disabled={!!currentUserData}
                                             loading={updating}
                                             variant='outlined'
-                                            color='primary'
+                                            color='secondary'
                                         >
                                             ลงชื่อเข้างาน WFH
                                         </Button>
@@ -179,18 +209,25 @@ function UserCheckIn() {
                         </Grid>
                         <Grid flex={'auto'}>
                             <Button
-                                disabled={!!currentUserData}
+                                disabled={!!currentUserData || findingLocation}
                                 loading={updating}
+                                size='large'
                                 variant='contained'
                                 color='error'
                                 onClick={() => onCheckinOnArea()}
                             >
-                                ลงชื่อเข้างาน
+                                {findingLocation ? 'กำลังหาตำแหน่ง...' : 'ลงชื่อเข้างาน'}
+                            </Button>
+                        </Grid>
+                        <Grid flex={'auto'}>
+                            <Button variant='contained' color='warning' size='large'>
+                                show map
                             </Button>
                         </Grid>
                     </Grid>
                 )}
-            </Box>
+                {/* </Box> */}
+            </LocationChecker>
         </>
     );
 }

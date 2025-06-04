@@ -1,6 +1,10 @@
 import { CheckinCalendar, FirebaseQuery, Profile, UserCheckInData, UserCheckinList } from 'type.global';
 import { db, signInWithGoogleGapi } from '../firebaseInitialize';
 import { addDoc, collection, deleteDoc, doc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore';
+import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+
+dayjs.extend(customParseFormat);
 
 type StandardResponse<T = any> = T & {
     id: string;
@@ -58,9 +62,9 @@ export const getUsersRegister = (email: string) => {
 
         if (matchedUsers.length > 0) {
             resolve(matchedUsers[0]);
+        } else {
+            reject('user not found');
         }
-
-        reject('user not found');
     });
 };
 export const getUsersRegisterList = () => {
@@ -199,15 +203,21 @@ export const getCheckinCalendar = () => {
             id: doc.id,
         }));
 
-        resolve(res);
+        const s = res.sort((a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf());
+        resolve(s);
     });
 };
 export const updateUserCheckin = (cId: string, uId: string, payload: UserCheckinList[]) => {
     return new Promise<{ date: string; userCheckinList: UserCheckinList[] }>(async (resolve, reject) => {
-        const querySnapshot = await updateDoc(doc(db, 'checkinCalendar', cId), { userCheckinList: payload });
-        await updateDoc(doc(db, 'checkinToday', uId), { status: 1 });
-        console.log('querySnapshot:', querySnapshot);
+        try {
+            await updateDoc(doc(db, 'checkinCalendar', cId), { userCheckinList: payload });
+            if (uId) {
+                await updateDoc(doc(db, 'checkinToday', uId), { status: 1 });
+            }
 
-        resolve({ date: 'string', userCheckinList: [] });
+            resolve({ date: 'string', userCheckinList: [] });
+        } catch (error) {
+            reject(error);
+        }
     });
 };

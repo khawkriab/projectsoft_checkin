@@ -55,7 +55,6 @@
     ]
   },
   "devDependencies": {
-    "@types/bootstrap": "^5.2.10",
     "@types/gapi": "^0.0.47",
     "@types/gapi.auth2": "^0.0.61",
     "env-cmd": "^10.1.0"

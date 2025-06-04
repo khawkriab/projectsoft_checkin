@@ -58,7 +58,21 @@ function UserRegister() {
         if (profile) {
             try {
                 const res = await getUsersRegister(profile.email);
-                setFormRegister((prev) => ({ ...prev, ...res }));
+
+                setFormRegister((prev) => ({
+                    ...prev,
+                    id: res.id,
+                    email: res.email,
+                    employmentType: res.employmentType,
+                    fullName: res.fullName,
+                    googleId: res.googleId,
+                    jobPosition: res.jobPosition,
+                    name: res.name,
+                    phoneNumber: res.phoneNumber,
+                    profileURL: res.profileURL,
+                    role: res.role,
+                    status: res.status,
+                }));
 
                 if (profile.status !== 'NO_REGIST') {
                     setIsRegistered(true);
@@ -66,7 +80,20 @@ function UserRegister() {
             } catch (error) {
                 console.error('error:', error);
                 // prev data from google account
-                setFormRegister((prev) => ({ ...prev, ...profile }));
+                setFormRegister((prev) => ({
+                    ...prev,
+                    id: '',
+                    email: profile.email,
+                    employmentType: profile.employmentType,
+                    fullName: profile.fullName,
+                    googleId: profile.googleId,
+                    jobPosition: profile.jobPosition,
+                    name: profile.name,
+                    phoneNumber: profile.phoneNumber,
+                    profileURL: profile.profileURL,
+                    role: profile.role,
+                    status: profile.status,
+                }));
             }
 
             setIsLoading(false);
@@ -199,6 +226,19 @@ function UserRegister() {
                         >
                             <Button loading={isLoading} type='submit' variant='contained' color='primary'>
                                 Register
+                            </Button>
+                        </Box>
+                    )}
+                    {formRegister.id && (
+                        <Box
+                            sx={{
+                                width: '100%',
+                                textAlign: 'right',
+                                marginTop: 6,
+                            }}
+                        >
+                            <Button loading={isLoading} type='submit' variant='contained' color='primary'>
+                                Update
                             </Button>
                         </Box>
                     )}

@@ -9,7 +9,37 @@ type StandardResponse<T = any> = T & {
 export const addUsersRegister = (googleToken: string, payload: Profile) => {
     return new Promise<string>(async (resolve) => {
         await signInWithGoogleGapi(googleToken);
-        await addDoc(collection(db, 'usersList'), { ...payload, status: 'WAITING' });
+        if (payload.id) {
+            await setDoc(
+                doc(db, 'usersList', payload.id ?? ''),
+                {
+                    email: payload.email,
+                    employmentType: payload.employmentType,
+                    fullName: payload.fullName,
+                    googleId: payload.googleId,
+                    jobPosition: payload.jobPosition,
+                    name: payload.name,
+                    phoneNumber: payload.phoneNumber,
+                    profileURL: payload.profileURL,
+                    role: payload.role,
+                    status: 'WAITING',
+                },
+                { merge: true }
+            );
+        } else {
+            await addDoc(collection(db, 'usersList'), {
+                email: payload.email,
+                employmentType: payload.employmentType,
+                fullName: payload.fullName,
+                googleId: payload.googleId,
+                jobPosition: payload.jobPosition,
+                name: payload.name,
+                phoneNumber: payload.phoneNumber,
+                profileURL: payload.profileURL,
+                role: payload.role,
+                status: 'WAITING',
+            });
+        }
 
         resolve('success');
     });

@@ -113,6 +113,25 @@ export const getUsers = (googleId: string) => {
         reject('user not found');
     });
 };
+export const getUsersWithEmail = (email: string) => {
+    return new Promise<Profile>(async (resolve, reject) => {
+        const usersRef = collection(db, 'usersList');
+        const q = query(usersRef, where('email', '==', email));
+
+        const querySnapshot = await getDocs(q);
+
+        const matchedUsers = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...(doc.data() as Profile),
+        }));
+
+        if (matchedUsers.length > 0) {
+            resolve(matchedUsers[0]);
+        }
+
+        reject('user not found');
+    });
+};
 export const getUsersList = () => {
     return new Promise<Profile[]>(async (resolve, reject) => {
         const querySnapshot = await getDocs(collection(db, 'usersList'));

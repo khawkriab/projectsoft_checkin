@@ -2,7 +2,7 @@ import axios from 'axios';
 import { loadAuth2, loadGapiInsideDOM } from 'gapi-script';
 import { createContext, useEffect, useState } from 'react';
 import { Profile, SheetData } from 'type.global';
-import { getUsers } from '../firebase/firebaseApi/checkinApi';
+import { getUsers, getUsersWithEmail } from '../firebase/firebaseApi/checkinApi';
 
 type GoogleLoginContextProps = {
     auth2: gapi.auth2.GoogleAuthBase | null;
@@ -109,7 +109,8 @@ function GoogleLoginProvider({ children }: { children: React.ReactNode }) {
                 status: 'NO_REGIST',
             };
             try {
-                const res = await getUsers(profile.getId());
+                // const res = await getUsers(profile.getId());
+                const res = await getUsersWithEmail(profile.getEmail());
 
                 setProfile({ ..._profile, ...res, status: 'APPROVE', token: _profile.token });
             } catch (error) {

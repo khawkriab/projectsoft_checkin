@@ -1,6 +1,14 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup, signOut } from 'firebase/auth';
+import {
+    getAuth,
+    getRedirectResult,
+    GoogleAuthProvider,
+    signInWithCredential,
+    signInWithPopup,
+    signInWithRedirect,
+    signOut,
+} from 'firebase/auth';
 import { initializeFirestore } from 'firebase/firestore';
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -56,6 +64,24 @@ export const loginWithGoogle = async () => {
     } catch (error) {
         console.error('❌ Google login failed:', error);
     }
+};
+export const loginWithRedirectGoogle = async () => {
+    getRedirectResult(auth)
+        .then((result) => {
+            if (result?.user) {
+                const user = result.user;
+                const credential = GoogleAuthProvider.credentialFromResult(result);
+                const accessToken = credential?.accessToken;
+
+                console.log('✅ Logged in via redirect', {
+                    user,
+                    accessToken,
+                });
+            }
+        })
+        .catch((error) => {
+            console.error('❌ Redirect login failed', error);
+        });
 };
 export const logoutWithGoogle = async () => {
     signOut(auth)

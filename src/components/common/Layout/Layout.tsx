@@ -23,7 +23,8 @@ import DarkModeIcon from '@mui/icons-material/DarkMode';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
-import { loginWithGoogle, logoutWithGoogle } from '../firebase/firebaseInitialize';
+import { loginWithGoogle, loginWithRedirectGoogle, logoutWithGoogle } from '../firebase/firebaseInitialize';
+import { isMobile } from 'react-device-detect';
 
 function MenuItem({ children, to }: { to: string; children: React.ReactNode }) {
     const location = useLocation();
@@ -151,9 +152,15 @@ function Layout() {
                                         </>
                                     ) : (
                                         <>
-                                            <Button variant='contained' color='secondary' onClick={loginWithGoogle}>
-                                                Signin with google**
-                                            </Button>
+                                            {isMobile ? (
+                                                <Button variant='contained' color='secondary' onClick={loginWithRedirectGoogle}>
+                                                    Signin with google++
+                                                </Button>
+                                            ) : (
+                                                <Button variant='contained' color='secondary' onClick={loginWithGoogle}>
+                                                    Signin with google**
+                                                </Button>
+                                            )}
                                         </>
                                     )}
                                 </>

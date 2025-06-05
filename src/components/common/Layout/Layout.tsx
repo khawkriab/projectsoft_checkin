@@ -23,6 +23,7 @@ import DarkModeIcon from '@mui/icons-material/DarkMode';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
+import { loginWithGoogle, logoutWithGoogle } from '../firebase/firebaseInitialize';
 
 function MenuItem({ children, to }: { to: string; children: React.ReactNode }) {
     const location = useLocation();
@@ -144,14 +145,14 @@ function Layout() {
                                         <>
                                             <Avatar />
                                             <Typography>{profile?.fullName}</Typography>
-                                            <Button variant='contained' color='error' onClick={onSignout}>
+                                            <Button variant='contained' color='error' onClick={logoutWithGoogle}>
                                                 Logout
                                             </Button>
                                         </>
                                     ) : (
                                         <>
-                                            <Button variant='contained' color='secondary' onClick={onSignin}>
-                                                Signin with google
+                                            <Button variant='contained' color='secondary' onClick={loginWithGoogle}>
+                                                Signin with google**
                                             </Button>
                                         </>
                                     )}

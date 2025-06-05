@@ -36,7 +36,7 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "env-cmd -f .env.test cross-env FAST_REFRESH=false react-scripts start",
+    "start": "env-cmd -f .env cross-env FAST_REFRESH=false react-scripts start",
     "build": "react-scripts build",
     "deploy": "gh-pages -d build",
     "test": "react-scripts test",

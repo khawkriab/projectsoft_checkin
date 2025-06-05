@@ -3,6 +3,7 @@ import { loadAuth2, loadGapiInsideDOM } from 'gapi-script';
 import { createContext, useEffect, useState } from 'react';
 import { Profile, SheetData } from 'type.global';
 import { getUsers, getUsersWithEmail } from '../firebase/firebaseApi/checkinApi';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
 type GoogleLoginContextProps = {
     auth2: gapi.auth2.GoogleAuthBase | null;
@@ -202,7 +203,41 @@ function GoogleLoginProvider({ children }: { children: React.ReactNode }) {
     };
 
     useEffect(() => {
-        initClient();
+        // initClient();
+    }, []);
+
+    useEffect(() => {
+        const auth = getAuth();
+
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            if (currentUser) {
+                let _profile: Profile = {
+                    googleId: currentUser.providerData[0]?.uid,
+                    token: '',
+                    fullName: currentUser.displayName ?? '',
+                    profileURL: currentUser.photoURL ?? '',
+                    email: currentUser.email ?? '',
+                    role: 'USER',
+                    status: 'NO_REGIST',
+                };
+                getUsersWithEmail(_profile.email)
+                    .then((t) => {
+                        setProfile({ ..._profile, ...t, status: 'APPROVE', token: _profile.token });
+                    })
+                    .catch((error) => {
+                        console.error('error:', error);
+                        setProfile({ ..._profile });
+                    });
+
+                setIsSignedIn(true);
+            } else {
+                setIsSignedIn(false);
+            }
+            setAuthLoading(false);
+        });
+
+        // Cleanup listener
+        return () => unsubscribe();
     }, []);
 
     //

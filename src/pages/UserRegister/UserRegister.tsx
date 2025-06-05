@@ -34,6 +34,7 @@ function UserRegister() {
         fullName: '',
         googleId: '',
         jobPosition: '',
+        profileURL: '',
         employmentType: '',
         phoneNumber: '',
         allowFindLocation: 0,
@@ -91,7 +92,7 @@ function UserRegister() {
                     jobPosition: profile.jobPosition,
                     name: profile.name,
                     phoneNumber: profile.phoneNumber,
-                    profileURL: profile.profileURL,
+                    profileURL: profile.profileURL ?? '',
                     role: profile.role,
                     status: profile.status,
                 }));

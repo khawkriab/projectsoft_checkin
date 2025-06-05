@@ -152,15 +152,13 @@ function Layout() {
                                         </>
                                     ) : (
                                         <>
-                                            {isMobile ? (
-                                                <Button variant='contained' color='secondary' onClick={loginWithRedirectGoogle}>
-                                                    Signin with google++
-                                                </Button>
-                                            ) : (
-                                                <Button variant='contained' color='secondary' onClick={loginWithGoogle}>
-                                                    Signin with google**
-                                                </Button>
-                                            )}
+                                            <Button variant='contained' color='secondary' onClick={loginWithRedirectGoogle}>
+                                                Signin with redirect google
+                                            </Button>
+
+                                            <Button variant='contained' color='secondary' onClick={loginWithGoogle}>
+                                                Signin with google**
+                                            </Button>
                                         </>
                                     )}
                                 </>
@@ -208,8 +206,12 @@ function Layout() {
                                     </>
                                 ) : (
                                     <>
-                                        <Button variant='contained' color='secondary' onClick={onSignin}>
-                                            Signin with google
+                                        <Button variant='contained' color='secondary' onClick={loginWithRedirectGoogle}>
+                                            Signin with redirect google
+                                        </Button>
+
+                                        <Button variant='contained' color='secondary' onClick={loginWithGoogle}>
+                                            Signin with google**
                                         </Button>
                                     </>
                                 )}

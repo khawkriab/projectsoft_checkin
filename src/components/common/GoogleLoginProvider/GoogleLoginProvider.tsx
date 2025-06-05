@@ -188,13 +188,10 @@ function GoogleLoginProvider({ children }: { children: React.ReactNode }) {
     };
 
     const initClient = async () => {
+        const scopes = ['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email'].join(' ');
         try {
             const gapi = await loadGapiInsideDOM();
-            const auth2 = await loadAuth2(
-                gapi,
-                process.env.REACT_APP_GOOGLE_PRIVATE_KEY as string,
-                'https://www.googleapis.com/auth/spreadsheets'
-            );
+            const auth2 = await loadAuth2(gapi, process.env.REACT_APP_GOOGLE_PRIVATE_KEY as string, scopes);
 
             setAuth(auth2);
             getSetProfile(auth2);

@@ -12,7 +12,7 @@ type StandardResponse<T = any> = T & {
 
 export const addUsersRegister = (googleToken: string, payload: Profile) => {
     return new Promise<string>(async (resolve) => {
-        await signInWithGoogleGapi(googleToken);
+        // await signInWithGoogleGapi(googleToken);
         if (payload.id) {
             await setDoc(
                 doc(db, 'usersList', payload.id ?? ''),
@@ -51,7 +51,7 @@ export const addUsersRegister = (googleToken: string, payload: Profile) => {
 
 export const usersUpdateAllowLocation = (googleToken: string, uId: string, allowFindLocation: number) => {
     return new Promise<string>(async (resolve) => {
-        await signInWithGoogleGapi(googleToken);
+        // await signInWithGoogleGapi(googleToken);
 
         await setDoc(
             doc(db, 'usersList', uId),
@@ -148,7 +148,8 @@ export const addUsersList = (googleToken: string, payload: Profile) => {
         if (!payload?.id) reject('no id');
 
         try {
-            await signInWithGoogleGapi(googleToken);
+            // await signInWithGoogleGapi(googleToken);
+            // await addDoc(collection(db, 'usersList'), payload);
             await setDoc(
                 doc(db, 'usersList', payload.id ?? ''),
                 {
@@ -219,7 +220,7 @@ export const getCheckinTodayList = () => {
 };
 export const addUserCheckinToday = (googleToken: string, payload: UserCheckInData) => {
     return new Promise<string>(async (resolve, reject) => {
-        await signInWithGoogleGapi(googleToken);
+        // await signInWithGoogleGapi(googleToken);
         await addDoc(collection(db, 'checkinToday'), payload);
 
         resolve('success');
@@ -227,7 +228,7 @@ export const addUserCheckinToday = (googleToken: string, payload: UserCheckInDat
 };
 export const createCheckinCalendar = (googleToken: string, payload: { date: string; userCheckinList: [] }[]) => {
     return new Promise<string>(async (resolve, reject) => {
-        await signInWithGoogleGapi(googleToken);
+        // await signInWithGoogleGapi(googleToken);
 
         const all = payload.map((d) => addDoc(collection(db, 'checkinCalendar'), d));
         await Promise.all(all);

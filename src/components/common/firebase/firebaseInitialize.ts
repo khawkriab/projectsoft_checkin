@@ -17,25 +17,25 @@ import { initializeFirestore } from 'firebase/firestore';
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 
 // CheckinSheets
-const firebaseConfig = {
-    apiKey: 'AIzaSyAZYP-RFU3_xwR5VQ6U7URxbS-jse-5B_Y',
-    authDomain: 'checkinsheets-452406.firebaseapp.com',
-    projectId: 'checkinsheets-452406',
-    storageBucket: 'checkinsheets-452406.firebasestorage.app',
-    messagingSenderId: '484657894073',
-    appId: '1:484657894073:web:692d7cc37b63ed77998168',
-    measurementId: 'G-Q4WFCS95PN',
-};
-// checkin-calendar
 // const firebaseConfig = {
-//     apiKey: 'AIzaSyBlFyN9DlEMpjaP6dNHqRHkBeVIHiPMmZw',
-//     authDomain: 'checkin-calendar-166b4.firebaseapp.com',
-//     projectId: 'checkin-calendar-166b4',
-//     storageBucket: 'checkin-calendar-166b4.firebasestorage.app',
-//     messagingSenderId: '1078310633734',
-//     appId: '1:1078310633734:web:b9afc87b7c67ff26a9de87',
-//     measurementId: 'G-3FZDBXGWC4',
+//     apiKey: 'AIzaSyAZYP-RFU3_xwR5VQ6U7URxbS-jse-5B_Y',
+//     authDomain: 'checkinsheets-452406.firebaseapp.com',
+//     projectId: 'checkinsheets-452406',
+//     storageBucket: 'checkinsheets-452406.firebasestorage.app',
+//     messagingSenderId: '484657894073',
+//     appId: '1:484657894073:web:692d7cc37b63ed77998168',
+//     measurementId: 'G-Q4WFCS95PN',
 // };
+// checkin-calendar
+const firebaseConfig = {
+    apiKey: 'AIzaSyBlFyN9DlEMpjaP6dNHqRHkBeVIHiPMmZw',
+    authDomain: 'checkin-calendar-166b4.firebaseapp.com',
+    projectId: 'checkin-calendar-166b4',
+    storageBucket: 'checkin-calendar-166b4.firebasestorage.app',
+    messagingSenderId: '1078310633734',
+    appId: '1:1078310633734:web:b9afc87b7c67ff26a9de87',
+    measurementId: 'G-3FZDBXGWC4',
+};
 
 // Initialize Firebase
 // const app = initializeApp(firebaseConfig);
@@ -52,7 +52,8 @@ export const signInWithGoogleGapi = async (idToken: string) => {
 };
 
 const provider = new GoogleAuthProvider();
-provider.addScope('https://www.googleapis.com/auth/contacts.readonly');
+provider.addScope('https://www.googleapis.com/auth/userinfo.email');
+provider.addScope('https://www.googleapis.com/auth/userinfo.profile');
 // provider.addScope('https://www.googleapis.com/auth/spreadsheets');
 
 export const loginWithGoogle = async () => {

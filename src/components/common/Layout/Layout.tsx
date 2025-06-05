@@ -152,12 +152,8 @@ function Layout() {
                                         </>
                                     ) : (
                                         <>
-                                            <Button variant='contained' color='secondary' onClick={loginWithRedirectGoogle}>
-                                                Signin with redirect google
-                                            </Button>
-
                                             <Button variant='contained' color='secondary' onClick={loginWithGoogle}>
-                                                Signin with google**
+                                                Signin with google
                                             </Button>
                                         </>
                                     )}
@@ -206,12 +202,8 @@ function Layout() {
                                     </>
                                 ) : (
                                     <>
-                                        <Button variant='contained' color='secondary' onClick={loginWithRedirectGoogle}>
-                                            Signin with redirect google
-                                        </Button>
-
                                         <Button variant='contained' color='secondary' onClick={loginWithGoogle}>
-                                            Signin with google**
+                                            Signin with google
                                         </Button>
                                     </>
                                 )}

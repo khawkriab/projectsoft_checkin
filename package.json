@@ -1,5 +1,5 @@
 {
-  "name": "check_in_sheets",
+  "name": "checkin_today",
   "version": "0.1.0",
   "private": true,
   "homepage": "https://khawkriab.github.io/projectsoft_checkin",
@@ -19,14 +19,11 @@
     "@types/node": "^16.18.126",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
-    "axios": "^1.8.1",
     "cross-env": "^7.0.3",
     "dayjs": "^1.11.13",
     "dayjs-plugin-utc": "^0.1.2",
     "firebase": "^11.8.1",
-    "gapi-script": "^1.2.0",
     "gh-pages": "^6.3.0",
-    "googleapis": "^146.0.0",
     "react": "^19.0.0",
     "react-device-detect": "^2.2.3",
     "react-dom": "^19.0.0",
@@ -36,7 +33,7 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "env-cmd -f .env cross-env FAST_REFRESH=false react-scripts start",
+    "start": "cross-env FAST_REFRESH=false react-scripts start",
     "build": "react-scripts build",
     "deploy": "gh-pages -d build",
     "test": "react-scripts test",
@@ -55,8 +52,6 @@
     ]
   },
   "devDependencies": {
-    "@types/gapi": "^0.0.47",
-    "@types/gapi.auth2": "^0.0.61",
     "env-cmd": "^10.1.0"
   }
 }

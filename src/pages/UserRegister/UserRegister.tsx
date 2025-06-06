@@ -17,13 +17,13 @@ import {
     Snackbar,
     TextField,
 } from '@mui/material';
-import { addUsersRegister, getUsersRegister } from 'components/common/firebase/firebaseApi/checkinApi';
-import { useGoogleLogin } from 'components/common/GoogleLoginProvider';
+import { useFirebase } from 'components/common/FirebaseProvider';
+import { addUsersRegister, getUsersRegister } from 'components/common/FirebaseProvider/firebaseApi/userApi';
 import { useEffect, useState } from 'react';
 import { Profile } from 'type.global';
 
 function UserRegister() {
-    const { profile } = useGoogleLogin();
+    const { profile } = useFirebase();
     //
     const [open, setOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -46,7 +46,7 @@ function UserRegister() {
         e.preventDefault();
         // if (profile?.token) {
         setIsLoading(true);
-        await addUsersRegister('', formRegister);
+        await addUsersRegister(formRegister);
         await getDataCurrentUser();
         setIsLoading(false);
         setOpen(true);

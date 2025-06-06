@@ -1,1 +1,1 @@
-export { default as UpdateUserCheckIn } from './UpdateUserCheckInSheets';
+export { default as UpdateUserCheckIn } from './UpdateUserCheckInFirebase';

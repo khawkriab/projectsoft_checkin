@@ -1,16 +1,16 @@
 import { BrowserRouter } from 'react-router-dom';
 import RoutesManagement from './RouteManagement';
-import { GoogleLoginProvider } from 'components/common/GoogleLoginProvider';
-import './App.css';
 import { ThemeProvider } from 'components/common/ThemeProvider';
+import { FirebaseProvider } from 'components/common/FirebaseProvider';
+import './App.css';
 
 function App() {
     return (
         <BrowserRouter basename='/projectsoft_checkin'>
             <ThemeProvider>
-                <GoogleLoginProvider>
+                <FirebaseProvider>
                     <RoutesManagement />
-                </GoogleLoginProvider>
+                </FirebaseProvider>
             </ThemeProvider>
         </BrowserRouter>
     );

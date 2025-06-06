@@ -4,9 +4,9 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
-import { createCheckinCalendar, getCheckinCalendar } from 'components/common/firebase/firebaseApi/checkinApi';
-import { useGoogleLogin } from 'components/common/GoogleLoginProvider';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
+import { useFirebase } from 'components/common/FirebaseProvider';
+import { createCheckinCalendar, getCheckinCalendar } from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
 
 dayjs.extend(customParseFormat);
 
@@ -23,7 +23,7 @@ function ServerDay(props: PickersDayProps & { highlightedDays?: number[] }) {
 }
 
 function CreateMonthCalendar() {
-    const { profile } = useGoogleLogin();
+    const { profile } = useFirebase();
     //
     const [highlightedDays, setHighlightedDays] = useState<number[]>([]);
     const [month, setMonth] = useState(dayjs().get('months'));
@@ -35,7 +35,7 @@ function CreateMonthCalendar() {
         const n = highlightedDays.sort((a, b) => a - b);
         const m = n.map((d) => ({ date: `${selectMonth}-${d}`, userCheckinList: [] }));
 
-        await createCheckinCalendar(profile?.token ?? '', m as any);
+        await createCheckinCalendar(m as any);
         alert('success');
     };
 

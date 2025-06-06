@@ -1,4 +1,4 @@
-import { Box, BoxProps, Button } from '@mui/material';
+import { Box, BoxProps } from '@mui/material';
 import { GoogleMap, Marker, useLoadScript } from '@react-google-maps/api';
 import isWithinRadius from 'helper/checkDistance';
 import { useEffect, useRef, useState } from 'react';
@@ -7,7 +7,13 @@ import { LatLng } from 'type.global';
 type LocationCheckerProps = BoxProps & {
     showMaps?: boolean;
     checkAvail?: boolean;
-    onMatchTarget: (isWithin: boolean) => void;
+    onMatchTarget: (
+        isWithin: boolean,
+        latlng: {
+            lat: number;
+            lng: number;
+        }
+    ) => void;
     onErrorLocation: (message: string) => void;
 };
 const target: LatLng = { lat: 16.455647329319532, lng: 102.81962779039188 };
@@ -56,10 +62,10 @@ function LocationChecker({
                     console.log('watchPosition');
                     const { latitude, longitude } = position.coords;
                     const current = { lat: latitude, lng: longitude };
-                    setCurrentLocation(current);
                     const within = isWithinRadius(current, target, 50); // 50 meters
+                    setCurrentLocation(current);
                     // setIsWithin(within);
-                    onMatchTarget(within);
+                    onMatchTarget(within, current);
                 },
                 (error) => {
                     console.error('Error getting location:', error);

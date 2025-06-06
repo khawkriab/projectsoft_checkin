@@ -1,6 +1,6 @@
 import { Alert, Box, Button, Paper, Slide, Snackbar, Table, TableBody, TableContainer, TableHead, TableRow } from '@mui/material';
-import { addUsersList, getUsersList, getUsersRegisterList } from 'components/common/firebase/firebaseApi/checkinApi';
-import { useGoogleLogin } from 'components/common/GoogleLoginProvider';
+import { useFirebase } from 'components/common/FirebaseProvider';
+import { addUsersList, getUsersList } from 'components/common/FirebaseProvider/firebaseApi/userApi';
 import { TableBodyCell, TableHeadCell } from 'components/common/MuiTable';
 import { useEffect, useMemo, useState } from 'react';
 import { Profile } from 'type.global';
@@ -8,7 +8,7 @@ import { Profile } from 'type.global';
 type MemberType = Profile;
 
 function Member() {
-    const { profile } = useGoogleLogin();
+    const { profile } = useFirebase();
     const [memberList, setMemberList] = useState<MemberType[]>([]);
     //
     const [updating, setUpdating] = useState(false);
@@ -19,27 +19,20 @@ function Member() {
         // if (!profile?.token) return;
 
         setUpdating(true);
-        await addUsersList('', user);
+        await addUsersList(user);
         setOpen(true);
         getUserList();
     };
     const onAddUser = async (user: any) => {
         setUpdating(true);
-        await addUsersList('', user);
+        await addUsersList(user);
 
         // getUserList();
         setUpdating(false);
         setOpen(true);
     };
     const getUserList = async () => {
-        // const arr = await getUserList();
-        // setMemberList([...arr]);
         const res = await getUsersList();
-        // const usersData: MemberType[] = res.map((doc) => ({
-        //     ...doc,
-        // }));
-
-        // setMemberList([...usersData]);
         setMemberList([...res]);
         // console.log('usersData:', usersData);
 

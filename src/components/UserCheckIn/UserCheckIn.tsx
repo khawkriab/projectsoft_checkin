@@ -1,22 +1,17 @@
 import { Alert, AlertColor, Box, Button, Grid, Slide, Snackbar, TextField } from '@mui/material';
-import {
-    addUserCheckinToday,
-    deleteOldCheckin,
-    getCheckinToday,
-    usersUpdateAllowLocation,
-} from 'components/common/firebase/firebaseApi/checkinApi';
-import { useGoogleLogin } from 'components/common/GoogleLoginProvider';
+import { useFirebase } from 'components/common/FirebaseProvider';
+import { addUserCheckinToday, deleteOldCheckin, getCheckinToday } from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
+import { usersUpdateAllowLocation } from 'components/common/FirebaseProvider/firebaseApi/userApi';
 import { LocationChecker } from 'components/common/LocationChecker';
 import dayjs from 'dayjs';
-import useLocation from 'hooks/useLocation';
 import { CheckinDataList } from 'pages/Home/HomeFirebase';
-import { useEffect, useState } from 'react';
-import { deviceDetect } from 'react-device-detect';
-import { UserCheckInData } from 'type.global';
+import { useEffect, useRef, useState } from 'react';
+import { deviceDetect, isAndroid, isIOS, isMobile } from 'react-device-detect';
+import { LatLng, UserCheckInData } from 'type.global';
 
 function UserCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
-    const { auth2, profile, updateProfile } = useGoogleLogin();
-    const { lat, lng } = useLocation();
+    const { profile } = useFirebase();
+    const latlng = useRef<LatLng>({ lat: 0, lng: 0 });
     //
     const [updating, setUpdating] = useState(false);
     const [findingLocation, setFindingLocation] = useState(false);
@@ -44,10 +39,10 @@ function UserCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
                 remark: remark ?? '',
                 reason: reason,
                 device: deviceDetect(undefined),
-                latlng: { lat, lng },
+                latlng: latlng.current,
                 status: 99,
             };
-            await addUserCheckinToday('', payload);
+            await addUserCheckinToday(payload);
             await getUserCheckinToday();
 
             setAlertOptions((prev) => ({
@@ -66,10 +61,9 @@ function UserCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
     };
 
     const onAllowFindLocation = async (isAllow: boolean) => {
-        if (profile && auth2) {
+        if (profile) {
             setUpdating(true);
-            await usersUpdateAllowLocation(profile?.token ?? '', profile?.id ?? '', isAllow ? 1 : 0);
-            await updateProfile(auth2);
+            await usersUpdateAllowLocation(profile?.id ?? '', isAllow ? 1 : 0);
 
             setAlertOptions((prev) => ({
                 ...prev,
@@ -100,8 +94,10 @@ function UserCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
     };
 
     useEffect(() => {
-        setAllowFindLocation(!!profile?.allowFindLocation);
-        setFindingLocation(!!profile?.allowFindLocation);
+        if (isMobile) {
+            setAllowFindLocation(!!profile?.allowFindLocation);
+            setFindingLocation(!!profile?.allowFindLocation);
+        }
     }, [profile?.allowFindLocation]);
 
     useEffect(() => {
@@ -152,10 +148,12 @@ function UserCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
                             open: true,
                         }));
                         setFindingLocation(false);
+                        latlng.current = { lat: 0, lng: 0 };
                     }}
-                    onMatchTarget={(e) => {
+                    onMatchTarget={(e, l) => {
                         setIsAvail(e);
                         setFindingLocation(!e);
+                        latlng.current = l;
                     }}
                 >
                     {/* <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, marginBottom: 2, marginTop: 2 }}> */}
@@ -203,29 +201,31 @@ function UserCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
                                     </Grid>
                                 </Box>
                             </Grid>
-                            <Grid flex={'auto'} display={'flex'} gap={2}>
-                                {allowFindLocation && (
+                            {(isIOS || isAndroid) && isMobile && (
+                                <Grid flex={'auto'} display={'flex'} gap={2}>
+                                    {allowFindLocation && (
+                                        <Button
+                                            disabled={!!currentUserData || findingLocation}
+                                            loading={updating}
+                                            size='large'
+                                            variant='contained'
+                                            color='primary'
+                                            onClick={() => onCheckinOnArea()}
+                                        >
+                                            {findingLocation ? 'กำลังหาตำแหน่ง...' : isAvail ? 'ลงชื่อเข้างาน' : 'ค้นหาตำแหน่ง'}
+                                        </Button>
+                                    )}
                                     <Button
-                                        disabled={!!currentUserData || findingLocation}
                                         loading={updating}
                                         size='large'
                                         variant='contained'
-                                        color='primary'
-                                        onClick={() => onCheckinOnArea()}
+                                        color='error'
+                                        onClick={() => onAllowFindLocation(!allowFindLocation)}
                                     >
-                                        {findingLocation ? 'กำลังหาตำแหน่ง...' : isAvail ? 'ลงชื่อเข้างาน' : 'ค้นหาตำแหน่ง'}
+                                        {allowFindLocation ? 'หยุดค้นหาตำแหน่ง' : 'อนุญาติให้ค้นหาตำแหน่ง'}
                                     </Button>
-                                )}
-                                <Button
-                                    loading={updating}
-                                    size='large'
-                                    variant='contained'
-                                    color='error'
-                                    onClick={() => onAllowFindLocation(!allowFindLocation)}
-                                >
-                                    {allowFindLocation ? 'หยุดค้นหาตำแหน่ง' : 'อนุญาติให้ค้นหาตำแหน่ง'}
-                                </Button>
-                            </Grid>
+                                </Grid>
+                            )}
                         </Grid>
                     )}
                     {/* </Box> */}

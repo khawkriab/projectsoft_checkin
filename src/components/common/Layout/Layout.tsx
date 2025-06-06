@@ -15,7 +15,6 @@ import {
     Typography,
     useTheme,
 } from '@mui/material';
-import { useGoogleLogin } from 'components/common/GoogleLoginProvider';
 import { useColorMode } from 'components/common/ThemeProvider';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import LightModeIcon from '@mui/icons-material/LightMode';
@@ -23,8 +22,7 @@ import DarkModeIcon from '@mui/icons-material/DarkMode';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
-import { loginWithGoogle, loginWithRedirectGoogle, logoutWithGoogle } from '../firebase/firebaseInitialize';
-import { isMobile } from 'react-device-detect';
+import { useFirebase } from '../FirebaseProvider';
 
 function MenuItem({ children, to }: { to: string; children: React.ReactNode }) {
     const location = useLocation();
@@ -46,7 +44,7 @@ function MenuItem({ children, to }: { to: string; children: React.ReactNode }) {
 }
 
 function Layout() {
-    const { authLoading, isSignedIn, profile, onSignin, onSignout } = useGoogleLogin();
+    const { authLoading, isSignedIn, profile, signInWithGoogle, signOutUser } = useFirebase();
     const { toggleColorMode } = useColorMode();
     const theme = useTheme();
     const [open, setOpen] = useState(false);
@@ -146,13 +144,13 @@ function Layout() {
                                         <>
                                             <Avatar />
                                             <Typography>{profile?.fullName}</Typography>
-                                            <Button variant='contained' color='error' onClick={logoutWithGoogle}>
+                                            <Button variant='contained' color='error' onClick={signOutUser}>
                                                 Logout
                                             </Button>
                                         </>
                                     ) : (
                                         <>
-                                            <Button variant='contained' color='secondary' onClick={loginWithGoogle}>
+                                            <Button variant='contained' color='secondary' onClick={signInWithGoogle}>
                                                 Signin with google
                                             </Button>
                                         </>
@@ -196,13 +194,13 @@ function Layout() {
                                     <>
                                         <Avatar />
                                         <Typography>{profile?.fullName}</Typography>
-                                        <Button variant='contained' color='error' onClick={onSignout}>
+                                        <Button variant='contained' color='error' onClick={signOutUser}>
                                             Logout
                                         </Button>
                                     </>
                                 ) : (
                                     <>
-                                        <Button variant='contained' color='secondary' onClick={loginWithGoogle}>
+                                        <Button variant='contained' color='secondary' onClick={signInWithGoogle}>
                                             Signin with google
                                         </Button>
                                     </>
@@ -222,6 +220,13 @@ function Layout() {
                                 Member
                             </Typography>
                         </NavLink>
+                        {profile?.googleId && (
+                            <NavLink to={'/register'}>
+                                <Typography margin={0} variant='h5'>
+                                    Register
+                                </Typography>
+                            </NavLink>
+                        )}
                     </Stack>
                 </Toolbar>
             </Drawer>

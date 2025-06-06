@@ -1,19 +1,15 @@
-import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
-import { useGoogleLogin } from 'components/common/GoogleLoginProvider';
-import { getColumnLetter } from 'helper/getColumnLetter';
 import { Box, Paper, Table, TableBody, TableContainer, TableHead, TableRow } from '@mui/material';
 import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/MuiTable';
-import { CheckinCalendar, FirebaseQuery, Profile, SheetData, UserCheckInData, UserCheckinList } from 'type.global';
+import { CheckinCalendar, Profile, UserCheckinList } from 'type.global';
 import { UserCheckIn } from 'components/UserCheckIn';
-import useLocation from 'hooks/useLocation';
-import { LocationChecker } from 'components/common/LocationChecker';
 import utc from 'dayjs/plugin/utc';
-import { getCheckinCalendar, getUsersList } from 'components/common/firebase/firebaseApi/checkinApi';
 import UpdateUserCheckInFirebase from 'components/UpdateUserCheckIn/UpdateUserCheckInFirebase';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import { isAndroid, isIOS, isMobile } from 'react-device-detect';
+import { useFirebase } from 'components/common/FirebaseProvider';
+import { getCheckinCalendar } from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
+import { getUsersList } from 'components/common/FirebaseProvider/firebaseApi/userApi';
 
 dayjs.extend(customParseFormat);
 dayjs.extend(utc);
@@ -26,7 +22,7 @@ export type CheckinDataList = Omit<CheckinCalendar, 'userCheckinList'> & {
 };
 
 function Home() {
-    const { profile, authLoading, isSignedIn } = useGoogleLogin();
+    const { profile, authLoading, isSignedIn } = useFirebase();
     //
     const [loading, setLoading] = useState<boolean>(true);
     const [userList, setUserList] = useState<Profile[]>([]);
@@ -117,7 +113,7 @@ function Home() {
                 ) : (
                     isSignedIn && (
                         <>
-                            {profile?.googleId && (isIOS || isAndroid) && isMobile && (
+                            {profile?.googleId && (
                                 <UserCheckIn checkinToday={checkinDataList.find((f) => f.date === dayjs().format('DD-MM-YYYY'))} />
                             )}
                             {/* {profile?.email && process.env.REACT_APP_ENV === 'test' && (

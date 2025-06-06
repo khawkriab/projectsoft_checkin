@@ -19,16 +19,12 @@ import {
 } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { getCellRange, getColumnLetter } from 'helper/getColumnLetter';
-import { useEffect, useRef, useState } from 'react';
-import { useGoogleLogin } from 'components/common/GoogleLoginProvider';
-import axios from 'axios';
+import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
-import { EmployeeData, SheetsDate } from 'pages/Home/HomeSheets';
 import { CheckinCalendar, Profile, UserCheckInData, UserCheckinList } from 'type.global';
 import { DesktopTimePicker } from '@mui/x-date-pickers';
-import { getCheckinCalendar, getCheckinTodayList, updateUserCheckin } from 'components/common/firebase/firebaseApi/checkinApi';
 import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/MuiTable';
+import { getCheckinTodayList, updateUserCheckin } from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
 
 type FormData = {
     dateId: string;
@@ -67,6 +63,7 @@ function UpdateUserCheckInFirebase({ dateList = [], userList = [], afterUndate =
         }
         setUpdating(false);
     };
+
     const onSubmit = async (e: React.ChangeEvent<HTMLFormElement>) => {
         e.preventDefault();
         const u = userList.find((f) => f.id === updateData.userId);

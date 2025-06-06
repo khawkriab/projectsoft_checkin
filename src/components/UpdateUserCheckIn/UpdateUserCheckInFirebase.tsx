@@ -152,7 +152,11 @@ function UpdateUserCheckInFirebase({ dateList = [], userList = [], afterUndate =
                 <Grid container spacing={2} marginTop={3}>
                     {/* Date (Disabled Select) */}
                     <Grid size={{ xs: 12, sm: 6, md: 'grow' }}>
-                        <FormControl disabled fullWidth>
+                        <FormControl
+                            disabled
+                            // disabled
+                            fullWidth
+                        >
                             <InputLabel id='date-label'>วันที่</InputLabel>
                             <Select labelId='date-label' name='dateId' value={updateData.dateId} onChange={onChangeData} label='วันที่'>
                                 {dateList.map((d) => (

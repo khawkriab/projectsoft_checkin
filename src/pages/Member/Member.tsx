@@ -4,7 +4,6 @@ import { useGoogleLogin } from 'components/common/GoogleLoginProvider';
 import { TableBodyCell, TableHeadCell } from 'components/common/MuiTable';
 import { useEffect, useMemo, useState } from 'react';
 import { Profile } from 'type.global';
-import { userList } from './userList';
 
 type MemberType = Profile;
 

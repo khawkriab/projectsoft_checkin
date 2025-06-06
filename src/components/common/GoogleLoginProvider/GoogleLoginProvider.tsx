@@ -211,6 +211,7 @@ function GoogleLoginProvider({ children }: { children: React.ReactNode }) {
 
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             if (currentUser) {
+                console.log('currentUser:', currentUser);
                 let _profile: Profile = {
                     googleId: currentUser.providerData[0]?.uid,
                     token: '',
@@ -222,7 +223,15 @@ function GoogleLoginProvider({ children }: { children: React.ReactNode }) {
                 };
                 getUsersWithEmail(_profile.email)
                     .then((t) => {
-                        setProfile({ ..._profile, ...t, status: 'APPROVE', token: _profile.token });
+                        setProfile({
+                            ..._profile,
+                            ...t,
+                            googleId: t.googleId || _profile.googleId,
+                            fullName: t.fullName || _profile.fullName,
+                            profileURL: t.profileURL || _profile.profileURL,
+                            email: t.email || _profile.email,
+                            token: _profile.token,
+                        });
                     })
                     .catch((error) => {
                         console.error('error:', error);

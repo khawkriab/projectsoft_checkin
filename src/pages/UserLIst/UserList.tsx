@@ -38,7 +38,7 @@ const UserList: React.FC = () => {
     };
     const onCheckinToday = async () => {
         console.log('profile:', profile);
-        if (!profile?.token) return;
+        if (!profile) return;
 
         const now = dayjs().utc().valueOf();
         const { lat, lng } = await getLocation(true);
@@ -53,7 +53,7 @@ const UserList: React.FC = () => {
             status: 99,
         };
         try {
-            await signInWithGoogleGapi(profile.token);
+            // await signInWithGoogleGapi(profile.token);
             await addDoc(collection(db, 'checkinTime'), payload);
             getCheckinTime();
         } catch (error) {

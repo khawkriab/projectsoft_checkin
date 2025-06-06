@@ -44,13 +44,13 @@ function UserRegister() {
     //
     const onSubmit = async (e: React.ChangeEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (profile?.token) {
-            setIsLoading(true);
-            await addUsersRegister(profile.token, formRegister);
-            await getDataCurrentUser();
-            setIsLoading(false);
-            setOpen(true);
-        }
+        // if (profile?.token) {
+        setIsLoading(true);
+        await addUsersRegister('', formRegister);
+        await getDataCurrentUser();
+        setIsLoading(false);
+        setOpen(true);
+        // }
     };
     const onChangeText = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent) => {
         setFormRegister((prev) => ({ ...prev, [e.target.name]: e.target.value }));

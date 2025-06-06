@@ -31,7 +31,7 @@ function UserCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
     const [currentUserData, setCurrentUserData] = useState<UserCheckInData | null | undefined>(undefined);
     //
     const onCheckin = async (remark?: string) => {
-        if (profile?.token) {
+        if (profile) {
             const now = dayjs().utc().valueOf();
 
             setUpdating(true);
@@ -47,7 +47,7 @@ function UserCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
                 latlng: { lat, lng },
                 status: 99,
             };
-            await addUserCheckinToday(profile.token, payload);
+            await addUserCheckinToday('', payload);
             await getUserCheckinToday();
 
             setAlertOptions((prev) => ({

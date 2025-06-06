@@ -55,9 +55,12 @@ function Home() {
                             statusText = remark;
                             remark = 'ลา';
                             absentFlag = 1;
+                        } else if (!remark && !timeText && isBeforeDay) {
+                            statusText = 'หาย';
+                            lateFlag = 1;
                         }
                         checkinData.push({ ...ul, ...userCheckin, statusText, absentFlag, lateFlag, timeText });
-                    } else if (ul?.email && isBeforeDay) {
+                    } else if (isBeforeDay) {
                         checkinData.push({
                             ...ul,
                             email: ul.email,

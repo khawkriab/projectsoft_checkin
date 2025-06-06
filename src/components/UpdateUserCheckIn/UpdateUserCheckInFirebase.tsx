@@ -25,6 +25,7 @@ import { CheckinCalendar, Profile, UserCheckInData, UserCheckinList } from 'type
 import { DesktopTimePicker } from '@mui/x-date-pickers';
 import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/MuiTable';
 import { getCheckinTodayList, updateUserCheckin } from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
+import { useFirebase } from 'components/common/FirebaseProvider';
 
 type FormData = {
     dateId: string;
@@ -43,7 +44,8 @@ type UpdateUserCheckInProps = {
 // type UserCheckInList = UserCheckInData & EmployeeData;
 type UserCheckInList = UserCheckInData;
 
-function UpdateUserCheckInFirebase({ dateList = [], userList = [], afterUndate = () => {}, getCheckin }: UpdateUserCheckInProps) {
+function UpdateUserCheckInFirebase({ dateList = [], userList = [], afterUndate = () => {} }: UpdateUserCheckInProps) {
+    const { profile } = useFirebase();
     //
     const [updating, setUpdating] = useState(false);
     const [open, setOpen] = useState(false);
@@ -151,7 +153,7 @@ function UpdateUserCheckInFirebase({ dateList = [], userList = [], afterUndate =
                     {/* Date (Disabled Select) */}
                     <Grid size={{ xs: 12, sm: 6, md: 'grow' }}>
                         <FormControl
-                            disabled
+                            disabled={profile?.role !== 'ADMIN'}
                             // disabled
                             fullWidth
                         >
@@ -244,8 +246,8 @@ function UpdateUserCheckInFirebase({ dateList = [], userList = [], afterUndate =
                                         <TableBodyCell>{dayjs(Number(c.time)).format('DD-MM-YYYY HH:mm')}</TableBodyCell>
                                         <TableBodyCell>{c.remark}</TableBodyCell>
                                         <TableBodyCell>{c.reason}</TableBodyCell>
-                                        <TableBodyCell>
-                                            {`${c.device?.osName}-${c.device?.browserName}`}
+                                        <TableBodyCell sx={{ whiteSpace: 'break-spaces' }}>
+                                            {`${c.device?.osName || c.device?.os}-${c.device?.browserName || c.device?.ua}`}
                                             <br />
                                             {`[${c.latlng.lat},${c.latlng.lng}]`}
                                         </TableBodyCell>

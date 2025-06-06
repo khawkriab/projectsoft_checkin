@@ -52,6 +52,8 @@ function UserCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
                 open: true,
             }));
         }
+
+        setFindingLocation(false);
         setUpdating(false);
     };
 
@@ -102,7 +104,7 @@ function UserCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
     };
 
     useEffect(() => {
-        if ((isIOS || isAndroid) && isMobile) {
+        if ((isIOS || isAndroid) && isMobile && currentUserData === null) {
             setAllowFindLocation(!!profile?.allowFindLocation);
             setFindingLocation(!!profile?.allowFindLocation);
         }
@@ -144,7 +146,7 @@ function UserCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
                     {alertOptions.message}
                 </Alert>
             </Snackbar>
-            {checkinToday && !checkinToday.userCheckinList.find((f) => f?.email === profile?.email) && (
+            {checkinToday && !checkinToday.userCheckinList.find((f) => f?.email === profile?.email) && profile?.status === 'APPROVE' && (
                 <LocationChecker
                     checkAvail={findingLocation}
                     sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, marginBottom: 2, marginTop: 2 }}
@@ -160,7 +162,7 @@ function UserCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
                     }}
                     onMatchTarget={(e, l) => {
                         setIsAvail(e);
-                        setFindingLocation(!e);
+                        // setFindingLocation(!e);
                         latlng.current = l;
                     }}
                 >
@@ -212,14 +214,14 @@ function UserCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
                                 <Grid flex={'auto'} display={'flex'} gap={2}>
                                     {allowFindLocation && (
                                         <Button
-                                            disabled={!!currentUserData || findingLocation}
+                                            disabled={!!currentUserData || !isAvail}
                                             loading={updating}
                                             size='large'
                                             variant='contained'
                                             color='primary'
                                             onClick={() => onCheckinOnArea()}
                                         >
-                                            {findingLocation ? 'กำลังหาตำแหน่ง...' : isAvail ? 'ลงชื่อเข้างาน' : 'ค้นหาตำแหน่ง'}
+                                            {findingLocation && !isAvail ? 'กำลังหาตำแหน่ง...' : isAvail ? 'ลงชื่อเข้างาน' : 'ค้นหาตำแหน่ง'}
                                         </Button>
                                     )}
                                     <Button

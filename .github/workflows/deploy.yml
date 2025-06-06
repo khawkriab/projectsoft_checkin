@@ -42,9 +42,6 @@ jobs:
                   echo "REACT_APP_MEASUREMENT_ID=${{ secrets.MEASUREMENT_ID }}" >> .env
                   echo "REACT_APP_GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}" >> .env
 
-            - name: Debug .env
-              run: cat .env
-
             - name: Build the React app
               run: npm run build
 

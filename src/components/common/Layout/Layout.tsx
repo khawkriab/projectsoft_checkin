@@ -29,13 +29,23 @@ function MenuItem({ children, to }: { to: string; children: React.ReactNode }) {
 
     return (
         <Box
-            sx={{
+            sx={(theme) => ({
                 borderBottom: '3px solid #ffffff',
-                borderColor: location.pathname === to ? '#ffffff' : 'transparent',
-            }}
+                borderColor:
+                    location.pathname === to
+                        ? {
+                              xs: theme.palette.mode === 'dark' ? '#fff' : theme.palette.primary.main,
+                              md: '#ffffff',
+                          }
+                        : 'transparent',
+            })}
         >
-            <NavLink to={to} style={{ textDecoration: 'none' }}>
-                <Typography color={'#fff'} margin={0} variant='h5'>
+            <NavLink to={to}>
+                <Typography
+                    sx={(theme) => ({ color: { xs: theme.palette.mode === 'dark' ? '#fff' : theme.palette.primary.main, md: '#fff' } })}
+                    margin={0}
+                    variant='h5'
+                >
                     {children}
                 </Typography>
             </NavLink>
@@ -108,7 +118,14 @@ function Layout() {
                                 sx={{ display: { xs: 'none', sm: 'none', md: 'flex' } }}
                             >
                                 <Stack direction={'row'} alignItems={'center'} spacing={2}>
-                                    {menuData.map((m) => m.condition && <MenuItem to={m.to}>{m.label}</MenuItem>)}
+                                    {menuData.map(
+                                        (m) =>
+                                            m.condition && (
+                                                <MenuItem key={m.label} to={m.to}>
+                                                    {m.label}
+                                                </MenuItem>
+                                            )
+                                    )}
                                 </Stack>
                             </Grid>
                         </Grid>
@@ -234,11 +251,9 @@ function Layout() {
                         {menuData.map(
                             (m) =>
                                 m.condition && (
-                                    <NavLink to={m.to}>
-                                        <Typography margin={0} variant='h5'>
-                                            {m.label}
-                                        </Typography>
-                                    </NavLink>
+                                    <MenuItem to={m.to} key={m.label}>
+                                        {m.label}
+                                    </MenuItem>
                                 )
                         )}
                     </Stack>

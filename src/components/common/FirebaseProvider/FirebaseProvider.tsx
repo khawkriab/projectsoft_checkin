@@ -9,19 +9,21 @@ interface FirebaseContextType {
     profile: Profile | null;
     isSignedIn: boolean;
     authLoading: boolean;
+    updateUserInfo: (profile: Profile) => Promise<void>;
     signInWithGoogle: () => Promise<void>;
     signOutUser: () => Promise<void>;
 }
 
 // Firebase config
+console.log('process.env.REACT_APP_API_KEY:', process.env.REACT_APP_API_KEY);
 const firebaseConfig = {
-    apiKey: 'AIzaSyBlFyN9DlEMpjaP6dNHqRHkBeVIHiPMmZw',
-    authDomain: 'checkin-calendar-166b4.firebaseapp.com',
-    projectId: 'checkin-calendar-166b4',
-    storageBucket: 'checkin-calendar-166b4.firebasestorage.app',
-    messagingSenderId: '1078310633734',
-    appId: '1:1078310633734:web:b9afc87b7c67ff26a9de87',
-    measurementId: 'G-3FZDBXGWC4',
+    apiKey: process.env.REACT_APP_API_KEY,
+    authDomain: process.env.REACT_APP_AUTH_DOMAIN,
+    projectId: process.env.REACT_APP_PROJECT_ID,
+    storageBucket: process.env.REACT_APP_STOREAGE_BUCKET,
+    messagingSenderId: process.env.REACT_APP_MESSAGE_SENDER_ID,
+    appId: process.env.REACT_APP_APPID,
+    measurementId: process.env.REACT_APP_MEASUREMENT_ID,
 };
 
 // Initialize Firebase
@@ -68,37 +70,39 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const updateUserInfo = async (profile: Profile) => {
+        try {
+            const res = await getUsersWithEmail(profile.email);
+            setProfile({
+                ...profile,
+                ...res,
+                googleId: res.googleId || profile.googleId,
+                fullName: res.fullName || profile.fullName,
+                profileURL: res.profileURL || profile.profileURL,
+                email: res.email || profile.email,
+            });
+        } catch (error) {
+            console.error('error:', error);
+            setProfile({ ...profile });
+        }
+    };
+
     useEffect(() => {
         const auth = getAuth();
 
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             if (currentUser) {
                 console.log('currentUser:', currentUser);
                 let _profile: Profile = {
                     googleId: currentUser.providerData[0]?.uid,
-                    token: '',
                     fullName: currentUser.displayName ?? '',
                     profileURL: currentUser.photoURL ?? '',
                     email: currentUser.email ?? '',
                     role: 'USER',
                     status: 'NO_REGIST',
                 };
-                getUsersWithEmail(_profile.email)
-                    .then((t) => {
-                        setProfile({
-                            ..._profile,
-                            ...t,
-                            googleId: t.googleId || _profile.googleId,
-                            fullName: t.fullName || _profile.fullName,
-                            profileURL: t.profileURL || _profile.profileURL,
-                            email: t.email || _profile.email,
-                            token: _profile.token,
-                        });
-                    })
-                    .catch((error) => {
-                        console.error('error:', error);
-                        setProfile({ ..._profile });
-                    });
+
+                await updateUserInfo(_profile);
 
                 setIsSignedIn(true);
             } else {
@@ -119,6 +123,7 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
                 authLoading: authLoading,
                 signInWithGoogle,
                 signOutUser,
+                updateUserInfo,
             }}
         >
             {children}

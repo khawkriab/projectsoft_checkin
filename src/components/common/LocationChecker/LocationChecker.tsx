@@ -48,7 +48,7 @@ function LocationChecker({
     const watchId = useRef<number>(0);
     const [currentLocation, setCurrentLocation] = useState<LatLng | null>(null);
     const { isLoaded, loadError } = useLoadScript({
-        googleMapsApiKey: 'AIzaSyBdt1dApGQpWou2IWmRkSF6W5Dqei8k8bc',
+        googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY as string,
         libraries: libraries as any,
     });
 

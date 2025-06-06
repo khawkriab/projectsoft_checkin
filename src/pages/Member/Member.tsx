@@ -16,8 +16,6 @@ function Member() {
     //
 
     const onApprove = async (user: MemberType) => {
-        // if (!profile?.token) return;
-
         setUpdating(true);
         await addUsersList(user);
         setOpen(true);
@@ -34,17 +32,7 @@ function Member() {
     const getUserList = async () => {
         const res = await getUsersList();
         setMemberList([...res]);
-        // console.log('usersData:', usersData);
 
-        // if (profile?.role === 'ADMIN') {
-        //     const queryRegist = await getUsersRegisterList();
-        //     const usersRegist: MemberType[] = queryRegist.map((doc) => ({
-        //         ...doc,
-        //         status: 'WAITING',
-        //     }));
-
-        //     setMemberList((prev) => [...prev, ...usersRegist]);
-        // }
         setUpdating(false);
     };
     useEffect(() => {
@@ -53,7 +41,7 @@ function Member() {
 
     const dataList = useMemo(() => {
         return memberList.filter((f) => f.email);
-    }, [memberList.toString()]);
+    }, [JSON.stringify(memberList)]);
 
     return (
         <Box>

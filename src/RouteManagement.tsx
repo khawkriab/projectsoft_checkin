@@ -6,14 +6,14 @@ import { UserRegister } from 'pages/UserRegister';
 import { CreateMonthCalendar } from 'pages/CreateMonthCalendar';
 
 function RoutesManagement() {
-    const basePath = process.env.NODE_ENV === 'production' ? '/projectsoft_checkin' : '';
     return (
         <Routes>
             <Route element={<Layout />}>
                 <Route path='/' element={<Home />} />
-                <Route path={`${basePath}/member`} element={<Member />} />
-                <Route path={`${basePath}/register`} element={<UserRegister />} />
-                <Route path={`${basePath}/create-calendar`} element={<CreateMonthCalendar />} />
+                <Route path={`/member`} element={<Member />} />
+                <Route path={`/register`} element={<UserRegister />} />
+                <Route path={`/create-calendar`} element={<CreateMonthCalendar />} />
+                <Route path={'*'} element={<div>Page not found</div>} />
             </Route>
         </Routes>
     );

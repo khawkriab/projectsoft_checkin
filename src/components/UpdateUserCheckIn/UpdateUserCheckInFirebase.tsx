@@ -126,6 +126,7 @@ function UpdateUserCheckInFirebase({ dateList = [], userList = [], afterUndate =
     const getCheckinData = async () => {
         // get all
         const res = await getCheckinTodayList();
+        console.log('res:', res);
 
         setCheckinList([...res.filter((f) => f.status === 99 && dayjs(Number(f.time)).isSame(dayjs(), 'day'))]);
     };
@@ -230,6 +231,9 @@ function UpdateUserCheckInFirebase({ dateList = [], userList = [], afterUndate =
                                 <TableHeadRow>
                                     <TableHeadCell>ชื่อ</TableHeadCell>
                                     <TableHeadCell>เวลาเข้างาน</TableHeadCell>
+                                    <TableHeadCell>หมายเหตุ</TableHeadCell>
+                                    <TableHeadCell>เหตุผล</TableHeadCell>
+                                    <TableHeadCell>รายละเอียด</TableHeadCell>
                                     <TableHeadCell>#</TableHeadCell>
                                 </TableHeadRow>
                             </TableHead>
@@ -238,6 +242,13 @@ function UpdateUserCheckInFirebase({ dateList = [], userList = [], afterUndate =
                                     <TableRow key={c.googleId}>
                                         <TableBodyCell>{c.name}</TableBodyCell>
                                         <TableBodyCell>{dayjs(Number(c.time)).format('DD-MM-YYYY HH:mm')}</TableBodyCell>
+                                        <TableBodyCell>{c.remark}</TableBodyCell>
+                                        <TableBodyCell>{c.reason}</TableBodyCell>
+                                        <TableBodyCell>
+                                            {`${c.device?.osName}-${c.device?.browserName}`}
+                                            <br />
+                                            {`[${c.latlng.lat},${c.latlng.lng}]`}
+                                        </TableBodyCell>
                                         <TableBodyCell>
                                             <Button
                                                 size='small'

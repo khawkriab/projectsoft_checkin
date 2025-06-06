@@ -10,7 +10,7 @@ import { deviceDetect, isAndroid, isIOS, isMobile } from 'react-device-detect';
 import { LatLng, UserCheckInData } from 'type.global';
 
 function UserCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
-    const { profile } = useFirebase();
+    const { profile, updateUserInfo } = useFirebase();
     const latlng = useRef<LatLng>({ lat: 0, lng: 0 });
     //
     const [updating, setUpdating] = useState(false);
@@ -64,6 +64,7 @@ function UserCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
         if (profile) {
             setUpdating(true);
             await usersUpdateAllowLocation(profile?.id ?? '', isAllow ? 1 : 0);
+            await updateUserInfo(profile);
 
             setAlertOptions((prev) => ({
                 ...prev,
@@ -72,6 +73,13 @@ function UserCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
                 open: true,
             }));
             setUpdating(false);
+        } else {
+            setAlertOptions((prev) => ({
+                ...prev,
+                message: 'profile not ready',
+                color: 'error',
+                open: true,
+            }));
         }
     };
     const onCheckinOnArea = async () => {
@@ -94,7 +102,7 @@ function UserCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
     };
 
     useEffect(() => {
-        if (isMobile) {
+        if ((isIOS || isAndroid) && isMobile) {
             setAllowFindLocation(!!profile?.allowFindLocation);
             setFindingLocation(!!profile?.allowFindLocation);
         }
@@ -156,7 +164,6 @@ function UserCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
                         latlng.current = l;
                     }}
                 >
-                    {/* <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, marginBottom: 2, marginTop: 2 }}> */}
                     {currentUserData && profile?.role === 'USER' && (
                         <>
                             <Box>เวลาเข้างาน: {dayjs(Number(currentUserData.time)).format('DD-MM-YYYY HH:mm')}</Box>
@@ -172,7 +179,7 @@ function UserCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
                             </Box>
                         </>
                     )}
-                    {currentUserData === null && (
+                    {currentUserData === null && profile?.status === 'APPROVE' && (
                         <Grid container gap={2} alignItems={'center'} width={'100%'}>
                             <Grid size={{ xs: 12, sm: 12, md: 7 }}>
                                 <Box component={'form'} onSubmit={onCheckinWFH}>
@@ -228,7 +235,6 @@ function UserCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
                             )}
                         </Grid>
                     )}
-                    {/* </Box> */}
                 </LocationChecker>
             )}
         </>

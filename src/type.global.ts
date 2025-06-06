@@ -24,7 +24,6 @@ export type Profile = EmployeeInfo &
     FirebaseQuery & {
         allowFindLocation?: number;
         googleId: string;
-        token?: string;
         fullName: string;
         profileURL?: string;
         email: string;
@@ -39,8 +38,8 @@ export type UserCheckInData = FirebaseQuery & {
     time: string;
     remark: string;
     reason: string;
-    device: string;
-    latlng: string | LatLng;
+    device: any;
+    latlng: LatLng;
     status: string | number;
     createdAt?: Date;
     createdBy?: string | number;

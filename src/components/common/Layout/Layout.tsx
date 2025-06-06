@@ -53,6 +53,29 @@ function Layout() {
         setOpen(newOpen);
     };
 
+    const menuData = [
+        {
+            condition: true,
+            label: 'Home',
+            to: '/',
+        },
+        {
+            condition: true,
+            label: 'Member',
+            to: '/member',
+        },
+        {
+            condition: !!profile?.googleId,
+            label: 'Register',
+            to: '/register',
+        },
+        {
+            condition: !!profile?.googleId,
+            label: 'เขียนใบลา',
+            to: '/absent',
+        },
+    ];
+
     //
     return (
         <Box sx={{ width: '100%', minHeight: 'inherit' }} display={'flex'} flexDirection={'column'}>
@@ -85,9 +108,7 @@ function Layout() {
                                 sx={{ display: { xs: 'none', sm: 'none', md: 'flex' } }}
                             >
                                 <Stack direction={'row'} alignItems={'center'} spacing={2}>
-                                    <MenuItem to={'/'}>Home</MenuItem>
-                                    <MenuItem to={'/member'}>Member</MenuItem>
-                                    {profile?.googleId && <MenuItem to={'/register'}>Register</MenuItem>}
+                                    {menuData.map((m) => m.condition && <MenuItem to={m.to}>{m.label}</MenuItem>)}
                                 </Stack>
                             </Grid>
                         </Grid>
@@ -210,22 +231,15 @@ function Layout() {
                     </Box>
                     <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
                     <Stack direction={'column'} alignItems={'start'} spacing={2}>
-                        <NavLink to={'/'}>
-                            <Typography margin={0} variant='h5'>
-                                Home
-                            </Typography>
-                        </NavLink>
-                        <NavLink to={'/member'}>
-                            <Typography margin={0} variant='h5'>
-                                Member
-                            </Typography>
-                        </NavLink>
-                        {profile?.googleId && (
-                            <NavLink to={'/register'}>
-                                <Typography margin={0} variant='h5'>
-                                    Register
-                                </Typography>
-                            </NavLink>
+                        {menuData.map(
+                            (m) =>
+                                m.condition && (
+                                    <NavLink to={m.to}>
+                                        <Typography margin={0} variant='h5'>
+                                            {m.label}
+                                        </Typography>
+                                    </NavLink>
+                                )
                         )}
                     </Stack>
                 </Toolbar>

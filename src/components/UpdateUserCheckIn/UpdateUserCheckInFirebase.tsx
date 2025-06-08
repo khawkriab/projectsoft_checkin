@@ -128,7 +128,6 @@ function UpdateUserCheckInFirebase({ dateList = [], userList = [], afterUndate =
     const getCheckinData = async () => {
         // get all
         const res = await getCheckinTodayList();
-        console.log('res:', res);
 
         setCheckinList([...res.filter((f) => f.status === 99 && dayjs(Number(f.time)).isSame(dayjs(), 'day'))]);
     };
@@ -153,6 +152,8 @@ function UpdateUserCheckInFirebase({ dateList = [], userList = [], afterUndate =
                     {/* Date (Disabled Select) */}
                     <Grid size={{ xs: 12, sm: 6, md: 'grow' }}>
                         <FormControl
+                            required
+                            error={!updateData.dateId}
                             disabled={profile?.role !== 'ADMIN'}
                             // disabled
                             fullWidth

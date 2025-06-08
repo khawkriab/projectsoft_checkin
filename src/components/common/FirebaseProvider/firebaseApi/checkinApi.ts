@@ -3,6 +3,7 @@ import { CheckinCalendar, UserCheckInData, UserCheckinList } from 'type.global';
 import { addDoc, collection, deleteDoc, doc, getDocs, query, updateDoc, where } from 'firebase/firestore';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
+import { getAuth } from 'firebase/auth';
 
 dayjs.extend(customParseFormat);
 
@@ -91,5 +92,13 @@ export const updateUserCheckin = (cId: string, uId: string, payload: UserCheckin
         } catch (error) {
             reject(error);
         }
+    });
+};
+
+export const deleteCalendarDay = (dayId: string) => {
+    return new Promise<string>(async (resolve, reject) => {
+        await deleteDoc(doc(db, 'checkinCalendar', dayId));
+
+        resolve('success');
     });
 };

@@ -1,4 +1,4 @@
-import { Badge, Box, Button } from '@mui/material';
+import { Badge, Box, Button, Table, TableBody, TableCell, TableContainer, TableRow } from '@mui/material';
 import { DateCalendar, LocalizationProvider, PickersDay, PickersDayProps } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -6,7 +6,8 @@ import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { useFirebase } from 'components/common/FirebaseProvider';
-import { createCheckinCalendar, getCheckinCalendar } from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
+import { createCheckinCalendar, deleteCalendarDay, getCheckinCalendar } from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
+import { CheckinCalendar } from 'type.global';
 
 dayjs.extend(customParseFormat);
 
@@ -26,6 +27,7 @@ function CreateMonthCalendar() {
     const { profile } = useFirebase();
     //
     const [highlightedDays, setHighlightedDays] = useState<number[]>([]);
+    const [allDays, setAllDays] = useState<CheckinCalendar[]>([]);
     const [month, setMonth] = useState(dayjs().get('months'));
     const [years, setYears] = useState(dayjs().get('years'));
     //
@@ -38,17 +40,41 @@ function CreateMonthCalendar() {
         await createCheckinCalendar(m as any);
         alert('success');
     };
+    const onDelete = async (id: string) => {
+        console.log('id:', id);
+        await deleteCalendarDay(id);
+        console.log('success');
+    };
 
     useEffect(() => {
         const init = async () => {
             const res = await getCheckinCalendar();
-            setHighlightedDays([...res.map((d) => dayjs(d.date, 'D-MM-YYYY').get('date'))]);
+            console.log('res:', res);
+            setAllDays([...res]);
+            setHighlightedDays([...res.map((d) => dayjs(d.date).get('date'))]);
         };
         init();
     }, []);
     //
     return (
         <Box>
+            {/* <TableContainer>
+                <Table>
+                    <TableBody>
+                        {allDays.map((m) => (
+                            <TableRow key={m.id}>
+                                <TableCell>
+                                    {m.date}
+                                    {`(${m.userCheckinList.length})`}
+                                </TableCell>
+                                <TableCell>
+                                    <Button onClick={() => onDelete(m.id ?? '')}>delete</Button>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer> */}
             <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DateCalendar
                     sx={{
@@ -105,7 +131,7 @@ function CreateMonthCalendar() {
                     }}
                 />
             </LocalizationProvider>
-            <Box>
+            <Box display={'flex'} justifyContent={'flex-end'}>
                 <Button variant='contained' color='primary' onClick={onCreateCalendar}>
                     Create
                 </Button>

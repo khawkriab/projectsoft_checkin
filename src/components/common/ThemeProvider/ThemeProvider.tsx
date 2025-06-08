@@ -8,12 +8,17 @@ const ThemeContext = createContext({ toggleColorMode: () => {} });
 export const useColorMode = () => useContext(ThemeContext);
 
 export const ThemeWrapper = ({ children }: { children: React.ReactNode }) => {
-    const [mode, setMode] = useState<PaletteMode>('light');
+    const themeMode = window.localStorage.getItem('mode');
+    const [mode, setMode] = useState<PaletteMode>((themeMode as PaletteMode) || 'light');
 
     const colorMode = useMemo(
         () => ({
             toggleColorMode: () => {
-                setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
+                setMode((prevMode) => {
+                    const mode = prevMode === 'light' ? 'dark' : 'light';
+                    window.localStorage.setItem('mode', mode);
+                    return mode;
+                });
             },
         }),
         []

@@ -3,7 +3,7 @@ import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signO
 import { initializeFirestore } from 'firebase/firestore';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Profile } from 'type.global';
-import { getUsersWithEmail } from './firebaseApi/userApi';
+import { deleteUser, getUsersWithEmail, updateUser } from './firebaseApi/userApi';
 
 interface FirebaseContextType {
     profile: Profile | null;
@@ -64,6 +64,7 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
     const signOutUser = async () => {
         try {
             await signOut(auth);
+            window.location.assign('/');
             console.log('User signed out');
         } catch (error) {
             console.error('Sign-out error:', error);
@@ -72,7 +73,22 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
 
     const updateUserInfo = async (profile: Profile) => {
         try {
+            const uid = auth.currentUser?.uid;
             const res = await getUsersWithEmail(profile.email);
+            if (uid && res.id && res.id !== uid && res.googleId) {
+                console.log('update:');
+
+                await updateUser(uid, {
+                    ...profile,
+                    ...res,
+                    googleId: res.googleId || profile.googleId,
+                    fullName: res.fullName || profile.fullName,
+                    profileURL: res.profileURL || profile.profileURL,
+                    email: res.email || profile.email,
+                });
+                await deleteUser(res.id);
+            }
+
             setProfile({
                 ...profile,
                 ...res,
@@ -98,6 +114,7 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
                     fullName: currentUser.displayName ?? '',
                     profileURL: currentUser.photoURL ?? '',
                     email: currentUser.email ?? '',
+                    name: currentUser.email ?? '',
                     role: 'USER',
                     status: 'NO_REGIST',
                 };

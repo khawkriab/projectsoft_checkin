@@ -34,7 +34,7 @@ function UserCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
             const payload: UserCheckInData = {
                 googleId: profile?.googleId,
                 email: profile.email,
-                name: profile?.name,
+                name: profile.name,
                 time: String(now),
                 remark: remark ?? '',
                 reason: reason,

@@ -1,6 +1,20 @@
-import { Alert, Box, Button, Paper, Slide, Snackbar, Table, TableBody, TableContainer, TableHead, TableRow } from '@mui/material';
+import {
+    Alert,
+    Box,
+    Button,
+    Paper,
+    Slide,
+    Snackbar,
+    Table,
+    TableBody,
+    TableContainer,
+    TableHead,
+    TableRow,
+    ToggleButton,
+    ToggleButtonGroup,
+} from '@mui/material';
 import { useFirebase } from 'components/common/FirebaseProvider';
-import { addUsersList, getUsersList } from 'components/common/FirebaseProvider/firebaseApi/userApi';
+import { updateUser, getUsersList } from 'components/common/FirebaseProvider/firebaseApi/userApi';
 import { TableBodyCell, TableHeadCell } from 'components/common/MuiTable';
 import { useEffect, useMemo, useState } from 'react';
 import { Profile } from 'type.global';
@@ -16,19 +30,21 @@ function Member() {
     //
 
     const onApprove = async (user: MemberType) => {
+        if (!user.id) return;
         setUpdating(true);
-        await addUsersList(user);
+        await updateUser(user.id, { ...user, status: 'APPROVE' });
         setOpen(true);
         getUserList();
     };
-    const onAddUser = async (user: any) => {
-        setUpdating(true);
-        await addUsersList(user);
 
-        // getUserList();
-        setUpdating(false);
+    const onChangeRole = async (role: MemberType['role'], user: MemberType) => {
+        if (!user.id) return;
+        setUpdating(true);
+        await updateUser(user.id, { ...user, role: role });
         setOpen(true);
+        getUserList();
     };
+
     const getUserList = async () => {
         const res = await getUsersList();
         setMemberList([...res]);
@@ -88,21 +104,28 @@ function Member() {
                                 <TableBodyCell>{u.phoneNumber}</TableBodyCell>
                                 <TableBodyCell>{u.jobPosition}</TableBodyCell>
                                 <TableBodyCell>{u.employmentType}</TableBodyCell>
-                                <TableBodyCell>{u.role}</TableBodyCell>
+                                <TableBodyCell>
+                                    {profile?.role === 'ADMIN' ? (
+                                        <ToggleButtonGroup
+                                            disabled={updating}
+                                            color='error'
+                                            exclusive
+                                            value={u.role}
+                                            onChange={(_, value) => {
+                                                onChangeRole(value as MemberType['role'], u);
+                                            }}
+                                        >
+                                            <ToggleButton value='ADMIN'>Admin</ToggleButton>
+                                            <ToggleButton value='STAFF'>Staff</ToggleButton>
+                                            <ToggleButton value='USER'>User</ToggleButton>
+                                        </ToggleButtonGroup>
+                                    ) : (
+                                        u.role
+                                    )}
+                                </TableBodyCell>
                                 {profile?.role === 'ADMIN' && (
                                     <>
                                         <TableBodyCell>{u.allowFindLocation}</TableBodyCell>
-                                        {/* <TableBodyCell>
-                                            <Button
-                                                size='small'
-                                                variant='contained'
-                                                color='success'
-                                                loading={updating}
-                                                onClick={() => onAddUser(u)}
-                                            >
-                                                add user
-                                            </Button>
-                                        </TableBodyCell> */}
                                         <TableBodyCell>
                                             {u.status === 'APPROVE' ? (
                                                 <Button size='small' variant='contained' color='success'>

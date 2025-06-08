@@ -1,50 +1,59 @@
-export type SheetData = {
-    range: string;
-    majorDimension: string;
-    values: string[][];
+export type ProfileRole = 'ADMIN' | 'STAFF' | 'USER';
+export type ProfileStatus = 'APPROVE' | 'WAITING' | 'NO_REGIST';
+export type AbsentStatus = 'APPROVE' | 'WAITING' | 'REJECT';
+export type LeaveTypes = 'VACATION' | 'SICK' | 'PERSONAL';
+export type LeavePeriods = 'HALF_DAY_AM' | 'HALF_DAY_PM' | 'FULL_DAY';
+
+export type LatLng = { lat: number; lng: number };
+
+export type StandardResponse<T = any> = T & FirebaseQuery;
+
+export type BaseData = {
+    createdAt?: Date;
+    updateAt?: Date;
 };
 
-export type SheetInfo = {
-    sheetRowNumber?: number;
+export type BaseProfile = {
+    name: string;
+    allowFindLocation?: number;
+    googleId: string;
+    fullName: string;
+    profileURL?: string;
+    email: string;
+    role: ProfileRole;
+    status?: ProfileStatus;
 };
 
 export type EmployeeInfo = {
-    name?: string;
     phoneNumber?: string;
     jobPosition?: string;
     employmentType?: string;
 };
 
-export type FirebaseQuery = {
+export type FirebaseQuery = BaseData & {
     id?: string;
 };
 
-export type Profile = EmployeeInfo &
-    SheetInfo &
+export type Profile = BaseProfile & EmployeeInfo & FirebaseQuery & BaseData;
+
+export type UserCheckInData = Pick<BaseProfile, 'googleId' | 'email' | 'name'> &
     FirebaseQuery & {
-        allowFindLocation?: number;
-        googleId: string;
-        fullName: string;
-        profileURL?: string;
-        email: string;
-        role: 'ADMIN' | 'STAFF' | 'USER';
-        status?: 'APPROVE' | 'WAITING' | 'NO_REGIST';
+        time: string;
+        remark: string;
+        reason: string;
+        device: any;
+        latlng: LatLng;
+        status: string | number;
     };
 
-export type UserCheckInData = FirebaseQuery & {
-    name?: string;
-    googleId: string;
-    email?: string;
-    time: string;
-    remark: string;
-    reason: string;
-    device: any;
-    latlng: LatLng;
-    status: string | number;
-    createdAt?: Date;
-    createdBy?: string | number;
-};
-
-export type LatLng = { lat: number; lng: number };
 export type UserCheckinList = Pick<UserCheckInData, 'email' | 'googleId' | 'reason' | 'remark' | 'time'>;
 export type CheckinCalendar = FirebaseQuery & { date: string; userCheckinList: UserCheckinList[] };
+export type AbsentData = Pick<BaseProfile, 'googleId' | 'email'> & {
+    leaveType: LeaveTypes;
+    leavePeriod: LeavePeriods;
+    startDate: string; // date format: YYYY-MM-DD
+    endDate: string; // date format: YYYY-MM-DD
+    reason: string;
+    status: AbsentStatus;
+    rejectReason?: string;
+};

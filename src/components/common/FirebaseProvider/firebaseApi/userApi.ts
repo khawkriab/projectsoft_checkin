@@ -1,28 +1,18 @@
-import { addDoc, collection, doc, getDocs, query, setDoc, where } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDocs, query, setDoc, where } from 'firebase/firestore';
 import { Profile } from 'type.global';
 import { db } from '../FirebaseProvider';
+import { getAuth } from 'firebase/auth';
+import dayjs from 'dayjs';
 
 export const addUsersRegister = (payload: Profile) => {
     return new Promise<string>(async (resolve) => {
-        if (payload.id) {
-            await setDoc(
-                doc(db, 'usersList', payload.id ?? ''),
-                {
-                    email: payload.email,
-                    employmentType: payload.employmentType,
-                    fullName: payload.fullName,
-                    googleId: payload.googleId,
-                    jobPosition: payload.jobPosition,
-                    name: payload.name,
-                    phoneNumber: payload.phoneNumber,
-                    profileURL: payload.profileURL,
-                    role: payload.role,
-                    status: 'WAITING',
-                },
-                { merge: true }
-            );
-        } else {
-            await addDoc(collection(db, 'usersList'), {
+        const auth = getAuth();
+        // Wait for user to sign in first
+        const user = auth.currentUser;
+
+        if (user) {
+            const userRef = doc(db, 'usersList', user.uid);
+            await setDoc(userRef, {
                 email: payload.email,
                 employmentType: payload.employmentType,
                 fullName: payload.fullName,
@@ -33,8 +23,11 @@ export const addUsersRegister = (payload: Profile) => {
                 profileURL: payload.profileURL,
                 role: payload.role,
                 status: 'WAITING',
+                createdAt: payload.createdAt,
+                updateAt: dayjs().toISOString(),
             });
         }
+        // }
 
         resolve('success');
     });
@@ -131,29 +124,39 @@ export const getUsersList = () => {
         resolve(usersData);
     });
 };
-export const addUsersList = (payload: Profile) => {
+export const updateUser = (uId: string, payload: Profile) => {
     return new Promise<string>(async (resolve, reject) => {
-        if (!payload?.id) reject('no id');
+        if (!uId) reject('no id');
 
         try {
-            await setDoc(
-                doc(db, 'usersList', payload.id ?? ''),
-                {
-                    googleId: payload.googleId,
-                    fullName: payload.fullName,
-                    profileURL: payload.profileURL ?? '',
-                    email: payload.email,
-                    role: payload.role,
-                    name: payload.name,
-                    phoneNumber: payload.phoneNumber,
-                    jobPosition: payload.jobPosition,
-                    employmentType: payload.employmentType,
-                    allowFindLocation: 0,
-                    status: 'APPROVE',
-                },
-                { merge: true }
-            );
+            await setDoc(doc(db, 'usersList', uId), {
+                googleId: payload.googleId,
+                fullName: payload.fullName,
+                profileURL: payload.profileURL ?? '',
+                email: payload.email,
+                role: payload.role,
+                name: payload.name,
+                phoneNumber: payload.phoneNumber,
+                jobPosition: payload.jobPosition,
+                employmentType: payload.employmentType,
+                allowFindLocation: payload.allowFindLocation,
+                status: payload.status,
+                updateAt: dayjs().toISOString(),
+            });
             // await deleteDoc(doc(db, 'usersRegister', payload.id ?? ''));
+
+            resolve('success');
+        } catch (error) {
+            reject(error);
+        }
+    });
+};
+export const deleteUser = (uId: string) => {
+    return new Promise<string>(async (resolve, reject) => {
+        if (!uId) reject('no id');
+
+        try {
+            await deleteDoc(doc(db, 'usersList', uId));
 
             resolve('success');
         } catch (error) {

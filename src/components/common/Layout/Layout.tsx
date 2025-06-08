@@ -84,6 +84,11 @@ function Layout() {
             label: 'เขียนใบลา',
             to: '/absent',
         },
+        {
+            condition: profile?.role === 'ADMIN',
+            label: 'Calendar',
+            to: '/create-calendar',
+        },
     ];
 
     //

@@ -24,7 +24,7 @@ import { useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import { useFirebase } from '../FirebaseProvider';
 
-function MenuItem({ children, to }: { to: string; children: React.ReactNode }) {
+function MenuItem({ children, to, onClick = () => {} }: { to: string; children: React.ReactNode; onClick?: () => void }) {
     const location = useLocation();
 
     return (
@@ -40,7 +40,7 @@ function MenuItem({ children, to }: { to: string; children: React.ReactNode }) {
                         : 'transparent',
             })}
         >
-            <NavLink to={to}>
+            <NavLink to={to} onClick={onClick}>
                 <Typography
                     sx={(theme) => ({ color: { xs: theme.palette.mode === 'dark' ? '#fff' : theme.palette.primary.main, md: '#fff' } })}
                     margin={0}
@@ -256,7 +256,7 @@ function Layout() {
                         {menuData.map(
                             (m) =>
                                 m.condition && (
-                                    <MenuItem to={m.to} key={m.label}>
+                                    <MenuItem to={m.to} key={m.label} onClick={() => setOpen(false)}>
                                         {m.label}
                                     </MenuItem>
                                 )

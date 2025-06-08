@@ -55,6 +55,7 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
     const signInWithGoogle = async () => {
         try {
             const user = await signInWithPopup(auth, provider);
+            window.location.reload();
             console.log('Logged in user:', user);
         } catch (error) {
             console.error('Google login failed:', error);

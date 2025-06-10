@@ -115,7 +115,7 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
                     fullName: currentUser.displayName ?? '',
                     profileURL: currentUser.photoURL ?? '',
                     email: currentUser.email ?? '',
-                    name: currentUser.email ?? '',
+                    name: '',
                     role: 'USER',
                     status: 'NO_REGIST',
                 };

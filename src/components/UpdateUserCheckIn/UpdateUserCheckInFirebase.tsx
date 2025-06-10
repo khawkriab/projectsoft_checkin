@@ -19,13 +19,14 @@ import {
 } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import dayjs from 'dayjs';
 import { CheckinCalendar, Profile, UserCheckInData, UserCheckinList } from 'type.global';
 import { DesktopTimePicker } from '@mui/x-date-pickers';
 import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/MuiTable';
 import { getCheckinTodayList, updateUserCheckin } from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
 import { useFirebase } from 'components/common/FirebaseProvider';
+import usePageVisibility from 'hooks/usePageVisibility';
 
 type FormData = {
     dateId: string;
@@ -46,6 +47,9 @@ type UserCheckInList = UserCheckInData;
 
 function UpdateUserCheckInFirebase({ dateList = [], userList = [], afterUndate = () => {} }: UpdateUserCheckInProps) {
     const { profile } = useFirebase();
+    const isVisible = usePageVisibility();
+    //
+    const timer = useRef<NodeJS.Timeout>(undefined);
     //
     const [updating, setUpdating] = useState(false);
     const [open, setOpen] = useState(false);
@@ -133,7 +137,14 @@ function UpdateUserCheckInFirebase({ dateList = [], userList = [], afterUndate =
     };
     useEffect(() => {
         getCheckinData();
-    }, []);
+        timer.current = setInterval(() => {
+            getCheckinData();
+        }, 30000);
+
+        return () => {
+            clearInterval(timer.current);
+        };
+    }, [isVisible]);
 
     useEffect(() => {
         if (dateList.length > 0) {

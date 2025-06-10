@@ -11,6 +11,7 @@ export const addUsersRegister = (payload: Profile) => {
         const user = auth.currentUser;
 
         if (user) {
+            console.log('user.ui:', user.uid);
             const userRef = doc(db, 'usersList', user.uid);
             await setDoc(userRef, {
                 email: payload.email,
@@ -23,7 +24,7 @@ export const addUsersRegister = (payload: Profile) => {
                 profileURL: payload.profileURL,
                 role: payload.role,
                 status: 'WAITING',
-                createdAt: payload.createdAt,
+                createdAt: payload?.createdAt || dayjs().toISOString(),
                 updateAt: dayjs().toISOString(),
             });
         }

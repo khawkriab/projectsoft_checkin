@@ -166,7 +166,7 @@ function UserCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
                         latlng.current = l;
                     }}
                 >
-                    {currentUserData && profile?.role === 'USER' && (
+                    {currentUserData && (
                         <>
                             <Box>เวลาเข้างาน: {dayjs(Number(currentUserData.time)).format('DD-MM-YYYY HH:mm')}</Box>
                             <Box

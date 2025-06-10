@@ -29,6 +29,7 @@ import 'dayjs/locale/th';
 import { AbsentData, FirebaseQuery, LeavePeriods, LeaveTypes } from 'type.global';
 import { createAbsent, getUserAbsent } from 'components/common/FirebaseProvider/firebaseApi/absentApi';
 import { useFirebase } from 'components/common/FirebaseProvider';
+import { getLeavePeriod, getLeaveType, leavePeriods, leaveTypes } from 'helper/leaveType';
 
 dayjs.locale('th');
 
@@ -39,18 +40,6 @@ type AbsentForm = {
     endDate: Dayjs | null;
     reason: string;
 };
-
-const leaveTypes = [
-    { label: 'ลาพักร้อน', value: 'VACATION' },
-    { label: 'ลาป่วย', value: 'SICK' },
-    { label: 'ลากิจ', value: 'PERSONAL' },
-];
-
-const leavePeriods = [
-    { label: 'ลาเช้า', value: 'HALF_DAY_AM' },
-    { label: 'ลาบ่าย', value: 'HALF_DAY_PM' },
-    { label: 'ทั้งวัน', value: 'FULL_DAY' },
-];
 
 function CustomMobileDatePicker(props: MobileDatePickerProps) {
     const [showDialog, setShowDialog] = useState(false);
@@ -100,17 +89,6 @@ function Absent() {
         reason: '',
     });
 
-    const getLeaveType = (value: LeaveTypes) => {
-        const findData = leaveTypes.find((f) => f.value === value);
-
-        return findData?.label;
-    };
-    const getLeavePeriod = (value: LeavePeriods) => {
-        const findData = leavePeriods.find((f) => f.value === value);
-
-        return findData?.label;
-    };
-
     const onSubmit = async (e: React.ChangeEvent<HTMLFormElement>) => {
         e.preventDefault();
 
@@ -128,6 +106,7 @@ function Absent() {
         setIsSending(true);
         try {
             await createAbsent({
+                name: profile.name,
                 email: profile.email,
                 googleId: profile.googleId,
                 leaveType: absentForm.leaveType,

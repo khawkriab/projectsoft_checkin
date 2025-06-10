@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
-import { Box, Paper, Table, TableBody, TableContainer, TableHead, TableRow } from '@mui/material';
+import { Box, Paper, Table, TableBody, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
 import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/MuiTable';
 import { CheckinCalendar, Profile, UserCheckinList } from 'type.global';
-import { UserCheckIn } from 'components/UserCheckIn';
 import utc from 'dayjs/plugin/utc';
-import UpdateUserCheckInFirebase from 'components/UpdateUserCheckIn/UpdateUserCheckInFirebase';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { useFirebase } from 'components/common/FirebaseProvider';
 import { getCheckinCalendar } from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
 import { getUsersList } from 'components/common/FirebaseProvider/firebaseApi/userApi';
+import { UserCheckinTodayForm } from 'components/UserCheckinTodayForm';
+import { UserCheckinTodayList } from 'components/UserCheckinTodayList';
+import { UserAbsentList } from 'components/UserAbsentList';
+import { UserSelfCheckIn } from 'components/UserSelfCheckIn';
 
 dayjs.extend(customParseFormat);
 dayjs.extend(utc);
@@ -110,109 +112,120 @@ function Home() {
     return (
         <div>
             {/* <LocationChecker /> */}
-            <Box sx={{ marginBottom: 4 }}>
-                {authLoading ? (
-                    <div>Loading...</div>
-                ) : (
-                    isSignedIn && (
-                        <>
-                            {profile?.googleId && (
-                                <UserCheckIn checkinToday={checkinDataList.find((f) => f.date === dayjs().format('DD-MM-YYYY'))} />
-                            )}
-                            {/* {profile?.email && process.env.REACT_APP_ENV === 'test' && (
-                                <UserCheckIn checkinToday={checkinDataList.find((f) => f.date === dayjs().format('DD-MM-YYYY'))} />
+
+            {authLoading ? (
+                <div>Loading...</div>
+            ) : (
+                isSignedIn && (
+                    <Box sx={{ marginBottom: 4 }}>
+                        {profile?.googleId && (
+                            <UserSelfCheckIn checkinToday={checkinDataList.find((f) => f.date === dayjs().format('DD-MM-YYYY'))} />
+                        )}
+                        {/* {profile?.email && process.env.REACT_APP_ENV === 'test' && (
+                                <UserSelfCheckIn checkinToday={checkinDataList.find((f) => f.date === dayjs().format('DD-MM-YYYY'))} />
                             )} */}
-                            {(profile?.role === 'ADMIN' || profile?.role === 'STAFF') && (
-                                <UpdateUserCheckInFirebase
+                        {(profile?.role === 'ADMIN' || profile?.role === 'STAFF') && (
+                            <>
+                                <UserCheckinTodayForm
                                     dateList={checkinDataList as CheckinCalendar[]}
                                     userList={userList}
                                     afterUndate={() => getCheckin(userList)}
-                                    // getCheckin={getCheckin}
                                 />
-                            )}
-                        </>
-                    )
-                )}
-            </Box>
+                                <UserCheckinTodayList
+                                    dateList={checkinDataList as CheckinCalendar[]}
+                                    afterUndate={() => getCheckin(userList)}
+                                />
+                                <UserAbsentList dateList={checkinDataList as CheckinCalendar[]} afterUndate={() => getCheckin(userList)} />
+                            </>
+                        )}
+                    </Box>
+                )
+            )}
+
             {!loading && (
-                <TableContainer component={Paper}>
-                    <Table>
-                        <TableHead>
-                            <TableHeadRow>
-                                <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'ชื่อพนักงาน'}</TableHeadCell>
-                                {userList.map((user, index) => {
-                                    return (
-                                        <TableHeadCell key={index} colSpan={2} align='center' sx={{ borderLeft: '1px solid #fff' }}>
-                                            {user.name}
-                                        </TableHeadCell>
-                                    );
-                                })}
-                            </TableHeadRow>
-                            <TableHeadRow>
-                                <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'วันที่'}</TableHeadCell>
-                                {userList.map((_, index) => {
-                                    return (
-                                        <React.Fragment key={index}>
-                                            <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'เวลาเข้าทำงาน'}</TableHeadCell>
-                                            <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'สถานะ'}</TableHeadCell>
-                                        </React.Fragment>
-                                    );
-                                })}
-                            </TableHeadRow>
-                        </TableHead>
-                        <TableBody>
-                            {checkinDataList.map((row, rowIdx) => (
-                                <TableRow key={rowIdx}>
-                                    <TableBodyCell
-                                        sx={(theme) => ({
-                                            border: '1px solid',
-                                            borderLeftColor: theme.palette.secondary.contrastText,
-                                        })}
-                                    >
-                                        {row.date}
-                                    </TableBodyCell>
-                                    {row.userCheckinList.map((u, uIndex) => (
-                                        <React.Fragment key={`${uIndex}-${u?.name}`}>
-                                            {/* เวลาเข้าทำงาน */}
-                                            <TableBodyCell
-                                                sx={(theme) => ({
-                                                    border: '1px solid',
-                                                    borderLeftColor: theme.palette.secondary.contrastText,
-                                                })}
-                                            >
-                                                {u?.timeText}
-                                                <Box display={'inline-block'} color={'#ff6f00'} fontWeight={700}>
-                                                    {u?.timeText && u?.remark && ' - '}
-                                                    {u?.remark}
-                                                </Box>
-                                            </TableBodyCell>
-                                            {/* สถานะ */}
-                                            <TableBodyCell
-                                                sx={(theme) => ({
-                                                    border: '1px solid',
-                                                    borderLeftColor: theme.palette.secondary.contrastText,
-                                                })}
-                                            >
-                                                <Box
-                                                    sx={{
-                                                        padding: '2px 4px',
-                                                        borderRadius: 1,
-                                                        backgroundColor: u?.lateFlag ? '#f00' : u?.absentFlag ? '#ff6f00' : '',
-                                                        color: u?.lateFlag || u?.absentFlag ? '#ffffff' : '',
-                                                        textAlign: u?.lateFlag || u?.absentFlag ? 'center' : '',
-                                                    }}
+                <>
+                    <Typography variant='h5' marginBottom={2}>
+                        ตารางเช็คชื่อเข้างานประจำเดือน {dayjs().format('MMMM YYYY')}
+                    </Typography>
+                    <TableContainer component={Paper}>
+                        <Table>
+                            <TableHead>
+                                <TableHeadRow>
+                                    <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'ชื่อพนักงาน'}</TableHeadCell>
+                                    {userList.map((user, index) => {
+                                        return (
+                                            <TableHeadCell key={index} colSpan={2} align='center' sx={{ borderLeft: '1px solid #fff' }}>
+                                                {user.name}
+                                            </TableHeadCell>
+                                        );
+                                    })}
+                                </TableHeadRow>
+                                <TableHeadRow>
+                                    <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'วันที่'}</TableHeadCell>
+                                    {userList.map((_, index) => {
+                                        return (
+                                            <React.Fragment key={index}>
+                                                <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'เวลาเข้าทำงาน'}</TableHeadCell>
+                                                <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'สถานะ'}</TableHeadCell>
+                                            </React.Fragment>
+                                        );
+                                    })}
+                                </TableHeadRow>
+                            </TableHead>
+                            <TableBody>
+                                {checkinDataList.map((row, rowIdx) => (
+                                    <TableRow key={rowIdx}>
+                                        <TableBodyCell
+                                            sx={(theme) => ({
+                                                border: '1px solid',
+                                                borderLeftColor: theme.palette.secondary.contrastText,
+                                            })}
+                                        >
+                                            {row.date}
+                                        </TableBodyCell>
+                                        {row.userCheckinList.map((u, uIndex) => (
+                                            <React.Fragment key={`${uIndex}-${u?.name}`}>
+                                                {/* เวลาเข้าทำงาน */}
+                                                <TableBodyCell
+                                                    sx={(theme) => ({
+                                                        border: '1px solid',
+                                                        borderLeftColor: theme.palette.secondary.contrastText,
+                                                    })}
                                                 >
-                                                    {u?.statusText}
-                                                </Box>
-                                                <Box>{u?.reason}</Box>
-                                            </TableBodyCell>
-                                        </React.Fragment>
-                                    ))}
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                                                    {u?.timeText}
+                                                    <Box display={'inline-block'} color={'#ff6f00'} fontWeight={700}>
+                                                        {u?.timeText && u?.remark && ' - '}
+                                                        {u?.remark}
+                                                    </Box>
+                                                </TableBodyCell>
+                                                {/* สถานะ */}
+                                                <TableBodyCell
+                                                    sx={(theme) => ({
+                                                        border: '1px solid',
+                                                        borderLeftColor: theme.palette.secondary.contrastText,
+                                                    })}
+                                                >
+                                                    <Box
+                                                        sx={{
+                                                            padding: '2px 4px',
+                                                            borderRadius: 1,
+                                                            backgroundColor: u?.lateFlag ? '#f00' : u?.absentFlag ? '#ff6f00' : '',
+                                                            color: u?.lateFlag || u?.absentFlag ? '#ffffff' : '',
+                                                            textAlign: u?.lateFlag || u?.absentFlag ? 'center' : '',
+                                                        }}
+                                                    >
+                                                        {u?.statusText}
+                                                    </Box>
+                                                    <Box>{u?.reason}</Box>
+                                                </TableBodyCell>
+                                            </React.Fragment>
+                                        ))}
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </>
             )}
         </div>
     );

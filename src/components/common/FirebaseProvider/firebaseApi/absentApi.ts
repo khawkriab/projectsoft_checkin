@@ -9,6 +9,7 @@ dayjs.extend(customParseFormat);
 export const createAbsent = (payload: AbsentData) => {
     return new Promise<string>(async (resolve, reject) => {
         await addDoc(collection(db, 'absentList'), {
+            name: payload.name,
             email: payload.email,
             googleId: payload.googleId,
             leaveType: payload.leaveType,

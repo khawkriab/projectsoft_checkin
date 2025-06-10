@@ -48,12 +48,13 @@ export type UserCheckInData = Pick<BaseProfile, 'googleId' | 'email' | 'name'> &
 
 export type UserCheckinList = Pick<UserCheckInData, 'email' | 'googleId' | 'reason' | 'remark' | 'time'>;
 export type CheckinCalendar = FirebaseQuery & { date: string; userCheckinList: UserCheckinList[] };
-export type AbsentData = Pick<BaseProfile, 'googleId' | 'email'> & {
-    leaveType: LeaveTypes;
-    leavePeriod: LeavePeriods;
-    startDate: string; // date format: YYYY-MM-DD
-    endDate: string; // date format: YYYY-MM-DD
-    reason: string;
-    status: AbsentStatus;
-    rejectReason?: string;
-};
+export type AbsentData = FirebaseQuery &
+    Pick<BaseProfile, 'googleId' | 'email' | 'name'> & {
+        leaveType: LeaveTypes;
+        leavePeriod: LeavePeriods;
+        startDate: string; // date format: YYYY-MM-DD
+        endDate: string; // date format: YYYY-MM-DD
+        reason: string;
+        status: AbsentStatus;
+        rejectReason?: string;
+    };

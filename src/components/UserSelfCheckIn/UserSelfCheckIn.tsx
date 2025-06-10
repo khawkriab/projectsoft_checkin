@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from 'react';
 import { deviceDetect, isAndroid, isIOS, isMobile } from 'react-device-detect';
 import { LatLng, UserCheckInData } from 'type.global';
 
-function UserCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
+function UserSelfCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
     const { profile, updateUserInfo } = useFirebase();
     const latlng = useRef<LatLng>({ lat: 0, lng: 0 });
     //
@@ -24,6 +24,7 @@ function UserCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
         open: false,
     });
     const [currentUserData, setCurrentUserData] = useState<UserCheckInData | null | undefined>(undefined);
+    console.log('currentUserData:', currentUserData);
     //
     const onCheckin = async (remark?: string) => {
         if (profile) {
@@ -243,4 +244,4 @@ function UserCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
     );
 }
 
-export default UserCheckIn;
+export default UserSelfCheckIn;

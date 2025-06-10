@@ -140,7 +140,7 @@ export const updateUser = (uId: string, payload: Profile) => {
                 phoneNumber: payload.phoneNumber,
                 jobPosition: payload.jobPosition,
                 employmentType: payload.employmentType,
-                allowFindLocation: payload.allowFindLocation,
+                allowFindLocation: payload?.allowFindLocation || 0,
                 status: payload.status,
                 updateAt: dayjs().toISOString(),
             });

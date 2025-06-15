@@ -1,19 +1,23 @@
 import { Box, Button, Paper, Table, TableBody, TableContainer, TableHead, TableRow } from '@mui/material';
-import { getAbsentList } from 'components/common/FirebaseProvider/firebaseApi/absentApi';
-import { updateUserCheckin } from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
+import { getAbsentList, updateAbsent } from 'components/common/FirebaseProvider/firebaseApi/absentApi';
+import { updateUserCheckin, updateUserCheckinCalendar } from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
 import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/MuiTable';
 import dayjs from 'dayjs';
 import { getLeavePeriod, getLeaveType } from 'helper/leaveType';
 import { useEffect, useState } from 'react';
 import { AbsentData, CheckinCalendar } from 'type.global';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+import { useNotification } from 'components/common/NotificationCenter';
+
+dayjs.extend(customParseFormat);
 
 function UserAbsentList({ dateList = [], afterUndate }: { dateList: CheckinCalendar[]; afterUndate: () => Promise<void> | void }) {
+    const { openNotify } = useNotification();
     const [updating, setUpdating] = useState(false);
     const [absentList, setAbsentList] = useState<AbsentData[]>([]);
     //
 
     const onApprove = (data: AbsentData) => {
-        console.log('data:', data);
         const start = dayjs(data.startDate);
         const end = dayjs(data.endDate);
         const datesInRange: string[] = [];
@@ -30,40 +34,63 @@ function UserAbsentList({ dateList = [], afterUndate }: { dateList: CheckinCalen
         if (!isRangeInDates) return alert('date not match');
 
         const all = datesInRange.map((d) => {
+            // DD-MM-YYYY
             const cd = dateList.find((f) => f.date === d);
 
             if (cd && cd?.id) {
                 const userCheckinList = cd.userCheckinList.filter((f) => f && f.email !== data.email);
 
-                return updateUserCheckin(cd.id, '', [
-                    ...userCheckinList,
-                    {
-                        remark: `${getLeaveType(data.leaveType)} - ${getLeavePeriod(data.leavePeriod)}`,
-                        time: '',
-                        email: data?.email,
-                        googleId: data?.googleId ?? '',
-                        reason: data?.reason ?? '',
-                    },
-                ]);
+                // return updateUserCheckin(cd.id, '', [
+                //     ...userCheckinList,
+                //     {
+                //         remark: `${getLeaveType(data.leaveType)} - ${getLeavePeriod(data.leavePeriod)}`,
+                //         time: '',
+                //         email: data?.email,
+                //         googleId: data?.googleId ?? '',
+                //         reason: data?.reason ?? '',
+                //     },
+                // ]);
+                const rd = dayjs(d, 'DD-MM-YYYY');
+                return updateUserCheckinCalendar({
+                    year: rd.get('year'),
+                    month: rd.get('month'),
+                    date: rd.get('date'),
+                    userCheckinList: [
+                        ...userCheckinList.filter((f) => !!f),
+                        {
+                            remark: `${getLeaveType(data.leaveType)} - ${getLeavePeriod(data.leavePeriod)}`,
+                            time: '',
+                            email: data?.email,
+                            googleId: data?.googleId ?? '',
+                            reason: data?.reason ?? '',
+                        },
+                    ],
+                });
             }
         });
 
         // console.log('all:', all);
-        Promise.all(all).then(() => {
-            console.log('success');
+        setUpdating(true);
+        Promise.all(all).then(async () => {
+            if (data.id) {
+                await updateAbsent(data.id, { status: 'APPROVE' });
+            }
+
+            await getAbsentData();
             afterUndate();
+            setUpdating(false);
+            openNotify('success', 'update success');
         });
     };
 
+    const getAbsentData = async () => {
+        // get all
+        const res = await getAbsentList('WAITING');
+        setAbsentList([...res]);
+
+        // setCheckinList([...res.filter((f) => f.status === 99 && dayjs(Number(f.time)).isSame(dayjs(), 'day'))]);
+    };
     useEffect(() => {
-        const getAbsentData = async () => {
-            // get all
-            const res = await getAbsentList('WAITING');
-            setAbsentList([...res]);
-
-            // setCheckinList([...res.filter((f) => f.status === 99 && dayjs(Number(f.time)).isSame(dayjs(), 'day'))]);
-        };
-
         getAbsentData();
     }, []);
     //

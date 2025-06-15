@@ -61,18 +61,12 @@ export const getUserAbsent = (googleId: string) => {
     });
 };
 
-export const updateAbsent = (abId: string, payload: AbsentData & BaseData) => {
+export const updateAbsent = (abId: string, payload: { status: AbsentStatus }) => {
     return new Promise<string>(async (resolve, reject) => {
         await setDoc(
             doc(db, 'absentList', abId),
             {
-                leaveType: payload.leaveType,
-                leavePeriod: payload.leavePeriod,
-                startDate: payload.startDate,
-                endDate: payload.endDate,
-                reason: payload.reason,
                 status: payload.status,
-                createdAt: payload.createdAt,
                 updateAt: dayjs().toISOString(),
             },
             { merge: true }

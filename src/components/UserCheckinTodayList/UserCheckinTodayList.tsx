@@ -1,5 +1,9 @@
 import { Alert, Box, Button, Paper, Slide, Snackbar, Table, TableBody, TableContainer, TableHead, TableRow } from '@mui/material';
-import { getCheckinTodayList, updateUserCheckin } from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
+import {
+    getCheckinTodayList,
+    updateUserCheckin,
+    updateUserCheckinCalendar,
+} from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
 import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/MuiTable';
 import dayjs from 'dayjs';
 import usePageVisibility from 'hooks/usePageVisibility';
@@ -16,21 +20,27 @@ function UserCheckinTodayList({ dateList, afterUndate }: { dateList: CheckinCale
     const [checkinList, setCheckinList] = useState<UserCheckInData[]>([]);
 
     const onApprove = async (data: UserCheckInData) => {
-        const today = dayjs().format('DD-MM-YYYY');
-        const cc = dateList.find((f) => f.date === today);
+        const today = dayjs();
+        const cc = dateList.find((f) => f.date === today.format('DD-MM-YYYY'));
 
         if (cc) {
             setUpdating(true);
-            await updateUserCheckin(cc.id as string, data.id as string, [
-                ...cc.userCheckinList,
-                {
-                    email: data.email,
-                    googleId: data.googleId,
-                    reason: data.reason,
-                    remark: data.remark,
-                    time: dayjs(Number(data.time)).format('HH:mm'),
-                },
-            ]);
+            await updateUserCheckinCalendar({
+                year: today.get('year'),
+                month: today.get('month'),
+                date: today.get('date'),
+                checkinTodayId: data.id,
+                userCheckinList: [
+                    ...cc.userCheckinList.filter((f) => !!f),
+                    {
+                        email: data.email,
+                        googleId: data.googleId,
+                        reason: data.reason,
+                        remark: data.remark,
+                        time: dayjs(Number(data.time)).format('HH:mm'),
+                    },
+                ],
+            });
             await afterUndate();
             await getCheckinData();
             setUpdating(false);

@@ -117,6 +117,7 @@ export const getUsersWithEmail = (email: string) => {
 export const getUsersList = () => {
     return new Promise<Profile[]>(async (resolve, reject) => {
         const querySnapshot = await getDocs(collection(db, 'usersList'));
+
         const usersData: Profile[] = querySnapshot.docs.map((doc) => ({
             ...(doc.data() as Profile),
             id: doc.id,

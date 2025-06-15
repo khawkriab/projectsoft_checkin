@@ -6,7 +6,7 @@ import { CheckinCalendar, Profile, UserCheckinList } from 'type.global';
 import utc from 'dayjs/plugin/utc';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { useFirebase } from 'components/common/FirebaseProvider';
-import { getCheckinCalendar } from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
+import { getCalendarMonthOfYears, getCheckinCalendar } from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
 import { getUsersList } from 'components/common/FirebaseProvider/firebaseApi/userApi';
 import { UserCheckinTodayForm } from 'components/UserCheckinTodayForm';
 import { UserCheckinTodayList } from 'components/UserCheckinTodayList';
@@ -32,7 +32,8 @@ function Home() {
 
     //
     const getCheckin = async (uList: Profile[]) => {
-        const c = await getCheckinCalendar();
+        // const c = await getCheckinCalendar();
+        const c = await getCalendarMonthOfYears({ year: dayjs().get('year'), month: dayjs().get('month') });
 
         if (uList.length > 0) {
             const m: CheckinDataList[] = c.map((d) => {
@@ -83,6 +84,7 @@ function Home() {
                 return {
                     id: d.id,
                     date: dayjs(d.date).format('DD-MM-YYYY'),
+                    wfhFlag: d.wfhFlag,
                     userCheckinList: checkinData,
                 };
             });
@@ -97,9 +99,9 @@ function Home() {
         const init = async () => {
             const res = await getUsersList();
 
-            setUserList([...res]);
+            setUserList([...res.filter((f) => f.status !== 'INACTIVE')]);
 
-            getCheckin(res);
+            getCheckin(res.filter((f) => f.status !== 'INACTIVE'));
         };
 
         init();
@@ -119,7 +121,10 @@ function Home() {
                 isSignedIn && (
                     <Box sx={{ marginBottom: 4 }}>
                         {profile?.googleId && (
-                            <UserSelfCheckIn checkinToday={checkinDataList.find((f) => f.date === dayjs().format('DD-MM-YYYY'))} />
+                            <UserSelfCheckIn
+                                defaultWfh={!!checkinDataList.find((f) => f.id === String(dayjs().get('date')))?.wfhFlag}
+                                checkinToday={checkinDataList.find((f) => f.date === dayjs().format('DD-MM-YYYY'))}
+                            />
                         )}
                         {/* {profile?.email && process.env.REACT_APP_ENV === 'test' && (
                                 <UserSelfCheckIn checkinToday={checkinDataList.find((f) => f.date === dayjs().format('DD-MM-YYYY'))} />

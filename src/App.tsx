@@ -3,6 +3,7 @@ import RoutesManagement from './RouteManagement';
 import { ThemeProvider } from 'components/common/ThemeProvider';
 import { FirebaseProvider } from 'components/common/FirebaseProvider';
 import './App.css';
+import NotificationCenterProvider from 'components/common/NotificationCenter/NotificationCenterProvider';
 
 function App() {
     return (
@@ -10,7 +11,9 @@ function App() {
             {/* <HashRouter basename='/projectsoft_checkin'> */}
             <ThemeProvider>
                 <FirebaseProvider>
-                    <RoutesManagement />
+                    <NotificationCenterProvider>
+                        <RoutesManagement />
+                    </NotificationCenterProvider>
                 </FirebaseProvider>
             </ThemeProvider>
         </HashRouter>

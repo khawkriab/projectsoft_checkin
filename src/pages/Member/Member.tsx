@@ -17,7 +17,7 @@ import { useFirebase } from 'components/common/FirebaseProvider';
 import { updateUser, getUsersList } from 'components/common/FirebaseProvider/firebaseApi/userApi';
 import { TableBodyCell, TableHeadCell } from 'components/common/MuiTable';
 import { useEffect, useMemo, useState } from 'react';
-import { Profile } from 'type.global';
+import { Profile, ProfileStatus } from 'type.global';
 
 type MemberType = Profile;
 
@@ -29,10 +29,17 @@ function Member() {
     const [open, setOpen] = useState(false);
     //
 
-    const onApprove = async (user: MemberType) => {
+    // const onApprove = async (user: MemberType) => {
+    //     if (!user.id) return;
+    //     setUpdating(true);
+    //     await updateUser(user.id, { ...user, status: 'APPROVE' });
+    //     setOpen(true);
+    //     getUserList();
+    // };
+    const onChangeStatus = async (user: MemberType, status: ProfileStatus) => {
         if (!user.id) return;
         setUpdating(true);
-        await updateUser(user.id, { ...user, status: 'APPROVE' });
+        await updateUser(user.id, { ...user, status: status });
         setOpen(true);
         getUserList();
     };
@@ -110,14 +117,19 @@ function Member() {
                                             disabled={updating}
                                             color='error'
                                             exclusive
-                                            value={u.role}
+                                            value={u.status === 'INACTIVE' ? 'INACTIVE' : u.role}
                                             onChange={(_, value) => {
-                                                onChangeRole(value as MemberType['role'], u);
+                                                if (value === 'INACTIVE') {
+                                                    onChangeStatus(u, 'INACTIVE');
+                                                } else {
+                                                    onChangeRole(value as MemberType['role'], u);
+                                                }
                                             }}
                                         >
                                             <ToggleButton value='ADMIN'>Admin</ToggleButton>
                                             <ToggleButton value='STAFF'>Staff</ToggleButton>
                                             <ToggleButton value='USER'>User</ToggleButton>
+                                            <ToggleButton value='INACTIVE'>Inactive User</ToggleButton>
                                         </ToggleButtonGroup>
                                     ) : (
                                         u.role
@@ -137,7 +149,7 @@ function Member() {
                                                     size='small'
                                                     variant='contained'
                                                     color='warning'
-                                                    onClick={() => onApprove(u)}
+                                                    onClick={() => onChangeStatus(u, 'APPROVE')}
                                                 >
                                                     Approve
                                                 </Button>

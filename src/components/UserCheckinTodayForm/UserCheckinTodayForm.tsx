@@ -1,24 +1,15 @@
-import {
-    Alert,
-    Box,
-    Button,
-    FormControl,
-    Grid,
-    InputLabel,
-    MenuItem,
-    Select,
-    SelectChangeEvent,
-    Slide,
-    Snackbar,
-    TextField,
-} from '@mui/material';
+import { Box, Button, FormControl, Grid, InputLabel, MenuItem, Select, SelectChangeEvent, TextField } from '@mui/material';
 import { DesktopTimePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { useFirebase } from 'components/common/FirebaseProvider';
-import { updateUserCheckin } from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
+import { updateUserCheckinCalendar } from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
+import { useNotification } from 'components/common/NotificationCenter';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 import { CheckinCalendar, Profile, UserCheckinList } from 'type.global';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+
+dayjs.extend(customParseFormat);
 
 type UpdateFormData = {
     dateId: string;
@@ -37,18 +28,25 @@ function UserCheckinTodayForm({
     afterUndate: () => Promise<void> | void;
 }) {
     const { profile } = useFirebase();
+    const { openNotify } = useNotification();
     //
-    const [open, setOpen] = useState(false);
+
     const [updateDataForm, setUpdateDataForm] = useState<UpdateFormData>({ dateId: '', userId: '', remark: '' });
     const [updating, setUpdating] = useState(false);
     //
-    const updateCheckin = async (payload: { dateId: string; userId: string; userCheckinList: UserCheckinList[] }) => {
+    const updateCheckin = async (payload: { date: string; userId: string; userCheckinList: UserCheckinList[] }) => {
         setUpdating(true);
         try {
-            await updateUserCheckin(payload.dateId, payload.userId, payload.userCheckinList);
+            const d = dayjs(payload.date, 'DD-MM-YYYY');
+            await updateUserCheckinCalendar({
+                year: d.get('years'),
+                month: d.get('month'),
+                date: d.get('date'),
+                userCheckinList: payload.userCheckinList,
+            });
             await afterUndate();
 
-            setOpen(true);
+            openNotify('success', 'updated successfully');
         } catch (error) {
             console.error('error:', error);
         }
@@ -59,6 +57,7 @@ function UserCheckinTodayForm({
         e.preventDefault();
         const u = userList.find((f) => f.id === updateDataForm.userId);
         const d = dateList.find((f) => f.id === updateDataForm.dateId);
+
         if (u && d) {
             const userCheckinList = d?.userCheckinList
                 .filter((f) => f && f?.email !== u.email)
@@ -70,7 +69,7 @@ function UserCheckinTodayForm({
                     reason: f.reason ?? '',
                 }));
             updateCheckin({
-                dateId: updateDataForm.dateId,
+                date: d.date,
                 userId: '',
                 userCheckinList: [
                     ...userCheckinList,
@@ -134,6 +133,8 @@ function UserCheckinTodayForm({
                             labelId='employee-label'
                             name='userId'
                             value={updateDataForm.userId}
+                            required
+                            error={!updateDataForm.userId}
                             onChange={onChangeData}
                             label='พนักงาน'
                         >
@@ -183,17 +184,6 @@ function UserCheckinTodayForm({
                     </Box>
                 </Grid>
             </Grid>
-            <Snackbar
-                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-                slots={{ transition: Slide }}
-                open={open}
-                autoHideDuration={6000}
-                onClose={() => setOpen(false)}
-            >
-                <Alert onClose={() => setOpen(false)} severity='success' variant='filled' sx={{ width: '100%' }}>
-                    updated successfully
-                </Alert>
-            </Snackbar>
         </Box>
     );
 }

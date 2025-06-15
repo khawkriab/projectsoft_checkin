@@ -3,14 +3,16 @@ import { useFirebase } from 'components/common/FirebaseProvider';
 import { addUserCheckinToday, deleteOldCheckin, getCheckinToday } from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
 import { usersUpdateAllowLocation } from 'components/common/FirebaseProvider/firebaseApi/userApi';
 import { LocationChecker } from 'components/common/LocationChecker';
+import { useNotification } from 'components/common/NotificationCenter';
 import dayjs from 'dayjs';
 import { CheckinDataList } from 'pages/Home/HomeFirebase';
 import { useEffect, useRef, useState } from 'react';
 import { deviceDetect, isAndroid, isIOS, isMobile } from 'react-device-detect';
 import { LatLng, UserCheckInData } from 'type.global';
 
-function UserSelfCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
+function UserSelfCheckIn({ checkinToday, defaultWfh }: { checkinToday?: CheckinDataList; defaultWfh: boolean }) {
     const { profile, updateUserInfo } = useFirebase();
+    const { openNotify } = useNotification();
     const latlng = useRef<LatLng>({ lat: 0, lng: 0 });
     //
     const [updating, setUpdating] = useState(false);
@@ -18,13 +20,7 @@ function UserSelfCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
     const [isAvail, setIsAvail] = useState(false);
     const [allowFindLocation, setAllowFindLocation] = useState(false);
     const [reason, setReason] = useState('');
-    const [alertOptions, setAlertOptions] = useState({
-        message: '',
-        color: '',
-        open: false,
-    });
     const [currentUserData, setCurrentUserData] = useState<UserCheckInData | null | undefined>(undefined);
-    console.log('currentUserData:', currentUserData);
     //
     const onCheckin = async (remark?: string) => {
         if (profile) {
@@ -46,12 +42,7 @@ function UserSelfCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
             await addUserCheckinToday(payload);
             await getUserCheckinToday();
 
-            setAlertOptions((prev) => ({
-                ...prev,
-                message: 'updated successfully',
-                color: 'success',
-                open: true,
-            }));
+            openNotify('success', 'updated successfully');
         }
 
         setFindingLocation(false);
@@ -69,20 +60,10 @@ function UserSelfCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
             await usersUpdateAllowLocation(profile?.id ?? '', isAllow ? 1 : 0);
             await updateUserInfo(profile);
 
-            setAlertOptions((prev) => ({
-                ...prev,
-                message: 'success',
-                color: 'success',
-                open: true,
-            }));
+            openNotify('success', 'success');
             setUpdating(false);
         } else {
-            setAlertOptions((prev) => ({
-                ...prev,
-                message: 'profile not ready',
-                color: 'error',
-                open: true,
-            }));
+            openNotify('error', 'profile not ready');
         }
     };
     const onCheckinOnArea = async () => {
@@ -92,8 +73,10 @@ function UserSelfCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
     const getUserCheckinToday = async () => {
         try {
             const res = await getCheckinToday(profile?.googleId ?? '');
+            console.log('res:', res);
 
             if (dayjs(Number(res.time)).isSame(dayjs(), 'day')) {
+                console.log('if');
                 setCurrentUserData({ ...res });
             } else {
                 await deleteOldCheckin(res.id);
@@ -117,47 +100,27 @@ function UserSelfCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
     //
     return (
         <>
-            <Snackbar
-                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-                slots={{ transition: Slide }}
-                open={alertOptions.open}
-                autoHideDuration={6000}
-                onClose={() =>
-                    setAlertOptions((prev) => ({
-                        ...prev,
-                        message: '',
-                        color: '',
-                        open: false,
-                    }))
-                }
-            >
-                <Alert
-                    onClose={() =>
-                        setAlertOptions((prev) => ({
-                            ...prev,
-                            message: '',
-                            color: '',
-                            open: false,
-                        }))
-                    }
-                    severity={alertOptions.color as AlertColor}
-                    variant='filled'
-                    sx={{ width: '100%' }}
-                >
-                    {alertOptions.message}
-                </Alert>
-            </Snackbar>
+            {currentUserData && (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, marginBottom: 2, marginTop: 2 }}>
+                    <Box>เวลาเข้างาน: {dayjs(Number(currentUserData.time)).format('DD-MM-YYYY HH:mm')}</Box>
+                    <Box
+                        sx={(theme) => ({
+                            padding: '2px 4px',
+                            borderRadius: 1,
+                            color: theme.palette.success.contrastText,
+                            backgroundColor: Number(currentUserData.status) === 99 ? '#ff6f00' : theme.palette.success.main,
+                        })}
+                    >
+                        สถานะ: {Number(currentUserData.status) === 99 ? 'รอ' : 'อนุมัติแล้ว'}
+                    </Box>
+                </Box>
+            )}
             {checkinToday && !checkinToday.userCheckinList.find((f) => f?.email === profile?.email) && profile?.status === 'APPROVE' && (
                 <LocationChecker
                     checkAvail={findingLocation}
                     sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, marginBottom: 2, marginTop: 2 }}
                     onErrorLocation={(m) => {
-                        setAlertOptions((prev) => ({
-                            ...prev,
-                            message: m,
-                            color: 'error',
-                            open: true,
-                        }));
+                        openNotify('error', m);
                         setFindingLocation(false);
                         latlng.current = { lat: 0, lng: 0 };
                     }}
@@ -167,35 +130,22 @@ function UserSelfCheckIn({ checkinToday }: { checkinToday?: CheckinDataList }) {
                         latlng.current = l;
                     }}
                 >
-                    {currentUserData && (
-                        <>
-                            <Box>เวลาเข้างาน: {dayjs(Number(currentUserData.time)).format('DD-MM-YYYY HH:mm')}</Box>
-                            <Box
-                                sx={(theme) => ({
-                                    padding: '2px 4px',
-                                    borderRadius: 1,
-                                    color: theme.palette.success.contrastText,
-                                    backgroundColor: Number(currentUserData.status) === 99 ? '#ff6f00' : theme.palette.success.main,
-                                })}
-                            >
-                                สถานะ: {Number(currentUserData.status) === 99 ? 'รอ' : 'อนุมัติแล้ว'}
-                            </Box>
-                        </>
-                    )}
                     {currentUserData === null && profile?.status === 'APPROVE' && (
                         <Grid container gap={2} alignItems={'center'} width={'100%'}>
-                            <Grid size={{ xs: 12, sm: 12, md: 7 }}>
+                            <Grid size={!defaultWfh ? { xs: 12, sm: 12, md: 7 } : 'auto'}>
                                 <Box component={'form'} onSubmit={onCheckinWFH}>
                                     <Grid container alignItems={'center'} gap={2} sx={{ width: '100%' }}>
-                                        <Grid size={{ xs: 12, sm: 'grow' }}>
-                                            <TextField
-                                                fullWidth
-                                                required
-                                                label='เหตุผลที่ work from home'
-                                                value={reason}
-                                                onChange={(e) => setReason(e.target.value)}
-                                            />
-                                        </Grid>
+                                        {!defaultWfh && (
+                                            <Grid size={{ xs: 12, sm: 'grow' }}>
+                                                <TextField
+                                                    fullWidth
+                                                    required
+                                                    label='เหตุผลที่ work from home'
+                                                    value={reason}
+                                                    onChange={(e) => setReason(e.target.value)}
+                                                />
+                                            </Grid>
+                                        )}
                                         <Grid flex={'none'}>
                                             <Button
                                                 type='submit'

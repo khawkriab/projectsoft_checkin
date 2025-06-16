@@ -38,6 +38,8 @@ function UserSelfCheckIn({ checkinToday, defaultWfh }: { checkinToday?: CheckinD
                 device: deviceDetect(undefined),
                 latlng: latlng.current,
                 status: 99,
+                approveBy: '',
+                approveByGoogleId: '',
             };
             await addUserCheckinToday(payload);
             await getUserCheckinToday();
@@ -73,7 +75,6 @@ function UserSelfCheckIn({ checkinToday, defaultWfh }: { checkinToday?: CheckinD
     const getUserCheckinToday = async () => {
         try {
             const res = await getCheckinToday(profile?.googleId ?? '');
-            console.log('res:', res);
 
             if (dayjs(Number(res.time)).isSame(dayjs(), 'day')) {
                 console.log('if');

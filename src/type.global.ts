@@ -44,9 +44,14 @@ export type UserCheckInData = Pick<BaseProfile, 'googleId' | 'email' | 'name'> &
         device: any;
         latlng: LatLng;
         status: string | number;
+        approveBy: string;
+        approveByGoogleId: string;
     };
 
-export type UserCheckinList = Pick<UserCheckInData, 'email' | 'googleId' | 'reason' | 'remark' | 'time'>;
+export type UserCheckinList = Pick<
+    UserCheckInData,
+    'email' | 'googleId' | 'reason' | 'remark' | 'time' | 'approveBy' | 'approveByGoogleId'
+>;
 export type CheckinCalendar = FirebaseQuery & { date: string; wfhFlag?: number; userCheckinList: UserCheckinList[] };
 export type AbsentData = FirebaseQuery &
     Pick<BaseProfile, 'googleId' | 'email' | 'name'> & {
@@ -57,4 +62,16 @@ export type AbsentData = FirebaseQuery &
         reason: string;
         status: AbsentStatus;
         rejectReason?: string;
+        approveBy: string;
+        approveByGoogleId: string;
+        createdAt?: string; // Date
+        updatedAt?: string; // Date
     };
+
+export type WeeklySchedule = {
+    startDate: string; // YYYY-MM-DD
+    endDate: string; // YYYY-MM-DD
+    userList: Pick<BaseProfile, 'name' | 'email' | 'googleId'>[];
+    createdAt?: Date; // Date
+    updatedAt?: Date; // Date
+};

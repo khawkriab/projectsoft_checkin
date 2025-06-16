@@ -1,4 +1,5 @@
 import { Alert, Box, Button, Paper, Slide, Snackbar, Table, TableBody, TableContainer, TableHead, TableRow } from '@mui/material';
+import { useFirebase } from 'components/common/FirebaseProvider';
 import {
     getCheckinTodayList,
     updateUserCheckin,
@@ -12,6 +13,7 @@ import { CheckinCalendar, UserCheckInData } from 'type.global';
 
 function UserCheckinTodayList({ dateList, afterUndate }: { dateList: CheckinCalendar[]; afterUndate: () => Promise<void> | void }) {
     const isVisible = usePageVisibility();
+    const { profile } = useFirebase();
     //
     const timer = useRef<NodeJS.Timeout>(undefined);
     //
@@ -38,6 +40,8 @@ function UserCheckinTodayList({ dateList, afterUndate }: { dateList: CheckinCale
                         reason: data.reason,
                         remark: data.remark,
                         time: dayjs(Number(data.time)).format('HH:mm'),
+                        approveBy: profile?.name ?? '',
+                        approveByGoogleId: profile?.googleId ?? '',
                     },
                 ],
             });

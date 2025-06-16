@@ -8,11 +8,13 @@ import { useEffect, useState } from 'react';
 import { AbsentData, CheckinCalendar } from 'type.global';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { useNotification } from 'components/common/NotificationCenter';
+import { useFirebase } from 'components/common/FirebaseProvider';
 
 dayjs.extend(customParseFormat);
 
 function UserAbsentList({ dateList = [], afterUndate }: { dateList: CheckinCalendar[]; afterUndate: () => Promise<void> | void }) {
     const { openNotify } = useNotification();
+    const { profile } = useFirebase();
     const [updating, setUpdating] = useState(false);
     const [absentList, setAbsentList] = useState<AbsentData[]>([]);
     //
@@ -63,6 +65,8 @@ function UserAbsentList({ dateList = [], afterUndate }: { dateList: CheckinCalen
                             email: data?.email,
                             googleId: data?.googleId ?? '',
                             reason: data?.reason ?? '',
+                            approveBy: profile?.name ?? '',
+                            approveByGoogleId: profile?.googleId ?? '',
                         },
                     ],
                 });
@@ -73,7 +77,11 @@ function UserAbsentList({ dateList = [], afterUndate }: { dateList: CheckinCalen
         setUpdating(true);
         Promise.all(all).then(async () => {
             if (data.id) {
-                await updateAbsent(data.id, { status: 'APPROVE' });
+                await updateAbsent(data.id, {
+                    status: 'APPROVE',
+                    approveBy: profile?.name ?? '',
+                    approveByGoogleId: profile?.googleId ?? '',
+                });
             }
 
             await getAbsentData();

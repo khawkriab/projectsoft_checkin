@@ -18,6 +18,8 @@ export const createAbsent = (payload: AbsentData) => {
             endDate: payload.endDate,
             reason: payload.reason,
             status: payload.status,
+            approveBy: payload.approveBy,
+            approveByGoogleId: payload.approveByGoogleId,
             createdAt: dayjs().toISOString(),
             updateAt: dayjs().toISOString(),
         });
@@ -61,12 +63,14 @@ export const getUserAbsent = (googleId: string) => {
     });
 };
 
-export const updateAbsent = (abId: string, payload: { status: AbsentStatus }) => {
+export const updateAbsent = (abId: string, payload: { status: AbsentStatus; approveBy: string; approveByGoogleId: string }) => {
     return new Promise<string>(async (resolve, reject) => {
         await setDoc(
             doc(db, 'absentList', abId),
             {
                 status: payload.status,
+                approveBy: payload.approveBy,
+                approveByGoogleId: payload.approveByGoogleId,
                 updateAt: dayjs().toISOString(),
             },
             { merge: true }

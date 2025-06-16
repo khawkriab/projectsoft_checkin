@@ -115,6 +115,8 @@ function Absent() {
                 endDate: absentForm.endDate.format('YYYY-MM-DD'),
                 reason: absentForm.reason,
                 status: 'WAITING',
+                approveBy: '',
+                approveByGoogleId: '',
             });
 
             await getAbsent(profile.googleId);

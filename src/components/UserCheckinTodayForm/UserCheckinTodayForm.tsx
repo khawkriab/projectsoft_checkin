@@ -67,6 +67,8 @@ function UserCheckinTodayForm({
                     email: f?.email,
                     googleId: f?.googleId ?? '',
                     reason: f.reason ?? '',
+                    approveBy: f.approveBy ?? '',
+                    approveByGoogleId: f.approveByGoogleId ?? '',
                 }));
             updateCheckin({
                 date: d.date,
@@ -79,6 +81,8 @@ function UserCheckinTodayForm({
                         email: u?.email,
                         googleId: u?.googleId ?? '',
                         reason: '',
+                        approveBy: profile?.name ?? '',
+                        approveByGoogleId: profile?.googleId ?? '',
                     },
                 ],
             });

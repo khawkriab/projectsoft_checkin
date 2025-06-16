@@ -123,7 +123,7 @@ export const getUsersList = () => {
             id: doc.id,
         }));
 
-        resolve(usersData);
+        resolve(usersData.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase())));
     });
 };
 export const updateUser = (uId: string, payload: Profile) => {

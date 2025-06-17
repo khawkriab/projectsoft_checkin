@@ -159,12 +159,15 @@ function Home() {
                         {(profile?.role === 'ADMIN' || profile?.role === 'STAFF') && (
                             <>
                                 <UserCheckinTodayForm
-                                    dateList={checkinDataList as CheckinCalendar[]}
+                                    dateList={calendarCheckinAllList as CheckinCalendar[]}
                                     userList={userList}
                                     afterUndate={() => getCheckin()}
                                 />
-                                <UserCheckinTodayList dateList={checkinDataList as CheckinCalendar[]} afterUndate={() => getCheckin()} />
-                                <UserAbsentList dateList={checkinDataList as CheckinCalendar[]} afterUndate={() => getCheckin()} />
+                                <UserCheckinTodayList
+                                    dateList={calendarCheckinAllList as CheckinCalendar[]}
+                                    afterUndate={() => getCheckin()}
+                                />
+                                <UserAbsentList dateList={calendarCheckinAllList as CheckinCalendar[]} afterUndate={() => getCheckin()} />
                             </>
                         )}
                     </Box>

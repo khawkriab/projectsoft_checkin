@@ -77,7 +77,6 @@ function UserSelfCheckIn({ checkinToday, defaultWfh }: { checkinToday?: CheckinD
             const res = await getCheckinToday(profile?.googleId ?? '');
 
             if (dayjs(Number(res.time)).isSame(dayjs(), 'day')) {
-                console.log('if');
                 setCurrentUserData({ ...res });
             } else {
                 await deleteOldCheckin(res.id);
@@ -90,10 +89,11 @@ function UserSelfCheckIn({ checkinToday, defaultWfh }: { checkinToday?: CheckinD
 
     useEffect(() => {
         if ((isIOS || isAndroid) && isMobile && currentUserData === null) {
+            // if (currentUserData === null) {
             setAllowFindLocation(!!profile?.allowFindLocation);
             setFindingLocation(!!profile?.allowFindLocation);
         }
-    }, [profile?.allowFindLocation]);
+    }, [profile?.allowFindLocation, currentUserData, isIOS, isAndroid, isMobile]);
 
     useEffect(() => {
         getUserCheckinToday();

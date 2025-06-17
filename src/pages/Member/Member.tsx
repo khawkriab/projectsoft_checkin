@@ -46,10 +46,16 @@ function Member() {
 
     const onChangeRole = async (role: MemberType['role'], user: MemberType) => {
         if (!user.id) return;
-        setUpdating(true);
-        await updateUser(user.id, { ...user, role: role });
-        setOpen(true);
-        getUserList();
+
+        try {
+            const status = user.status === 'INACTIVE' ? 'APPROVE' : user.status;
+            setUpdating(true);
+            await updateUser(user.id, { ...user, role: role, status: status });
+            setOpen(true);
+            getUserList();
+        } catch (error) {
+            console.error('error:', error);
+        }
     };
 
     const getUserList = async () => {

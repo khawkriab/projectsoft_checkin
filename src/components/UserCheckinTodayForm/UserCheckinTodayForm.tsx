@@ -46,6 +46,7 @@ function UserCheckinTodayForm({
             });
             await afterUndate();
 
+            setUpdateDataForm((prev) => ({ ...prev, userId: '', remark: '' }));
             openNotify('success', 'updated successfully');
         } catch (error) {
             console.error('error:', error);

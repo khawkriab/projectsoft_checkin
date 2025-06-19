@@ -3,6 +3,7 @@ import {
   Box,
   Button,
   Divider,
+  FormControl,
   Grid,
   MenuItem,
   Select,
@@ -12,6 +13,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  InputLabel,
 } from "@mui/material";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -139,6 +141,7 @@ function Schedule() {
         display: "flex",
         justifyContent: "center",
         width: "100%",
+        //border: 1,
       }}
     >
       <Box sx={{ width: "100%", maxWidth: 900 }}>
@@ -155,7 +158,7 @@ function Schedule() {
             Schedule
           </Divider>
         </Box>
-        {!isAdmin && (
+        {isAdmin && (
           <>
             {/* Form Section */}
             <Box
@@ -181,7 +184,7 @@ function Schedule() {
                     sx={{
                       flex: 1,
                       padding: 2,
-                      border: 1,
+                      border: 0,
                       borderColor: "#ccc",
                       borderRadius: 2,
                     }}
@@ -230,41 +233,51 @@ function Schedule() {
                     sx={{
                       flex: 1,
                       padding: 2,
-                      border: 1,
+                      border: 0,
                       borderColor: "#ccc",
                       borderRadius: 2,
                     }}
                   >
                     <Grid container spacing={2}>
                       <Grid size={{ xs: 12, md: 6 }}>
-                        <Select
-                          value={employee1}
-                          onChange={(e) => setEmployee1(e.target.value)}
-                          displayEmpty
-                          fullWidth
-                        >
-                          <MenuItem value="">Staff 1</MenuItem>
-                          {dataUser.map((user) => (
-                            <MenuItem key={user.userId} value={user.userId}>
-                              {user.userFullname}
+                        <FormControl fullWidth>
+                          <InputLabel id="employee1-label">Staff 1</InputLabel>
+                          <Select
+                            labelId="employee1-label"
+                            value={employee1 || ""}
+                            label="Staff 1"
+                            onChange={(e) => setEmployee1(e.target.value)}
+                          >
+                            <MenuItem value="">
+                              <em>none</em>
                             </MenuItem>
-                          ))}
-                        </Select>
+                            {dataUser.map((user) => (
+                              <MenuItem key={user.userId} value={user.userId}>
+                                {user.userFullname}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
                       </Grid>
                       <Grid size={{ xs: 12, md: 6 }}>
-                        <Select
-                          value={employee2}
-                          onChange={(e) => setEmployee2(e.target.value)}
-                          displayEmpty
-                          fullWidth
-                        >
-                          <MenuItem value="">Staff 2</MenuItem>
-                          {dataUser.map((user) => (
-                            <MenuItem key={user.userId} value={user.userId}>
-                              {user.userFullname}
+                        <FormControl fullWidth>
+                          <InputLabel id="employee2-label">Staff 2</InputLabel>
+                          <Select
+                            labelId="employee2-label"
+                            value={employee2 || ""}
+                            label="Staff 2"
+                            onChange={(e) => setEmployee2(e.target.value)}
+                          >
+                            <MenuItem value="">
+                              <em>none</em>
                             </MenuItem>
-                          ))}
-                        </Select>
+                            {dataUser.map((user) => (
+                              <MenuItem key={user.userId} value={user.userId}>
+                                {user.userFullname}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
                       </Grid>
                     </Grid>
                   </Box>

@@ -16,7 +16,7 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 
 dayjs.extend(customParseFormat);
 interface Props {
-  date: string;
+  //date: string;
   user: UserCheckIn;
   ApproveWork: (checkInId: string | null, status: number) => void;
   ApproveLeave: (ApproveLeave: string | null, status: number) => void;
@@ -35,7 +35,7 @@ const leaveTimeDescription = {
 };
 
 const UserApprovalCell = ({
-  date,
+  //date,
   user,
   ApproveWork,
   ApproveLeave,
@@ -88,7 +88,16 @@ const UserApprovalCell = ({
                 Reject
               </Button>
 
-              {dayjs().isSame(dayjs(date, "YYYY/MM/DD"), "day") && (
+              <Button
+                size="small"
+                variant="contained"
+                color="info"
+                component={Link}
+                to={`/Map?userId=${user.userId}`}
+              >
+                Location
+              </Button>
+              {/* {dayjs().isSame(dayjs(date, "YYYY/MM/DD"), "day") && (
                 <Button
                   size="small"
                   variant="contained"
@@ -98,7 +107,7 @@ const UserApprovalCell = ({
                 >
                   Location
                 </Button>
-              )}
+              )} */}
             </Stack>
           )}
         </Box>
@@ -144,7 +153,16 @@ const UserApprovalCell = ({
                 Reject
               </Button>
 
-              {dayjs().isSame(dayjs(date, "YYYY-MM-DD"), "day") && (
+              <Button
+                size="small"
+                variant="contained"
+                color="warning"
+                component={Link}
+                to={`/Map?userId=${user.userId}`}
+              >
+                Location
+              </Button>
+              {/* {dayjs().isSame(dayjs(date, "YYYY-MM-DD"), "day") && (
                 <Button
                   size="small"
                   variant="contained"
@@ -154,149 +172,13 @@ const UserApprovalCell = ({
                 >
                   Location
                 </Button>
-              )}
+              )} */}
             </Stack>
           )}
         </Box>
       )}
     </Box>
   );
-
-  // สำหรับ role อื่นๆ (เช่น staff)
-
-  // if (0) {
-  //   <Box>
-  //     <Box textAlign="center">
-  //       {"On-site"}
-  //       <br />
-  //       {user.status}
-  //     </Box>
-  //     <Box display="flex" gap={1}>
-  //       <Button
-  //         variant="contained"
-  //         size="small"
-  //         sx={{
-  //           backgroundColor: "#ff5c5c",
-  //           color: "#fff",
-  //           "&:hover": { backgroundColor: "#e04848" },
-  //           zIndex: 2,
-  //         }}
-  //         onClick={() => handleApprove(user.checkInData.checkInId, 0)}
-  //       >
-  //         Reject
-  //       </Button>
-  //       <Button
-  //         variant="contained"
-  //         size="small"
-  //         sx={{
-  //           backgroundColor: "#77f277",
-  //           color: "#fff",
-  //           "&:hover": { backgroundColor: "#49d649" },
-  //           zIndex: 2,
-  //         }}
-  //         onClick={() => handleApprove(user.checkInData.checkInId, 1)}
-  //       >
-  //         Approve
-  //       </Button>
-
-  //       {dayjs().isSame(dayjs(date, "DD/MM/YYYY"), "day") && (
-  //         <Button
-  //           variant="outlined"
-  //           size="small"
-  //           component={Link}
-  //           to={`/Map?userId=${user.userId}`}
-  //         >
-  //           Map
-  //         </Button>
-  //       )}
-  //     </Box>
-  //   </Box>;
-  // }
-
-  // Admin - Pending (approve/reject)
-  // if (isAdmin && user.approvedStatus === 99) {
-  //   const lateInfo = dayjs(user.checkinTime, "HH:mm:ss").isAfter(
-  //     dayjs("08:00:00", "HH:mm:ss")
-  //   )
-  //     ? `Late ${user.lateTime} HR`
-  //     : "On time";
-
-  //   const statusLabel =
-  //     user.attendanceStatus === 0
-  //       ? `Onsite${user.remark ? ` : ${user.remark}` : ""}`
-  //       : `WFH${user.remark ? ` : ${user.remark}` : ""}`;
-
-  //   return (
-  //     <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
-  //       <Box textAlign="center">
-  //         {statusLabel}
-  //         <br />
-  //         {lateInfo}
-  //       </Box>
-  //       <Box display="flex" gap={1}>
-  //         <Button
-  //           variant="contained"
-  //           size="small"
-  //           sx={{
-  //             backgroundColor: "#ff5c5c",
-  //             color: "#fff",
-  //             "&:hover": { backgroundColor: "#e04848" },
-  //           }}
-  //           onClick={() => handleApprove(checkinID, 0)}
-  //         >
-  //           Reject
-  //         </Button>
-  //         <Button
-  //           variant="contained"
-  //           size="small"
-  //           sx={{
-  //             backgroundColor: "#77f277",
-  //             color: "#fff",
-  //             "&:hover": { backgroundColor: "#49d649" },
-  //           }}
-  //           onClick={() => handleApprove(checkinID, 1)}
-  //         >
-  //           Approve
-  //         </Button>
-
-  //         {dayjs().isSame(dayjs(date, "DD/MM/YYYY"), "day") && (
-  //           <Button
-  //             variant="outlined"
-  //             size="small"
-  //             component={Link}
-  //             to={`/Map?userId=${user.userId}`}
-  //           >
-  //             Map
-  //           </Button>
-  //         )}
-  //       </Box>
-  //     </Box>
-  //   );
-  // }
-
-  // User หรือ Admin (Approved/Rejected)
-  // if (isUser || isAdmin) {
-  //   const lateInfo = dayjs(user.checkinTime, "HH:mm:ss").isBefore(
-  //     dayjs("08:00:00", "HH:mm:ss")
-  //   )
-  //     ? user.lateTime
-  //     : `Late ${user.lateTime} HR`;
-
-  //   const statusLabel =
-  //     user.attendanceStatus === 0
-  //       ? `Onsite${user.remark ? ` : ${user.remark}` : ""}`
-  //       : `WFH${user.remark ? ` : ${user.remark}` : ""}`;
-
-  //   return (
-  //     <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
-  //       <Box textAlign="center">
-  //         {statusLabel}
-  //         <br />
-  //         {lateInfo}
-  //       </Box>
-  //     </Box>
-  //   );
-  // }
 };
 
 export default UserApprovalCell;

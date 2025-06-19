@@ -8,7 +8,7 @@ import { Layout } from "components/layout";
 import { Absent } from "./pages/Absent";
 import { Register } from "./pages/Register";
 import { Map } from "./pages/Map";
-
+import { Tester } from "pages/Tester";
 interface RegisterProps {
   fullName: string;
   email: string;
@@ -43,6 +43,7 @@ function RoutesManagement() {
           <Route path="/Absent" element={<Absent />} />
           <Route path="/Register" element={<Register />} />
           <Route path="/Map" element={<Map />} />
+          <Route path="/Tester" element={<Tester />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -1,252 +1,232 @@
-import React, { useEffect, useState } from "react";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  BarElement,
-  ArcElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  ChartOptions,
-} from "chart.js";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
+  Divider,
+  Typography,
+  Stack,
+  Switch,
+  styled,
+  TextField,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  Divider,
+  Grid,
+  Button,
 } from "@mui/material";
-
-import { Bar, Pie } from "react-chartjs-2";
-
+import { Pie } from "react-chartjs-2";
 import { useFetcher } from "hooks/useFetcher";
-import dayjs from "dayjs";
-import "dayjs/locale/th";
-dayjs.locale("th");
-// 👉 ลงทะเบียน components ที่ Chart.js ใช้
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  BarElement,
-  LineElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend
-);
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, Title } from "chart.js";
+import dayjs, { Dayjs } from "dayjs";
+import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
-type DataMonth = {
-  month: string;
-  monthDescription: string;
-  year: number;
-  days: DataDate[];
+ChartJS.register(ArcElement, Tooltip, Legend, Title);
+
+const AntSwitch = styled(Switch)(({ theme }) => ({
+  width: 40,
+  height: 20,
+  padding: 0,
+  display: "flex",
+  "& .MuiSwitch-switchBase": {
+    padding: 2,
+    "&.Mui-checked": {
+      transform: "translateX(20px)",
+      color: "#fff",
+      "& + .MuiSwitch-track": {
+        backgroundColor: "#1890ff",
+        opacity: 1,
+      },
+    },
+  },
+  "& .MuiSwitch-thumb": {
+    width: 16,
+    height: 16,
+    boxShadow: "none",
+  },
+  "& .MuiSwitch-track": {
+    borderRadius: 20 / 2,
+    backgroundColor: "#bfbfbf",
+    opacity: 1,
+  },
+}));
+
+type UserCheckIn = {
+  userId: string;
+  userNickname: string;
+  userImg: string;
+  userPhone: string;
+  userFullname: string;
+  userJobPosition: string;
+  userJobStatus: string;
+  userEmail: string;
 };
 
-type DataDate = {
-  date: string;
-  day: string;
-  weekendFlag: 0 | 1;
-  holidayFlag: 0 | 1;
-  holidayDescription: string;
+type PieData = {
   userLeaveTotal: number;
   userCheckInTotal: number;
   userCheckInOnTimeTotal: number;
   userCheckInLateTotal: number;
   userAbsentTotal: number;
-};
-
-type DataTrimester = {
-  quarter: number;
-  startDate: string;
-  endDate: string;
-  data: TotalDataTrimester[];
-};
-
-type TotalDataTrimester = {
-  userLeaveTotal: number;
-  userCheckInTotal: number;
-  userCheckInOnTimeTotal: number;
-  userCheckInLateTotal: number;
-  userAbsentTotal: number;
-};
-
-const backendDataTrimester = {
-  data: [
-    { trimester: 1, normal: 386, late: 33, absent: 46 },
-    { trimester: 2, normal: 350, late: 40, absent: 10 },
-    { trimester: 3, normal: 371, late: 12, absent: 60 },
-    { trimester: 4, normal: 369, late: 44, absent: 24 },
-  ],
 };
 
 function Summary() {
-  const [dataTotal, setDataTotal] = useState<DataMonth | null>(null);
-  const [dataTrimester, setDataTrimester] = useState<DataTrimester | null>(
-    null
-  );
-  const [selectedTrimester, setSelectedTrimester] = useState(1);
-  const { POST } = useFetcher();
-  const [selectedMonth, setSelectedMonth] = useState(dayjs().month() + 1);
-  const [selectedYear, setSelectedYear] = useState(dayjs().year());
-  const monthNames = [
-    "มกราคม",
-    "กุมภาพันธ์",
-    "มีนาคม",
-    "เมษายน",
-    "พฤษภาคม",
-    "มิถุนายน",
-    "กรกฎาคม",
-    "สิงหาคม",
-    "กันยายน",
-    "ตุลาคม",
-    "พฤศจิกายน",
-    "ธันวาคม",
-  ];
+  const { GET, POST } = useFetcher();
+  const [isSummary, setIsSummary] = useState(true);
+  const [yearPie, setYearPie] = useState<number | null>(null);
+  const [trimesterPie, setTrimesterPie] = useState<number | null>(null);
+  const [monthPie, setMonthPie] = useState<number | null>(null);
+  const [weekPie, setWeekPie] = useState<number | null>(null);
+  const [dayPie, setDayPie] = useState<number | null>(null);
 
-  const availableYears = Array.from(
-    { length: 5 },
-    (_, i) => dayjs().year() - i
-  );
-  const labels =
-    dataTotal?.days.map((d) => `วันที่ ${d.date.split("-")[2]}`) || [];
+  const [startDate, setStartDate] = useState<Dayjs | null>(null);
+  const [endDate, setEndDate] = useState<Dayjs | null>(null);
 
-  const normalData = dataTotal?.days.map((d) => d.userCheckInOnTimeTotal) || [];
-  const lateData = dataTotal?.days.map((d) => d.userCheckInLateTotal) || [];
-  const absentData = dataTotal?.days.map((d) => d.userAbsentTotal) || [];
-  const leaveData = dataTotal?.days.map((d) => d.userLeaveTotal) || [];
+  const [employee, setEmployee] = useState<string | null>(null);
 
-  const baroptions: ChartOptions<"bar"> = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: "top" as const,
-      },
-      title: {
-        display: true,
-        text: `สรุปการมาทำงาน - เดือน${dataTotal?.monthDescription ?? ""}`,
-      },
-    },
+  const [dataUser, setDataUser] = useState<UserCheckIn[]>([]);
+  const [dataPie, setDataPie] = useState<PieData[] | null>(null);
+
+  const daysInMonth = useMemo(() => {
+    if (monthPie && yearPie) {
+      return new Date(yearPie, monthPie, 0).getDate();
+    }
+    return 31;
+  }, [monthPie, yearPie]);
+
+  const weeksInMonth = useMemo(() => {
+    if (monthPie && yearPie) {
+      const start = dayjs(`${yearPie}-${monthPie}-01`);
+      const end = start.endOf("month");
+
+      const startDayOfWeek = start.day();
+      const totalDays = end.date();
+
+      const totalCells = startDayOfWeek + totalDays;
+      return Math.ceil(totalCells / 7);
+    }
+    return 5;
+  }, [monthPie, yearPie]);
+
+  useEffect(() => {
+    if (trimesterPie !== null) {
+      setMonthPie(null);
+      setWeekPie(null);
+      setDayPie(null);
+    }
+  }, [trimesterPie]);
+
+  useEffect(() => {
+    if (monthPie !== null) {
+      setTrimesterPie(null);
+    }
+  }, [monthPie]);
+
+  useEffect(() => {
+    if (weekPie !== null) {
+      setDayPie(null);
+    }
+  }, [weekPie]);
+
+  useEffect(() => {
+    if (dayPie !== null) {
+      setWeekPie(null);
+    }
+  }, [dayPie]);
+
+  const total = dataPie
+    ? dataPie.reduce(
+        (acc, curr) => {
+          acc.onTime += curr.userCheckInOnTimeTotal;
+          acc.late += curr.userCheckInLateTotal;
+          acc.leave += curr.userLeaveTotal;
+          acc.absent += curr.userAbsentTotal;
+          return acc;
+        },
+        { onTime: 0, late: 0, leave: 0, absent: 0 }
+      )
+    : { onTime: 0, late: 0, leave: 0, absent: 0 };
+
+  const setValue = async (
+    startDate: Dayjs | null,
+    endDate: Dayjs | null,
+    year: number | null,
+    quarter: number | null,
+    month: number | null,
+    week: number | null,
+    day: number | null,
+    user_id: string | null
+  ) => {
+    try {
+      const result = await POST("/summary/option", {
+        start_date: startDate,
+        end_date: endDate,
+        year: year,
+        quarter: quarter,
+        month: month,
+        week: week,
+        day: day,
+        user_id: user_id,
+      });
+
+      setDataPie(result.data.TotalData);
+    } catch (error) {
+      console.error("failed to req : ", error);
+    }
   };
 
-  const barData = {
-    labels,
-    datasets: [
-      {
-        label: "มาทำงานตรงเวลา",
-        data: normalData,
-        backgroundColor: "#4CAF50",
-      },
-      {
-        label: "มาสาย",
-        data: lateData,
-        backgroundColor: "#FFC107",
-      },
-      {
-        label: "ขาดงาน",
-        data: absentData,
-        backgroundColor: "#F44336",
-      },
-      {
-        label: "ลางาน",
-        data: leaveData,
-        backgroundColor: "#2196F3",
-      },
-    ],
-  };
+  const fetchUsers = async () => {
+    try {
+      const result = await GET("/user");
+      const users: UserCheckIn[] = (result.data || []).map((u: any) => ({
+        userId: u.user_id,
+        userNickname: u.user_nickname,
+        userImg: u.user_image_url,
+        userPhone: u.user_phonenumber,
+        userFullname: u.user_fullname,
+        userJobPosition: u.user_job_position,
+        userJobStatus: u.user_job_status,
+        userEmail: u.user_email,
+      }));
 
-  const pieOptions: ChartOptions<"pie"> = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: "top" as const,
-      },
-      title: {
-        display: true,
-        text: "สรุปการมาทำงานแยกตามไตรมาส",
-      },
-    },
+      setDataUser(users);
+    } catch (error) {
+      console.error("โหลดข้อมูลล้มเหลว:", error);
+    }
   };
-
-  const total = dataTrimester?.data.reduce(
-    (acc, curr) => {
-      acc.onTime += curr.userCheckInOnTimeTotal;
-      acc.late += curr.userCheckInLateTotal;
-      acc.leave += curr.userLeaveTotal;
-      acc.absent += curr.userAbsentTotal;
-      return acc;
-    },
-    { onTime: 0, late: 0, leave: 0, absent: 0 }
-  );
 
   const pieData = {
     labels: ["มาทำงานปกติ", "มาสาย", "ลางาน", "ขาดงาน"],
     datasets: [
       {
-        label: "รวม",
-        data: total
-          ? [total.onTime, total.late, total.leave, total.absent]
-          : [],
+        label: "รวมทั้งหมด",
+        data: [total.onTime, total.late, total.leave, total.absent],
+
         backgroundColor: ["#4CAF50", "#FF9800", "#2196F3", "#F44336"],
         borderWidth: 1,
       },
     ],
   };
 
-  const getDataBar = async (month: number, year: number) => {
-    try {
-      const result = await POST("/summary/month", {
-        mount: month,
-        year: year,
-      });
-
-      const rawData = result.data;
-
-      const formattedData: DataMonth = {
-        month: rawData.mount,
-        monthDescription: rawData.mountDescription,
-        year: rawData.year,
-        days: rawData.TotalData,
-      };
-
-      setDataTotal(formattedData);
-    } catch (error) {
-      console.error("โหลดข้อมูลล้มเหลว:", error);
-    }
-  };
-
-  const getDataTrimester = async (quarter: number) => {
-    try {
-      const result = await POST("/summary/quarter", {
-        quarter: quarter,
-      });
-
-      const rawData = result.data;
-      const formattedData: DataTrimester = {
-        quarter: rawData.quarter,
-        startDate: rawData.start,
-        endDate: rawData.end,
-        data: rawData.TotalData,
-      };
-      setDataTrimester(formattedData);
-    } catch (error) {
-      console.error("โหลดข้อมูลล้มเหลว:", error);
-    }
+  const pieOptions = {
+    responsive: true,
+    plugins: {
+      legend: { position: "top" as const },
+      title: {
+        display: true,
+        text: isSummary ? "สรุปการมาทำงานรวม" : "ข้อมูลรายบุคคล (User A)",
+      },
+    },
   };
 
   useEffect(() => {
-    getDataBar(selectedMonth, selectedYear);
-    getDataTrimester(1);
-  }, [selectedMonth, selectedYear]);
+    fetchUsers();
+  }, []);
 
   return (
     <Box sx={{ display: "flex", justifyContent: "center", width: "100%" }}>
-      <Box sx={{ width: "100%", maxWidth: 1400 }}>
-        <Box marginBottom={3}>
+      <Box sx={{ width: "100%", maxWidth: 1200 }}>
+        <Box mb={3}>
           <Divider
             textAlign="left"
             sx={{
@@ -261,90 +241,236 @@ function Summary() {
 
         <Box
           sx={{
+            width: "100%",
+            border: 1,
+            borderColor: "#4b4b4b",
+            padding: 4,
+            borderRadius: 2,
             display: "flex",
+            flexDirection: "row",
             gap: 2,
-            flexDirection: { xs: "column", md: "row" },
+            alignItems: "flex-start",
+            justifyContent: "center",
           }}
         >
-          {/* B1 - Bar Chart */}
-          <Box
-            sx={{
-              flexBasis: "60%",
-              border: 1,
-              borderColor: "#4b4b4b",
-              padding: { xs: 2, md: 4 },
-              borderRadius: 2,
-            }}
-          >
-            <Box sx={{ display: "flex", gap: 2, marginBottom: 2 }}>
-              <FormControl fullWidth>
-                <InputLabel id="month-select-label">เดือน</InputLabel>
-                <Select
-                  labelId="month-select-label"
-                  value={selectedMonth}
-                  label="เดือน"
-                  onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                >
-                  {monthNames.map((name, index) => (
-                    <MenuItem key={index + 1} value={index + 1}>
-                      {name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+          <Box sx={{ width: "100%", maxWidth: 600 }}>
+            <Stack direction="row" alignItems="center" spacing={2} mb={3}>
+              <Typography>เลือกเอง</Typography>
+              <AntSwitch
+                checked={isSummary}
+                onChange={() => {
+                  setIsSummary(!isSummary);
+                  setYearPie(null);
+                }}
+              />
+              <Typography>ช่วงเวลา</Typography>
+            </Stack>
 
-              <FormControl fullWidth>
-                <InputLabel id="year-select-label">ปี</InputLabel>
-                <Select
-                  labelId="year-select-label"
-                  value={selectedYear}
-                  label="ปี"
-                  onChange={(e) => setSelectedYear(Number(e.target.value))}
-                >
-                  {availableYears.map((year) => (
-                    <MenuItem key={year} value={year}>
-                      {year}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+            {isSummary ? (
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 6 }}>
+                  <TextField
+                    fullWidth
+                    label="Year"
+                    placeholder="YYYY"
+                    type="number"
+                    value={yearPie || ""}
+                    onChange={(e) => setYearPie(Number(e.target.value))}
+                  />
+                </Grid>
+
+                <Grid size={{ xs: 6 }}>
+                  <FormControl fullWidth>
+                    <InputLabel id="trimester-label">Trimester</InputLabel>
+                    <Select
+                      labelId="trimester-label"
+                      value={trimesterPie || ""}
+                      label="Trimester"
+                      onChange={(e) => setTrimesterPie(Number(e.target.value))}
+                      disabled={!yearPie}
+                    >
+                      <MenuItem value="">
+                        <em>none</em>
+                      </MenuItem>
+                      {[1, 2, 3, 4].map((t) => (
+                        <MenuItem key={t} value={t}>
+                          {t}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                <Grid size={{ xs: 6 }}>
+                  <FormControl fullWidth>
+                    <InputLabel id="month-label">Month</InputLabel>
+                    <Select
+                      labelId="month-label"
+                      value={monthPie || ""}
+                      label="Month"
+                      onChange={(e) => setMonthPie(Number(e.target.value))}
+                      disabled={!yearPie}
+                    >
+                      <MenuItem value="">
+                        <em>none</em>
+                      </MenuItem>
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                        <MenuItem key={m} value={m}>
+                          {m}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                <Grid size={{ xs: 6 }}>
+                  <FormControl fullWidth>
+                    <InputLabel>Week</InputLabel>
+                    <Select
+                      labelId="week-label"
+                      value={weekPie || ""}
+                      label="Week"
+                      onChange={(e) => setWeekPie(Number(e.target.value))}
+                      disabled={!yearPie || !monthPie}
+                    >
+                      <MenuItem value="">
+                        <em>none</em>
+                      </MenuItem>
+                      {[...Array(weeksInMonth)].map((_, i) => (
+                        <MenuItem key={i + 1} value={i + 1}>
+                          {i + 1}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                <Grid size={{ xs: 6 }}>
+                  <FormControl fullWidth>
+                    <InputLabel>Day</InputLabel>
+                    <Select
+                      labelId="day-label"
+                      value={dayPie || ""}
+                      label="Day"
+                      onChange={(e) => setDayPie(Number(e.target.value))}
+                      disabled={!yearPie || !monthPie}
+                    >
+                      <MenuItem value="">
+                        <em>none</em>
+                      </MenuItem>
+                      {[...Array(daysInMonth)].map((_, i) => (
+                        <MenuItem key={i + 1} value={i + 1}>
+                          {i + 1}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                <Grid size={{ xs: 6 }}>
+                  <FormControl fullWidth>
+                    <InputLabel id="employee1-label">employee</InputLabel>
+                    <Select
+                      labelId="employee-label"
+                      value={employee || ""}
+                      label="employee"
+                      onChange={(e) => setEmployee(e.target.value)}
+                    >
+                      <MenuItem value="">
+                        <em>none</em>
+                      </MenuItem>
+                      {dataUser.map((user) => (
+                        <MenuItem key={user.userId} value={user.userId}>
+                          {user.userFullname}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </Grid>
+            ) : (
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 6 }}>
+                    <DatePicker
+                      label="วันที่เริ่มต้น"
+                      value={startDate}
+                      onChange={(newValue) => {
+                        setStartDate(newValue);
+                        if (endDate && newValue && endDate.isBefore(newValue)) {
+                          setEndDate(null);
+                        }
+                      }}
+                      slotProps={{ textField: { fullWidth: true } }}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 6 }}>
+                    <DatePicker
+                      label="วันที่สิ้นสุด"
+                      value={endDate}
+                      onChange={(newValue) => {
+                        if (
+                          newValue &&
+                          startDate &&
+                          newValue.isBefore(startDate)
+                        ) {
+                          alert("วันที่สิ้นสุดต้องมากกว่าวันที่เริ่มต้น");
+                        } else {
+                          setEndDate(newValue);
+                        }
+                      }}
+                      slotProps={{ textField: { fullWidth: true } }}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 6 }}>
+                    <FormControl fullWidth>
+                      <InputLabel id="employee1-label">employee</InputLabel>
+                      <Select
+                        labelId="employee-label"
+                        value={employee || ""}
+                        label="employee"
+                        onChange={(e) => setEmployee(e.target.value)}
+                      >
+                        <MenuItem value="">
+                          <em>none</em>
+                        </MenuItem>
+                        {dataUser.map((user) => (
+                          <MenuItem key={user.userId} value={user.userId}>
+                            {user.userFullname}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                </Grid>
+              </LocalizationProvider>
+            )}
+            <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
+              <Button
+                variant="contained"
+                onClick={() => {
+                  setValue(
+                    startDate,
+                    endDate,
+                    yearPie,
+                    trimesterPie,
+                    monthPie,
+                    weekPie,
+                    dayPie,
+                    employee
+                  );
+                  console.log("startDate:", startDate);
+                  console.log("endDate:", endDate);
+                  console.log("yearPie:", yearPie);
+                }}
+                disabled={isSummary && yearPie === null}
+              >
+                View
+              </Button>
             </Box>
-
-            <Bar data={barData} options={baroptions} />
           </Box>
 
-          {/* B2 - Pie Chart */}
-          <Box
-            sx={{
-              flexBasis: "40%",
-              border: 1,
-              borderColor: "#4b4b4b",
-              padding: { xs: 2, md: 4 },
-              borderRadius: 2,
-            }}
-          >
-            <Box sx={{ marginBottom: 2, minWidth: 200 }}>
-              <FormControl fullWidth>
-                <InputLabel id="trimester-select-label">เลือกไตรมาส</InputLabel>
-                <Select
-                  labelId="trimester-select-label"
-                  id="trimesterSelect"
-                  value={selectedTrimester}
-                  label="เลือกไตรมาส"
-                  onChange={(e) => {
-                    const quarter = Number(e.target.value);
-                    setSelectedTrimester(quarter);
-                    getDataTrimester(quarter); // เรียกดึงข้อมูลตามไตรมาสที่เลือก
-                  }}
-                >
-                  {backendDataTrimester.data.map((t) => (
-                    <MenuItem key={t.trimester} value={t.trimester}>
-                      ไตรมาสที่ {t.trimester}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
+          <Box sx={{ width: "100%", maxWidth: 450 }}>
             <Pie data={pieData} options={pieOptions} />
           </Box>
         </Box>

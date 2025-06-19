@@ -1,0 +1,10 @@
+Edit more
+cheack-in 
+-add search name 
+-maybe change to calendar 
+
+summary 
+-change scale ( day week mouth trimester year )
+
+map
+-cheack history login location  

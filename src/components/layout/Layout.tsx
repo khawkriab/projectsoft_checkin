@@ -36,6 +36,7 @@ const navLinks = [
   { label: "Absent", path: "/Absent" },
   { label: "Register", path: "/Register" },
   { label: "Map", path: "/Map" },
+  { label: "Tester", path: "/Tester" },
 ];
 
 function Layout({ onProfileLoad }: LayoutProps) {

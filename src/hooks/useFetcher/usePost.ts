@@ -27,7 +27,7 @@ function useApi() {
       //ip,
     };
 
-    const response = await fetch("http://192.168.31.165:8000" + url, {
+    const response = await fetch("https://e8ac-49-231-223-132.ngrok-free.app/" + url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -49,7 +49,9 @@ function useApi() {
     url: string,
     options?: { headers?: Record<string, string> }
   ): Promise<T> => {
-    const response = await fetch("http://192.168.31.165:8000" + url, {
+    //
+    //http://192.168.31.165:8000
+    const response = await fetch("https://e8ac-49-231-223-132.ngrok-free.app/" + url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

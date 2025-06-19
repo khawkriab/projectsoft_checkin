@@ -87,7 +87,15 @@ function LocationChecker({ onLocationUpdate }: LocationCheckerProps) {
   if (loadError) return <div>Error loading maps</div>;
   if (!isLoaded) return <div>Loading Maps...</div>;
 
-  return <div></div>;
+  return (
+    <div>
+      {currentLocation && (
+        <p>
+          Within 50m of target: <strong>{isWithin ? "Yes" : "No"}</strong>
+        </p>
+      )}
+    </div>
+  );
 }
 
 export default LocationChecker;

@@ -1,0 +1,70 @@
+{/* MOCK DATA LIST type 1*/}
+        <Box
+          sx={{
+            width: "100%",
+            border: 1,
+            borderColor: "#4b4b4b",
+            padding: { xs: 2, md: 4 },
+            borderRadius: 2,
+            marginBottom: 3,
+          }}
+        >
+          {dataList.length === 0 ? (
+            <Typography>ไม่มีข้อมูลการลา</Typography>
+          ) : (
+            dataList.map((item) => (
+              <Card
+                key={item.TID}
+                variant="outlined"
+                sx={{ marginBottom: 2, backgroundColor: "#f9f9f9" }}
+              >
+                <CardHeader
+                  title={`คำขอเลขที่ ${item.TID}`}
+                  action={
+                    <Chip
+                      label={
+                        item.approved_status_id === 0
+                          ? "รออนุมัติ"
+                          : item.approved_status_id === 1
+                          ? "อนุมัติแล้ว"
+                          : "ไม่อนุมัติ"
+                      }
+                      color={
+                        item.approved_status_id === 0
+                          ? "warning"
+                          : item.approved_status_id === 1
+                          ? "success"
+                          : "error"
+                      }
+                    />
+                  }
+                />
+                <CardContent>
+                  <Typography>
+                    🗓 ช่วงเวลา: {item.start_date} - {item.end_date}
+                  </Typography>
+                  <Typography>
+                    📌 ประเภทการลา:{" "}
+                    {item.leave_type_id === 1
+                      ? "ลาพักร้อน"
+                      : item.leave_type_id === 2
+                      ? "ลาป่วย"
+                      : "ลากิจ"}
+                  </Typography>
+                  <Typography>
+                    🕒 เวลา:{" "}
+                    {item.leave_time_id === 1
+                      ? "เช้า"
+                      : item.leave_time_id === 2
+                      ? "บ่าย"
+                      : "ทั้งวัน"}
+                  </Typography>
+                  <Typography>✏️ เหตุผล: {item.leave_reason}</Typography>
+                  <Typography>👤 ผู้อนุมัติ: {item.approved_by}</Typography>
+                </CardContent>
+              </Card>
+            ))
+        )}
+        </Box>
+
+       

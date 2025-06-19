@@ -52,6 +52,8 @@ function Absent() {
         leaveReason: reason,
       };
 
+      console.log("payload:", payload);
+
       try {
         const response = await POST("/userleave/create", payload);
         alert("ส่งคำขอลาสำเร็จ");

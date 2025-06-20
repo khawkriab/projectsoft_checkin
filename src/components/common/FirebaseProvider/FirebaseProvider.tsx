@@ -76,28 +76,22 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
         try {
             const uid = auth.currentUser?.uid;
             const res = await getUsersWithEmail(profile.email);
-            if (uid && res.id && res.id !== uid && res.googleId) {
-                console.log('update:');
-
-                await updateUser(uid, {
-                    ...profile,
-                    ...res,
-                    googleId: res.googleId || profile.googleId,
-                    fullName: res.fullName || profile.fullName,
-                    profileURL: res.profileURL || profile.profileURL,
-                    email: res.email || profile.email,
-                });
-                await deleteUser(res.id);
-            }
-
-            setProfile({
+            let userData = {
                 ...profile,
                 ...res,
                 googleId: res.googleId || profile.googleId,
                 fullName: res.fullName || profile.fullName,
                 profileURL: res.profileURL || profile.profileURL,
                 email: res.email || profile.email,
-            });
+            };
+            if (uid && res.id && res.id !== uid && res.googleId) {
+                userData = { ...userData, id: uid };
+
+                await updateUser(uid, userData);
+                await deleteUser(res.id);
+            }
+
+            setProfile({ ...userData });
         } catch (error) {
             console.error('error:', error);
             setProfile({ ...profile });

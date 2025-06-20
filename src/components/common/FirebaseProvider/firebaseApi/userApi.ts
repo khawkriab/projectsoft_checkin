@@ -1,19 +1,12 @@
 import { addDoc, collection, deleteDoc, doc, getDocs, query, setDoc, where } from 'firebase/firestore';
 import { Profile } from 'type.global';
 import { db } from '../FirebaseProvider';
-import { getAuth } from 'firebase/auth';
 import dayjs from 'dayjs';
 
 export const addUsersRegister = (payload: Profile) => {
     return new Promise<string>(async (resolve) => {
-        const auth = getAuth();
-        // Wait for user to sign in first
-        const user = auth.currentUser;
-
-        if (user) {
-            console.log('user.ui:', user.uid);
-            const userRef = doc(db, 'usersList', user.uid);
-            await setDoc(userRef, {
+        if (payload?.id) {
+            await setDoc(doc(db, 'usersList', payload.id), {
                 email: payload.email,
                 employmentType: payload.employmentType,
                 fullName: payload.fullName,
@@ -23,6 +16,7 @@ export const addUsersRegister = (payload: Profile) => {
                 phoneNumber: payload.phoneNumber,
                 profileURL: payload.profileURL,
                 role: payload.role,
+                allowFindLocation: payload?.allowFindLocation || 0,
                 status: 'WAITING',
                 createdAt: payload?.createdAt || dayjs().toISOString(),
                 updateAt: dayjs().toISOString(),

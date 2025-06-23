@@ -1,4 +1,4 @@
-import { Box } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import dayjs, { Dayjs } from 'dayjs';
 import isBetweenPlugin from 'dayjs/plugin/isBetween';
 import { styled } from '@mui/material/styles';
@@ -6,7 +6,10 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { PickersDay, PickersDayProps } from '@mui/x-date-pickers/PickersDay';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { createScheduleWeekly, getScheduleWeekly } from 'components/common/FirebaseProvider/firebaseApi/schedulesApi';
+import { useFirebase } from 'components/common/FirebaseProvider';
+import { useNotification } from 'components/common/NotificationCenter';
 
 dayjs.extend(isBetweenPlugin);
 
@@ -76,8 +79,62 @@ function Day(
 }
 
 function WeeklySchedule() {
+    const { profile } = useFirebase();
+    const { openNotify } = useNotification();
     const [hoveredDay, setHoveredDay] = useState<Dayjs | null>(null);
-    const [value, setValue] = useState<Dayjs | null>(dayjs('2022-04-17'));
+    const [value, setValue] = useState<Dayjs | null>(dayjs());
+    const [loading, setLoading] = useState(false);
+
+    const onAddSchedule = async () => {
+        if (!value || !profile) return;
+
+        setLoading(true);
+        try {
+            const startOfWeek = value.startOf('week');
+            const endOfWeek = value.endOf('week');
+            // DD-MM_DD-MM-YYYY
+            await createScheduleWeekly(`${startOfWeek.format('DD-MM')}_${endOfWeek.format('DD-MM-YYYY')}`, {
+                startDate: startOfWeek.format('YYYY-MM-DD'),
+                endDate: endOfWeek.format('YYYY-MM-DD'),
+                userList: [
+                    {
+                        name: profile?.name,
+                        email: profile?.email,
+                        googleId: profile?.googleId,
+                    },
+                ],
+            });
+
+            openNotify('success', 'add success');
+        } catch (error) {
+            openNotify('error', '!!! error');
+            console.error('error:', error);
+        }
+
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        console.log('value:', value);
+        console.log('startOf:', value?.startOf('week'));
+        console.log('endOf:', value?.endOf('week'));
+
+        const init = async () => {
+            const now = dayjs();
+            const startDate = now.startOf('month').startOf('week').format('YYYY-MM-DD');
+            console.log('startDate:', startDate);
+            const endDate = now.endOf('month').endOf('week').format('YYYY-MM-DD');
+            console.log('endDate:', endDate);
+            try {
+                const res = await getScheduleWeekly(startDate, endDate);
+                console.log('res:', res);
+            } catch (error) {
+                console.log('error:', error);
+            }
+        };
+
+        init();
+    }, [value]);
 
     return (
         <Box>
@@ -120,7 +177,11 @@ function WeeklySchedule() {
                     />
                 </LocalizationProvider>
             </Box>
-            <Box width={'50%'}></Box>
+            <Box width={'50%'}>
+                <Button loading={loading} variant='contained' color='primary' onClick={onAddSchedule}>
+                    add
+                </Button>
+            </Box>
         </Box>
     );
 }

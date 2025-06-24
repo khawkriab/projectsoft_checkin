@@ -88,7 +88,7 @@ function UserSelfCheckIn({ checkinToday, defaultWfh }: { checkinToday?: CheckinD
     };
 
     useEffect(() => {
-        if ((isIOS || isAndroid) && isMobile && currentUserData === null) {
+        if ((((isIOS || isAndroid) && isMobile) || process.env.REACT_APP_TEST === '1') && currentUserData === null) {
             // if (currentUserData === null) {
             setAllowFindLocation(!!profile?.allowFindLocation);
             setFindingLocation(!!profile?.allowFindLocation);
@@ -162,7 +162,7 @@ function UserSelfCheckIn({ checkinToday, defaultWfh }: { checkinToday?: CheckinD
                                     </Grid>
                                 </Box>
                             </Grid>
-                            {(isIOS || isAndroid) && isMobile && (
+                            {(((isIOS || isAndroid) && isMobile) || process.env.REACT_APP_TEST === '1') && (
                                 <Grid flex={'auto'} display={'flex'} gap={2}>
                                     {allowFindLocation && (
                                         <Button

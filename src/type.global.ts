@@ -68,7 +68,7 @@ export type AbsentData = FirebaseQuery &
         updatedAt?: string; // Date
     };
 
-export type WeeklySchedule = {
+export type WeeklyScheduleData = {
     startDate: string; // YYYY-MM-DD
     endDate: string; // YYYY-MM-DD
     userList: Pick<BaseProfile, 'name' | 'email' | 'googleId'>[];

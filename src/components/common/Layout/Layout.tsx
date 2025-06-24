@@ -89,6 +89,11 @@ function Layout() {
             label: 'Calendar',
             to: '/create-calendar',
         },
+        {
+            condition: !!profile?.googleId,
+            label: 'Schedule',
+            to: '/weekly-schedule',
+        },
     ];
 
     //

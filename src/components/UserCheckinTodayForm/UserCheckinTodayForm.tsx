@@ -79,7 +79,7 @@ function UserCheckinTodayForm({
                     {
                         remark: updateDataForm.remark ?? '',
                         time: updateDataForm.time ?? '',
-                        email: u?.email,
+                        email: u?.email.replace(/\s+/g, ''),
                         googleId: u?.googleId ?? '',
                         reason: '',
                         approveBy: profile?.name ?? '',

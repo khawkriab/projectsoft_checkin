@@ -1,21 +1,17 @@
-import { Badge, Box, Button, Grid, IconButton, Table, TableBody, TableCell, TableContainer, TableRow, ToggleButton } from '@mui/material';
+import { Badge, Box, Button, ToggleButton } from '@mui/material';
 import { DateCalendar, LocalizationProvider, PickersDay, PickersDayProps } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useEffect, useState } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import { useFirebase } from 'components/common/FirebaseProvider';
 import {
     createCalendarMonthOfYears,
-    createCheckinCalendar,
-    deleteCalendarDay,
     deleteCalendarMonthOfYears,
     getCalendarMonthOfYears,
-    getCheckinCalendar,
     updateCalendarMonthOfYears,
 } from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
-import { CheckinCalendar, UserCheckinList } from 'type.global';
+import { CheckinCalendar, Profile, UserCheckinList } from 'type.global';
 import { useNotification } from 'components/common/NotificationCenter';
 
 dayjs.extend(customParseFormat);
@@ -144,23 +140,12 @@ function CreateMonthCalendar() {
         setCurrentFromDatabase([...mapData]);
     };
     useEffect(() => {
-        getCalendar(dayjs().get('years'), dayjs().get('months'));
-    }, []);
+        getCalendar(years, month);
+    }, [month, years]);
+
     //
     return (
         <Box>
-            {/* <Grid container>
-                {allDays.map((m) => (
-                    <Grid size='auto'>
-                        <Box padding={2} border={'1px solid #f00'}>
-                            {m.date}
-                            <Button variant='contained' onClick={() => onTranfer(m)}>
-                                TranferData
-                            </Button>
-                        </Box>
-                    </Grid>
-                ))}
-            </Grid> */}
             <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DateCalendar
                     fixedWeekNumber={6}

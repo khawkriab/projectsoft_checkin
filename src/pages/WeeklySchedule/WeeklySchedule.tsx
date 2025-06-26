@@ -1,4 +1,4 @@
-import { Box, Button, Table, TableBody, TableContainer, TableRow } from '@mui/material';
+import { Box, Button, FormControl, InputLabel, MenuItem, Select, Table, TableBody, TableContainer, TableRow } from '@mui/material';
 import dayjs, { Dayjs } from 'dayjs';
 import isBetweenPlugin from 'dayjs/plugin/isBetween';
 import { styled } from '@mui/material/styles';
@@ -11,7 +11,8 @@ import { createScheduleWeekly, getScheduleWeekly } from 'components/common/Fireb
 import { useFirebase } from 'components/common/FirebaseProvider';
 import { useNotification } from 'components/common/NotificationCenter';
 import { TableBodyCell } from 'components/common/MuiTable';
-import { BaseData, FirebaseQuery, WeeklyScheduleData } from 'type.global';
+import { BaseData, FirebaseQuery, Profile, WeeklyScheduleData } from 'type.global';
+import { getUsersList } from 'components/common/FirebaseProvider/firebaseApi/userApi';
 
 dayjs.extend(isBetweenPlugin);
 
@@ -83,16 +84,21 @@ function Day(
 function WeeklySchedule() {
     const { profile } = useFirebase();
     const { openNotify } = useNotification();
+    //
     const [hoveredDay, setHoveredDay] = useState<Dayjs | null>(null);
     const [value, setValue] = useState<Dayjs | null>(dayjs());
     const [loading, setLoading] = useState(false);
     const [weeklyScheduleList, setWeeklyScheduleList] = useState<(FirebaseQuery & WeeklyScheduleData)[]>([]);
+    const [profileData, setProfileData] = useState<Pick<Profile, 'email' | 'googleId' | 'name'> | null>(null);
+    const [userList, setUserList] = useState<Profile[]>([]);
+    //
 
     const onAddSchedule = async () => {
-        if (!value || !profile) return;
+        if (!value || !profileData) return;
 
         setLoading(true);
         try {
+            console.log('weeklyInfo:', weeklyInfo);
             const startOfWeek = value.startOf('week');
             const endOfWeek = value.endOf('week');
             // DD-MM_DD-MM-YYYY
@@ -100,10 +106,11 @@ function WeeklySchedule() {
                 startDate: startOfWeek.format('YYYY-MM-DD'),
                 endDate: endOfWeek.format('YYYY-MM-DD'),
                 userList: [
+                    ...(weeklyInfo?.userList ?? []),
                     {
-                        name: profile?.name,
-                        email: profile?.email,
-                        googleId: profile?.googleId,
+                        name: profileData?.name,
+                        email: profileData?.email,
+                        googleId: profileData?.googleId,
                     },
                 ],
             });
@@ -131,25 +138,53 @@ function WeeklySchedule() {
     const getScheduleWeeklyData = async (startDate: string, endDate: string) => {
         try {
             const res = await getScheduleWeekly(startDate, endDate);
-            // console.log('res:', res);
             setWeeklyScheduleList([...res]);
         } catch (error) {
             console.log('error:', error);
         }
     };
 
+    const getUserList = async () => {
+        try {
+            const res = await getUsersList();
+            const u = res.filter((f) => f.status !== 'INACTIVE' && f.jobPosition !== 'CEO');
+
+            setUserList([...u]);
+        } catch (error) {
+            console.error('error:', error);
+        }
+    };
+
     useEffect(() => {
-        const init = () => {
-            const cs = value?.startOf('month').startOf('week');
-            const ce = value?.endOf('month').endOf('week');
+        const getScheduleWithMonth = () => {
+            const cs = value?.startOf('week').startOf('month');
+            const ce = value?.endOf('week').endOf('month');
 
             if (cs && ce) {
                 getScheduleWeeklyData(cs.format('YYYY-MM-DD'), ce.format('YYYY-MM-DD'));
             }
         };
 
+        getScheduleWithMonth();
+    }, [value?.startOf('week')?.startOf('month')?.get('month'), value?.endOf('week')?.endOf('month')?.get('month')]);
+
+    useEffect(() => {
+        const init = () => {
+            if (profile) {
+                setProfileData({
+                    name: profile?.name,
+                    email: profile?.email,
+                    googleId: profile?.googleId,
+                });
+            }
+
+            if (profile?.role === 'ADMIN') {
+                getUserList();
+            }
+        };
+
         init();
-    }, [value?.startOf('month')?.startOf('week')?.get('month'), value?.endOf('month')?.endOf('week')?.get('month')]);
+    }, [JSON.stringify(profile)]);
 
     return (
         <Box>
@@ -160,6 +195,8 @@ function WeeklySchedule() {
                             value={value}
                             onChange={(newValue) => setValue(newValue)}
                             showDaysOutsideCurrentMonth
+                            minDate={dayjs().startOf('month')}
+                            maxDate={dayjs().add(3, 'month').endOf('month')}
                             // displayWeekNumber
                             slots={{ day: Day }}
                             slotProps={{
@@ -207,11 +244,12 @@ function WeeklySchedule() {
                                                     weeklyInfo.endDate
                                                 ).format('DD/MM/YYYY')}`}</TableBodyCell>
                                                 <TableBodyCell align='right'>
-                                                    {profile?.googleId === u.googleId && (
-                                                        <Button variant='contained' color='error'>
-                                                            ยกเลิก
-                                                        </Button>
-                                                    )}
+                                                    {profile?.googleId === u.googleId &&
+                                                        dayjs().isBefore(dayjs(weeklyInfo.startDate).format('DD/MM/YYYY'), 'date') && (
+                                                            <Button variant='contained' color='error'>
+                                                                ยกเลิก
+                                                            </Button>
+                                                        )}
                                                 </TableBodyCell>
                                             </TableRow>
                                         ))}
@@ -220,17 +258,50 @@ function WeeklySchedule() {
                             </TableContainer>
                         )}
                     </Box>
-                    <Box marginTop={'auto'} marginLeft={'auto'} pt={4} pb={2}>
-                        <Box>ชื่อ: {profile?.name}</Box>
-                        <Box>
-                            รับผิดชอบ: {`${value?.startOf('week').format('DD/MM/YYYY')} - ${value?.endOf('week').format('DD/MM/YYYY')}`}
+                    {weeklyInfo?.userList && weeklyInfo.userList.filter((f) => f.email === profile?.email).length <= 0 && (
+                        <Box marginTop={'auto'} marginLeft={'auto'} pt={4} pb={2}>
+                            <Box display={'flex'} alignItems={'center'}>
+                                ชื่อ:{' '}
+                                {profile?.role === 'ADMIN' ? (
+                                    <FormControl fullWidth>
+                                        <Select
+                                            name='email'
+                                            value={profileData?.email ?? ''}
+                                            onChange={(e) => {
+                                                const findData = userList.find((f) => f.email === e.target.value);
+
+                                                if (findData) {
+                                                    setProfileData((prev) => ({
+                                                        ...prev,
+                                                        email: findData.email,
+                                                        googleId: findData.googleId,
+                                                        name: findData.name,
+                                                    }));
+                                                }
+                                            }}
+                                        >
+                                            {userList.map((u) => (
+                                                <MenuItem key={u.id} value={u.email}>
+                                                    {u.name}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                ) : (
+                                    <span>{profile?.name}</span>
+                                )}
+                            </Box>
+
+                            <Box>
+                                รับผิดชอบ: {`${value?.startOf('week').format('DD/MM/YYYY')} - ${value?.endOf('week').format('DD/MM/YYYY')}`}
+                            </Box>
+                            <Box display={'flex'} justifyContent={'flex-end'} mt={2}>
+                                <Button loading={loading} variant='contained' color='error' onClick={onAddSchedule}>
+                                    ลงชื่อเปิดห้อง
+                                </Button>
+                            </Box>
                         </Box>
-                        <Box display={'flex'} justifyContent={'flex-end'} mt={2}>
-                            <Button loading={loading} variant='contained' color='error' onClick={onAddSchedule}>
-                                ลงชื่อเปิดห้อง
-                            </Button>
-                        </Box>
-                    </Box>
+                    )}
                 </Box>
             </Box>
         </Box>

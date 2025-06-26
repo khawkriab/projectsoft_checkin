@@ -1,6 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
-import { Box, Paper, Table, TableBody, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
+import {
+    Box,
+    FormControl,
+    Grid,
+    MenuItem,
+    Paper,
+    Select,
+    Table,
+    TableBody,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Typography,
+} from '@mui/material';
 import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/MuiTable';
 import { CheckinCalendar, Profile, UserCheckinList } from 'type.global';
 import utc from 'dayjs/plugin/utc';
@@ -31,6 +44,8 @@ function Home() {
     const [userList, setUserList] = useState<Profile[]>([]);
     const [userFilterList, setUserFilterList] = useState<Profile[]>([]);
     const [checkinDataList, setCheckinDataList] = useState<CheckinCalendar[]>([]);
+    const [month, setMonth] = useState(dayjs().get('months')); // 0-11
+    const [years, setYears] = useState(dayjs().get('years'));
 
     //
     const getCheckinCalendar = (uList: Profile[], calender: CheckinCalendar[]) => {
@@ -116,23 +131,30 @@ function Home() {
         // return checkinDataList.filter((f) => f.userCheckinList.some((s) => s?.email && fl.includes(s?.email)));
     }, [JSON.stringify(checkinDataList), JSON.stringify(userList)]);
 
-    const getCheckin = async () => {
-        const c = await getCalendarMonthOfYears({ year: dayjs().get('year'), month: dayjs().get('month') });
+    const getCheckin = async (year: number, month: number) => {
+        const c = await getCalendarMonthOfYears({ year: year, month: month });
         setCheckinDataList([...c]);
     };
 
     useEffect(() => {
         const init = async () => {
             const res = await getUsersList();
-            await getCheckin();
 
-            const u = res.filter((f) => f.status !== 'INACTIVE');
+            const u = res.filter((f) => f.status !== 'INACTIVE' && f.jobPosition !== 'CEO');
             setUserList([...u]);
             setLoading(false);
         };
 
         init();
     }, []);
+
+    useEffect(() => {
+        const init = async () => {
+            await getCheckin(years, month);
+        };
+
+        init();
+    }, [years, month]);
 
     if (loading) {
         return <div>Loading...</div>;
@@ -161,13 +183,16 @@ function Home() {
                                 <UserCheckinTodayForm
                                     dateList={calendarCheckinAllList as CheckinCalendar[]}
                                     userList={userList}
-                                    afterUndate={() => getCheckin()}
+                                    afterUndate={() => getCheckin(years, month)}
                                 />
                                 <UserCheckinTodayList
                                     dateList={calendarCheckinAllList as CheckinCalendar[]}
-                                    afterUndate={() => getCheckin()}
+                                    afterUndate={() => getCheckin(years, month)}
                                 />
-                                <UserAbsentList dateList={calendarCheckinAllList as CheckinCalendar[]} afterUndate={() => getCheckin()} />
+                                <UserAbsentList
+                                    dateList={calendarCheckinAllList as CheckinCalendar[]}
+                                    afterUndate={() => getCheckin(years, month)}
+                                />
                             </>
                         )}
                     </Box>
@@ -176,8 +201,42 @@ function Home() {
 
             {!loading && (
                 <>
-                    <Box display={'flex'} alignItems={'center'} marginBottom={2}>
-                        <Typography variant='h5'>ตารางเช็คชื่อเข้างานประจำเดือน {dayjs().format('MMMM YYYY')}</Typography>
+                    <Box display={'flex'} alignItems={'center'} justifyContent={'space-between'} marginBottom={2}>
+                        <Box display={'flex'} alignItems={'center'}>
+                            <Typography variant='h5'>ตารางเช็คชื่อเข้างานประจำเดือน </Typography>
+                            {profile?.role === 'ADMIN' ? (
+                                <Box display={'flex'} flex={'auto'} gap={2} marginLeft={2}>
+                                    <Select
+                                        name='month'
+                                        value={month}
+                                        onChange={(e) => {
+                                            setMonth(e.target.value);
+                                        }}
+                                    >
+                                        {Array.from({ length: 12 }).map((_, i) => (
+                                            <MenuItem key={i} value={i}>
+                                                {dayjs().month(i).format('MMMM')}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                    <Select
+                                        name='email'
+                                        value={years}
+                                        onChange={(e) => {
+                                            setYears(e.target.value);
+                                        }}
+                                    >
+                                        {Array.from({ length: 4 }).map((_, i) => (
+                                            <MenuItem key={i} value={dayjs().year() - i}>
+                                                {dayjs().year() - i}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </Box>
+                            ) : (
+                                <Typography variant='h5'>{dayjs().format('MMMM YYYY')}</Typography>
+                            )}
+                        </Box>
                         <FilterCheckinUser userList={userList} onChangeFilter={(values) => setUserFilterList([...values])} />
                     </Box>
                     <TableContainer component={Paper}>

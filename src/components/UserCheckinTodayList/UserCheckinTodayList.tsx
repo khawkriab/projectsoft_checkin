@@ -32,6 +32,8 @@ function UserCheckinTodayList({ dateList, afterUndate }: { dateList: CheckinCale
                 month: today.get('month'),
                 date: today.get('date'),
                 checkinTodayId: data.id,
+                approveBy: profile?.name ?? '',
+                approveByGoogleId: profile?.googleId ?? '',
                 userCheckinList: [
                     ...cc.userCheckinList.filter((f) => !!f),
                     {

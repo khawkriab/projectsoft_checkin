@@ -49,7 +49,7 @@ export default function FilterCheckinUser({ userList, onChangeFilter }: FilterCh
     }, [JSON.stringify(selectedUsers)]);
 
     return (
-        <Box display={'flex'} alignItems={'center'} flexWrap={'wrap'} marginLeft={4} gap={1}>
+        <Box display={'flex'} alignItems={'center'} flexWrap={'wrap'} gap={1}>
             <Tooltip title='Fillter'>
                 <IconButton
                     size='small'

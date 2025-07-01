@@ -78,6 +78,8 @@ export const updateUserCheckinCalendar = (payload: {
     month: number;
     date: number;
     checkinTodayId?: string;
+    approveBy?: string;
+    approveByGoogleId?: string;
     userCheckinList: UserCheckinList[];
 }) => {
     return new Promise<{ date: string; userCheckinList: UserCheckinList[] }>(async (resolve, reject) => {
@@ -86,7 +88,11 @@ export const updateUserCheckinCalendar = (payload: {
                 userCheckinList: payload.userCheckinList,
             });
             if (payload.checkinTodayId) {
-                await updateDoc(doc(db, 'checkinToday', payload.checkinTodayId), { status: 1 });
+                await updateDoc(doc(db, 'checkinToday', payload.checkinTodayId), {
+                    status: 1,
+                    approveBy: payload.approveBy,
+                    approveByGoogleId: payload.approveByGoogleId,
+                });
             }
 
             resolve({ date: 'string', userCheckinList: [] });

@@ -1,6 +1,7 @@
 import { Alert, Box, Button, Paper, Slide, Snackbar, Table, TableBody, TableContainer, TableHead, TableRow } from '@mui/material';
 import { useFirebase } from 'components/common/FirebaseProvider';
 import {
+    getCalendarDateOfMonth,
     getCheckinTodayList,
     updateUserCheckin,
     updateUserCheckinCalendar,
@@ -10,6 +11,9 @@ import dayjs from 'dayjs';
 import usePageVisibility from 'hooks/usePageVisibility';
 import { useEffect, useRef, useState } from 'react';
 import { CheckinCalendar, UserCheckInData } from 'type.global';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+
+dayjs.extend(customParseFormat);
 
 function UserCheckinTodayList({ dateList, afterUndate }: { dateList: CheckinCalendar[]; afterUndate: () => Promise<void> | void }) {
     const isVisible = usePageVisibility();
@@ -27,6 +31,8 @@ function UserCheckinTodayList({ dateList, afterUndate }: { dateList: CheckinCale
 
         if (cc) {
             setUpdating(true);
+            const parseData = dayjs(cc.date, 'DD-MM-YYYY');
+            const c = await getCalendarDateOfMonth({ year: parseData.year(), month: parseData.month(), date: parseData.date() });
             await updateUserCheckinCalendar({
                 year: today.get('year'),
                 month: today.get('month'),
@@ -35,7 +41,7 @@ function UserCheckinTodayList({ dateList, afterUndate }: { dateList: CheckinCale
                 approveBy: profile?.name ?? '',
                 approveByGoogleId: profile?.googleId ?? '',
                 userCheckinList: [
-                    ...cc.userCheckinList.filter((f) => !!f),
+                    ...c.userCheckinList.filter((f) => !!f),
                     {
                         email: data.email,
                         googleId: data.googleId,

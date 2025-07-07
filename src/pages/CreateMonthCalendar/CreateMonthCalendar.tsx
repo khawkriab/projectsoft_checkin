@@ -11,8 +11,9 @@ import {
     getCalendarMonthOfYears,
     updateCalendarMonthOfYears,
 } from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
-import { CheckinCalendar, Profile, UserCheckinList } from 'type.global';
+import { CheckinCalendar, Profile, ProfileRole, UserCheckinList } from 'type.global';
 import { useNotification } from 'components/common/NotificationCenter';
+import { useFirebase } from 'components/common/FirebaseProvider';
 
 dayjs.extend(customParseFormat);
 
@@ -22,8 +23,10 @@ type DateSelected = {
     userCheckinList: UserCheckinList[];
 };
 
-function ServerDay(props: PickersDayProps & { datesSelected: DateSelected[]; onAddMarkWFH: (date: number, wfhFlag: boolean) => void }) {
-    const { datesSelected = [], day, outsideCurrentMonth, onAddMarkWFH, ...other } = props;
+function ServerDay(
+    props: PickersDayProps & { role?: ProfileRole; datesSelected: DateSelected[]; onAddMarkWFH: (date: number, wfhFlag: boolean) => void }
+) {
+    const { role, datesSelected = [], day, outsideCurrentMonth, onAddMarkWFH, ...other } = props;
 
     const findDate = datesSelected.find((f) => f.date === props.day.date());
     const isSelected = !props.outsideCurrentMonth && !!findDate;
@@ -43,7 +46,7 @@ function ServerDay(props: PickersDayProps & { datesSelected: DateSelected[]; onA
             badgeContent={
                 <>
                     {isSelected ? <CheckCircleIcon color='success' /> : undefined}
-                    {isSelected ? (
+                    {(isSelected && role === 'ADMIN') || findDate?.wfhFlag ? (
                         <ToggleButton
                             size='small'
                             value='check'
@@ -64,6 +67,8 @@ function ServerDay(props: PickersDayProps & { datesSelected: DateSelected[]; onA
 }
 
 function CreateMonthCalendar() {
+    const { profile } = useFirebase();
+    //
     const { openNotify } = useNotification();
     const [allDays, setAllDays] = useState<CheckinCalendar[]>([]);
     const [updating, setUpdating] = useState(false);
@@ -183,16 +188,19 @@ function CreateMonthCalendar() {
                         day: (dayProps) => (
                             <ServerDay
                                 {...dayProps}
+                                role={profile?.role}
                                 datesSelected={datesSelected}
                                 onAddMarkWFH={(date: number, wfhFlag: boolean) => {
-                                    let n = [...datesSelected];
-                                    const indexOfDate = n.findIndex((f) => f.date === date);
+                                    if (profile?.role === 'ADMIN') {
+                                        let n = [...datesSelected];
+                                        const indexOfDate = n.findIndex((f) => f.date === date);
 
-                                    if (indexOfDate >= 0) {
-                                        n[indexOfDate].wfhFlag = wfhFlag;
+                                        if (indexOfDate >= 0) {
+                                            n[indexOfDate].wfhFlag = wfhFlag;
+                                        }
+
+                                        setDatesSelected([...n]);
                                     }
-
-                                    setDatesSelected([...n]);
                                 }}
                             />
                         ),
@@ -208,7 +216,7 @@ function CreateMonthCalendar() {
                     }}
                     onChange={(newValue) => {
                         const date = newValue?.get('date') ?? 0;
-                        if (date) {
+                        if (date && profile?.role === 'ADMIN') {
                             let n = [...datesSelected];
                             const index = n.findIndex((f) => f.date === date);
 
@@ -223,11 +231,13 @@ function CreateMonthCalendar() {
                     }}
                 />
             </LocalizationProvider>
-            <Box display={'flex'} justifyContent={'flex-end'} width={'90vw'} margin={'auto'}>
-                <Button variant='contained' color='primary' onClick={onUpdateCalendar} loading={updating}>
-                    Update
-                </Button>
-            </Box>
+            {profile?.role === 'ADMIN' && (
+                <Box display={'flex'} justifyContent={'flex-end'} width={'90vw'} margin={'auto'}>
+                    <Button variant='contained' color='primary' onClick={onUpdateCalendar} loading={updating}>
+                        Update
+                    </Button>
+                </Box>
+            )}
         </Box>
     );
 }

@@ -258,7 +258,7 @@ function WeeklySchedule() {
                             </TableContainer>
                         )}
                     </Box>
-                    {weeklyInfo?.userList && weeklyInfo.userList.filter((f) => f.email === profile?.email).length <= 0 && (
+                    {(!weeklyInfo?.userList || weeklyInfo?.userList?.filter((f) => f.email === profile?.email).length <= 0) && (
                         <Box marginTop={'auto'} marginLeft={'auto'} pt={4} pb={2}>
                             <Box display={'flex'} alignItems={'center'}>
                                 ชื่อ:{' '}

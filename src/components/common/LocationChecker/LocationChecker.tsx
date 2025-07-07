@@ -73,8 +73,8 @@ function LocationChecker({
                 },
                 {
                     enableHighAccuracy: true,
-                    timeout: 1000,
-                    maximumAge: 0,
+                    timeout: 10000, // max time to wait for *each* update
+                    maximumAge: 0, // don’t reuse cached position
                 }
             );
         }

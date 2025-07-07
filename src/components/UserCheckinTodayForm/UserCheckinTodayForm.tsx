@@ -2,7 +2,11 @@ import { Box, Button, FormControl, Grid, InputLabel, MenuItem, Select, SelectCha
 import { DesktopTimePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { useFirebase } from 'components/common/FirebaseProvider';
-import { updateUserCheckinCalendar } from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
+import {
+    getCalendarDateOfMonth,
+    getCalendarMonthOfYears,
+    updateUserCheckinCalendar,
+} from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
 import { useNotification } from 'components/common/NotificationCenter';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
@@ -60,7 +64,9 @@ function UserCheckinTodayForm({
         const d = dateList.find((f) => f.id === updateDataForm.dateId);
 
         if (u && d) {
-            const userCheckinList = d?.userCheckinList
+            const parseData = dayjs(d.date, 'DD-MM-YYYY');
+            const c = await getCalendarDateOfMonth({ year: parseData.year(), month: parseData.month(), date: parseData.date() });
+            const userCheckinList = c.userCheckinList
                 .filter((f) => f && f?.email !== u.email)
                 .map((f) => ({
                     remark: f.remark ?? '',

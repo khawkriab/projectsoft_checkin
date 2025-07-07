@@ -1,6 +1,6 @@
 import { db } from '../FirebaseProvider';
 import { CheckinCalendar, UserCheckInData, UserCheckinList } from 'type.global';
-import { addDoc, collection, deleteDoc, doc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { getAuth } from 'firebase/auth';
@@ -203,5 +203,31 @@ export const getCalendarMonthOfYears = (payload: {
 
         const s = dates.sort((a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf());
         resolve(s);
+    });
+};
+export const getCalendarDateOfMonth = (payload: {
+    date: number; // D
+    year: number; // YYYY
+    month: number; // 0 - 11
+}) => {
+    return new Promise<CheckinCalendar>(async (resolve, reject) => {
+        const dateCollectionRef = doc(
+            db,
+            'calendar',
+            String(payload.year),
+            'month',
+            String(payload.month + 1),
+            'date',
+            String(payload.date)
+        );
+
+        const querySnapshot = await getDoc(dateCollectionRef);
+
+        if (querySnapshot.exists()) {
+            const data = querySnapshot.data() as CheckinCalendar;
+            resolve(data);
+        } else {
+            reject('not found data');
+        }
     });
 };

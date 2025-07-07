@@ -55,7 +55,7 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
     const signInWithGoogle = async () => {
         try {
             const user = await signInWithPopup(auth, provider);
-            window.location.reload();
+            window.location.assign('/projectsoft_checkin');
             console.log('Logged in user:', user);
         } catch (error) {
             console.error('Google login failed:', error);
@@ -65,7 +65,7 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
     const signOutUser = async () => {
         try {
             await signOut(auth);
-            window.location.assign('/');
+            window.location.assign('/projectsoft_checkin');
             console.log('User signed out');
         } catch (error) {
             console.error('Sign-out error:', error);

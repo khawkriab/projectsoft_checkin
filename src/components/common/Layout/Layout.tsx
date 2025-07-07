@@ -70,22 +70,7 @@ function Layout() {
             to: '/',
         },
         {
-            condition: true,
-            label: 'Member',
-            to: '/member',
-        },
-        {
             condition: !!profile?.googleId,
-            label: 'Register',
-            to: '/register',
-        },
-        {
-            condition: !!profile?.googleId,
-            label: 'เขียนใบลา',
-            to: '/absent',
-        },
-        {
-            condition: profile?.role === 'ADMIN',
             label: 'Calendar',
             to: '/create-calendar',
         },
@@ -93,6 +78,21 @@ function Layout() {
             condition: !!profile?.googleId,
             label: 'Schedule',
             to: '/weekly-schedule',
+        },
+        {
+            condition: !!profile?.googleId,
+            label: 'เขียนใบลา',
+            to: '/absent',
+        },
+        {
+            condition: !!profile?.googleId,
+            label: 'Member',
+            to: '/member',
+        },
+        {
+            condition: !!profile?.googleId,
+            label: 'Register',
+            to: '/register',
         },
     ];
 

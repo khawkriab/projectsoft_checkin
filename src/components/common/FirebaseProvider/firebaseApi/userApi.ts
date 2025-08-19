@@ -105,7 +105,7 @@ export const getUsersWithEmail = (email: string) => {
             resolve(matchedUsers[0]);
         }
 
-        reject('user not found');
+        reject({});
     });
 };
 export const getUsersList = () => {

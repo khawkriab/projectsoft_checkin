@@ -84,11 +84,10 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
                 profileURL: res.profileURL || profile.profileURL,
                 email: res.email || profile.email,
             };
-            if (uid && res.id && res.id !== uid) {
+            if (uid && res?.id !== uid) {
                 userData = { ...userData, id: uid };
 
                 await updateUser(uid, userData);
-                await deleteUser(res.id);
             }
 
             setProfile({ ...userData });

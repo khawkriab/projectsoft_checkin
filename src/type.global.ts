@@ -9,8 +9,8 @@ export type LatLng = { lat: number; lng: number };
 export type StandardResponse<T = any> = T & FirebaseQuery;
 
 export type BaseData = {
-    createdAt?: Date;
-    updateAt?: Date;
+    createdAt?: Date | string;
+    updateAt?: Date | string;
 };
 
 export type BaseProfile = {

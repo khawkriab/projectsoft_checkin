@@ -57,6 +57,7 @@ function Home() {
 
             uList.forEach((ul) => {
                 const userCheckin = d.userCheckinList.find((f) => f?.email === ul.email);
+                const startWork = dayjs(ul.createdAt).isAfter(d.date);
 
                 if (userCheckin) {
                     // time: HH:mm
@@ -78,7 +79,7 @@ function Home() {
                         lateFlag = 1;
                     }
                     checkinData.push({ ...ul, ...userCheckin, statusText, absentFlag, lateFlag, timeText });
-                } else if (isBeforeDay) {
+                } else if (isBeforeDay && !startWork) {
                     checkinData.push({
                         ...ul,
                         email: ul.email,

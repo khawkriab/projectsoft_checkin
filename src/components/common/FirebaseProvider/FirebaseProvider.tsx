@@ -4,6 +4,7 @@ import { initializeFirestore } from 'firebase/firestore';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Profile } from 'type.global';
 import { deleteUser, getUsersWithEmail, updateUser } from './firebaseApi/userApi';
+import dayjs from 'dayjs';
 
 interface FirebaseContextType {
     profile: Profile | null;
@@ -93,7 +94,7 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
             if (uid && !res) {
                 userData = { ...userData, id: uid };
 
-                await updateUser(uid, userData);
+                await updateUser(uid, { ...userData, createdAt: dayjs().toISOString() });
             }
 
             setProfile({ ...userData });

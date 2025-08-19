@@ -90,7 +90,7 @@ export const getUsers = (googleId: string) => {
     });
 };
 export const getUsersWithEmail = (email: string) => {
-    return new Promise<Profile>(async (resolve, reject) => {
+    return new Promise<Profile | null>(async (resolve, reject) => {
         const usersRef = collection(db, 'usersList');
         const q = query(usersRef, where('email', '==', email));
 
@@ -105,7 +105,7 @@ export const getUsersWithEmail = (email: string) => {
             resolve(matchedUsers[0]);
         }
 
-        reject({});
+        resolve(null);
     });
 };
 export const getUsersList = () => {

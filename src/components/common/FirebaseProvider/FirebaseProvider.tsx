@@ -78,13 +78,19 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
             const res = await getUsersWithEmail(profile.email);
             let userData = {
                 ...profile,
-                ...res,
-                googleId: res.googleId || profile.googleId,
-                fullName: res.fullName || profile.fullName,
-                profileURL: res.profileURL || profile.profileURL,
-                email: res.email || profile.email,
             };
-            if (uid && res?.id !== uid) {
+
+            if (res) {
+                userData = {
+                    ...userData,
+                    ...res,
+                    googleId: res.googleId || profile.googleId,
+                    fullName: res.fullName || profile.fullName,
+                    profileURL: res.profileURL || profile.profileURL,
+                    email: res.email || profile.email,
+                };
+            }
+            if (uid && !res) {
                 userData = { ...userData, id: uid };
 
                 await updateUser(uid, userData);
@@ -111,6 +117,9 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
                     name: '',
                     role: 'USER',
                     status: 'NO_REGIST',
+                    phoneNumber: '',
+                    jobPosition: '',
+                    employmentType: '',
                 };
 
                 await updateUserInfo(_profile);

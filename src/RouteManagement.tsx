@@ -7,10 +7,12 @@ import { CreateMonthCalendar } from 'pages/CreateMonthCalendar';
 import { Absent } from 'pages/Absent';
 import { PrivacyPolicy } from 'pages/PrivacyPolicy';
 import { WeeklySchedule } from 'pages/WeeklySchedule';
+import HomeLanding from 'pages/HomeLanding';
 
 function RoutesManagement() {
     return (
         <Routes>
+            <Route path={`/landing`} element={<HomeLanding />} />
             <Route element={<Layout />}>
                 <Route path='/' element={<Home />} />
                 <Route path={`/member`} element={<Member />} />

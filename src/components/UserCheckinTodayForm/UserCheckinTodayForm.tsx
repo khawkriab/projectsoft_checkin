@@ -1,12 +1,12 @@
 import { Box, Button, FormControl, Grid, InputLabel, MenuItem, Select, SelectChangeEvent, TextField } from '@mui/material';
 import { DesktopTimePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { useFirebase } from 'components/common/FirebaseProvider';
+import { useFirebase } from 'context/FirebaseProvider';
 import {
     getCalendarDateOfMonth,
     getCalendarMonthOfYears,
     updateUserCheckinCalendar,
-} from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
+} from 'context/FirebaseProvider/firebaseApi/checkinApi';
 import { useNotification } from 'components/common/NotificationCenter';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';

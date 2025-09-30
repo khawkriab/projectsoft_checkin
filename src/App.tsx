@@ -1,7 +1,7 @@
 import { HashRouter } from 'react-router-dom';
 import RoutesManagement from './RouteManagement';
-import { ThemeProvider } from 'components/common/ThemeProvider';
-import { FirebaseProvider } from 'components/common/FirebaseProvider';
+import { ThemeProvider } from 'context/ThemeProvider';
+import { FirebaseProvider } from 'context/FirebaseProvider';
 import './App.css';
 import NotificationCenterProvider from 'components/common/NotificationCenter/NotificationCenterProvider';
 

@@ -15,14 +15,14 @@ import {
     Typography,
     useTheme,
 } from '@mui/material';
-import { useColorMode } from 'components/common/ThemeProvider';
+import { useColorMode } from 'context/ThemeProvider';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
-import { useFirebase } from '../FirebaseProvider';
+import { useFirebase } from 'context/FirebaseProvider';
 
 function MenuItem({ children, to, onClick = () => {} }: { to: string; children: React.ReactNode; onClick?: () => void }) {
     const location = useLocation();

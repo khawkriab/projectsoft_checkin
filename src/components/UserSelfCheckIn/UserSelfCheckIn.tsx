@@ -1,7 +1,6 @@
 import { Alert, AlertColor, Box, Button, Grid, Slide, Snackbar, TextField } from '@mui/material';
-import { useFirebase } from 'components/common/FirebaseProvider';
-import { addUserCheckinToday, deleteOldCheckin, getCheckinToday } from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
-import { usersUpdateAllowLocation } from 'components/common/FirebaseProvider/firebaseApi/userApi';
+import { addUserCheckinToday, deleteOldCheckin, getCheckinToday } from 'context/FirebaseProvider/firebaseApi/checkinApi';
+import { usersUpdateAllowLocation } from 'context/FirebaseProvider/firebaseApi/userApi';
 import { LocationChecker } from 'components/common/LocationChecker';
 import { useNotification } from 'components/common/NotificationCenter';
 import dayjs from 'dayjs';
@@ -9,6 +8,7 @@ import { CheckinDataList } from 'pages/Home/HomeFirebase';
 import { useEffect, useRef, useState } from 'react';
 import { deviceDetect, isAndroid, isIOS, isMobile } from 'react-device-detect';
 import { LatLng, UserCheckInData } from 'type.global';
+import { useFirebase } from 'context/FirebaseProvider';
 
 function UserSelfCheckIn({ checkinToday, defaultWfh }: { checkinToday?: CheckinDataList; defaultWfh: boolean }) {
     const { profile, updateUserInfo } = useFirebase();

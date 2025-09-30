@@ -13,8 +13,8 @@ import {
     ToggleButton,
     ToggleButtonGroup,
 } from '@mui/material';
-import { useFirebase } from 'components/common/FirebaseProvider';
-import { updateUser, getUsersList } from 'components/common/FirebaseProvider/firebaseApi/userApi';
+import { useFirebase } from 'context/FirebaseProvider';
+import { updateUser, getUsersList } from 'context/FirebaseProvider/firebaseApi/userApi';
 import { TableBodyCell, TableHeadCell } from 'components/common/MuiTable';
 import { useEffect, useMemo, useState } from 'react';
 import { Profile, ProfileStatus } from 'type.global';

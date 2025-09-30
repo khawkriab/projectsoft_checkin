@@ -17,7 +17,7 @@ import {
 import FilterListIcon from '@mui/icons-material/FilterList';
 import CloseIcon from '@mui/icons-material/Close';
 import { Profile, UserCheckinList } from 'type.global';
-import { useFirebase } from '../FirebaseProvider';
+import { useFirebase } from 'context/FirebaseProvider';
 
 interface FilterCheckinUserProps {
     userList: Profile[];

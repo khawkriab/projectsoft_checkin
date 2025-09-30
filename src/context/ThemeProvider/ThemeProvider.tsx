@@ -1,6 +1,6 @@
 // ThemeContext.tsx
 import React, { createContext, useMemo, useState, useContext } from 'react';
-import { createTheme, ThemeProvider, CssBaseline, ThemeOptions } from '@mui/material';
+import { createTheme, ThemeProvider, CssBaseline, ThemeOptions, responsiveFontSizes } from '@mui/material';
 import { PaletteMode } from '@mui/material';
 
 const ThemeContext = createContext({ toggleColorMode: () => {} });
@@ -30,7 +30,7 @@ export const ThemeWrapper = ({ children }: { children: React.ReactNode }) => {
                 mode: 'dark',
                 primary: {
                     main: '#002884',
-                    light: '#757ce8',
+                    light: '#2196F3',
                     dark: '#002884',
                     contrastText: '#fff',
                 },
@@ -47,7 +47,7 @@ export const ThemeWrapper = ({ children }: { children: React.ReactNode }) => {
                 mode: 'light',
                 primary: {
                     main: '#144da0',
-                    light: '#757ce8',
+                    light: '#2196F3',
                     dark: '#002884',
                     contrastText: '#fff',
                 },
@@ -75,7 +75,7 @@ export const ThemeWrapper = ({ children }: { children: React.ReactNode }) => {
         },
     };
 
-    const theme = useMemo(
+    let theme = useMemo(
         () =>
             createTheme({
                 components: {
@@ -88,21 +88,33 @@ export const ThemeWrapper = ({ children }: { children: React.ReactNode }) => {
                             },
                         },
                     },
+                    MuiCssBaseline: {
+                        styleOverrides: (theme) => ({
+                            html: {
+                                fontFamily: 'Sarabun, Arial, sans-serif',
+                                fontSize: '14px',
+                                [theme.breakpoints.up('md')]: {
+                                    fontSize: '16px', // increase base size at md+
+                                },
+                            },
+                        }),
+                    },
                     ...themeConfigMode[mode]['components'],
-                    // MuiTableCell: {
-                    //     styleOverrides: {
-                    //         root: ({ theme }) => ({
-                    //             borderBottom: `1px solid ${theme.palette.secondary.contrastText}`, // Use theme color
-                    //         }),
-                    //     },
-                    // },
                 },
                 palette: {
                     ...themeConfigMode[mode]['palette'],
                 },
+                typography: {
+                    fontFamily: 'Sarabun, Arial, sans-serif',
+                },
             }),
         [mode]
     );
+
+    // make typography scale automatically between breakpoints
+    theme = responsiveFontSizes(theme, {
+        factor: 2, // scaling factor (default = 2)
+    });
 
     return (
         <ThemeContext.Provider value={colorMode}>

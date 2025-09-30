@@ -10,7 +10,7 @@ dayjs.extend(customParseFormat);
 export const createScheduleWeekly = (weekly: string, payload: WeeklyScheduleData) => {
     // weekly: 'DD-MM_DD-MM-YYYY'
     return new Promise<string>(async (resolve, reject) => {
-        await setDoc(doc(db, 'weeklyResponsibilities', weekly), {
+        await setDoc(doc(db, 'weeklySchedule', weekly), {
             startDate: payload.startDate,
             endDate: payload.endDate,
             userList: payload.userList,
@@ -25,7 +25,7 @@ export const createScheduleWeekly = (weekly: string, payload: WeeklyScheduleData
 export const getScheduleWeekly = (startDateString: string, endDateString: string) => {
     return new Promise<(FirebaseQuery & WeeklyScheduleData)[]>(async (resolve, reject) => {
         const q = query(
-            collection(db, 'weeklyResponsibilities'),
+            collection(db, 'weeklySchedule'),
             where('createdAt', '>=', startDateString), // Your date field in Firestore
             where('createdAt', '<=', endDateString)
         );

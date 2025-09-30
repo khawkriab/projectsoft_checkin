@@ -18,9 +18,9 @@ import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/Mu
 import { CheckinCalendar, Profile, UserCheckinList } from 'type.global';
 import utc from 'dayjs/plugin/utc';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import { useFirebase } from 'components/common/FirebaseProvider';
-import { getCalendarMonthOfYears } from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
-import { getUsersList } from 'components/common/FirebaseProvider/firebaseApi/userApi';
+import { useFirebase } from 'context/FirebaseProvider';
+import { getCalendarMonthOfYears } from 'context/FirebaseProvider/firebaseApi/checkinApi';
+import { getUsersList } from 'context/FirebaseProvider/firebaseApi/userApi';
 import { UserCheckinTodayForm } from 'components/UserCheckinTodayForm';
 import { UserCheckinTodayList } from 'components/UserCheckinTodayList';
 import { UserAbsentList } from 'components/UserAbsentList';

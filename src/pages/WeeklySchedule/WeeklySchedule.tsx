@@ -7,12 +7,12 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { PickersDay, PickersDayProps } from '@mui/x-date-pickers/PickersDay';
 import { useEffect, useMemo, useState } from 'react';
-import { createScheduleWeekly, getScheduleWeekly } from 'components/common/FirebaseProvider/firebaseApi/schedulesApi';
-import { useFirebase } from 'components/common/FirebaseProvider';
+import { createScheduleWeekly, getScheduleWeekly } from 'context/FirebaseProvider/firebaseApi/schedulesApi';
+import { useFirebase } from 'context/FirebaseProvider';
 import { useNotification } from 'components/common/NotificationCenter';
 import { TableBodyCell } from 'components/common/MuiTable';
 import { BaseData, FirebaseQuery, Profile, WeeklyScheduleData } from 'type.global';
-import { getUsersList } from 'components/common/FirebaseProvider/firebaseApi/userApi';
+import { getUsersList } from 'context/FirebaseProvider/firebaseApi/userApi';
 
 dayjs.extend(isBetweenPlugin);
 

@@ -17,8 +17,8 @@ import {
     Snackbar,
     TextField,
 } from '@mui/material';
-import { useFirebase } from 'components/common/FirebaseProvider';
-import { addUsersRegister, getUsersRegister } from 'components/common/FirebaseProvider/firebaseApi/userApi';
+import { useFirebase } from 'context/FirebaseProvider';
+import { addUsersRegister, getUsersRegister } from 'context/FirebaseProvider/firebaseApi/userApi';
 import { useEffect, useState } from 'react';
 import { Profile } from 'type.global';
 

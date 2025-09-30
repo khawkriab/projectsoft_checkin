@@ -1,11 +1,11 @@
 import { Alert, Box, Button, Paper, Slide, Snackbar, Table, TableBody, TableContainer, TableHead, TableRow } from '@mui/material';
-import { useFirebase } from 'components/common/FirebaseProvider';
+import { useFirebase } from 'context/FirebaseProvider';
 import {
     getCalendarDateOfMonth,
     getCheckinTodayList,
     updateUserCheckin,
     updateUserCheckinCalendar,
-} from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
+} from 'context/FirebaseProvider/firebaseApi/checkinApi';
 import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/MuiTable';
 import dayjs from 'dayjs';
 import usePageVisibility from 'hooks/usePageVisibility';

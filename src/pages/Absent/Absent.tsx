@@ -27,8 +27,8 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/th';
 import { AbsentData, FirebaseQuery, LeavePeriods, LeaveTypes } from 'type.global';
-import { createAbsent, getUserAbsent } from 'components/common/FirebaseProvider/firebaseApi/absentApi';
-import { useFirebase } from 'components/common/FirebaseProvider';
+import { createAbsent, getUserAbsent } from 'context/FirebaseProvider/firebaseApi/absentApi';
+import { useFirebase } from 'context/FirebaseProvider';
 import { getLeavePeriod, getLeaveType, leavePeriods, leaveTypes } from 'helper/leaveType';
 
 dayjs.locale('th');

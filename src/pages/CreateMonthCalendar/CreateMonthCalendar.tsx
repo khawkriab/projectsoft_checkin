@@ -10,10 +10,10 @@ import {
     deleteCalendarMonthOfYears,
     getCalendarMonthOfYears,
     updateCalendarMonthOfYears,
-} from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
+} from 'context/FirebaseProvider/firebaseApi/checkinApi';
 import { CheckinCalendar, Profile, ProfileRole, UserCheckinList } from 'type.global';
 import { useNotification } from 'components/common/NotificationCenter';
-import { useFirebase } from 'components/common/FirebaseProvider';
+import { useFirebase } from 'context/FirebaseProvider';
 
 dayjs.extend(customParseFormat);
 

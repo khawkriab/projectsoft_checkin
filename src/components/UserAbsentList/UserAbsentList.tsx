@@ -1,6 +1,6 @@
 import { Box, Button, Paper, Table, TableBody, TableContainer, TableHead, TableRow } from '@mui/material';
-import { getAbsentList, updateAbsent } from 'components/common/FirebaseProvider/firebaseApi/absentApi';
-import { updateUserCheckin, updateUserCheckinCalendar } from 'components/common/FirebaseProvider/firebaseApi/checkinApi';
+import { getAbsentList, updateAbsent } from 'context/FirebaseProvider/firebaseApi/absentApi';
+import { updateUserCheckin, updateUserCheckinCalendar } from 'context/FirebaseProvider/firebaseApi/checkinApi';
 import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/MuiTable';
 import dayjs from 'dayjs';
 import { getLeavePeriod, getLeaveType } from 'helper/leaveType';
@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 import { AbsentData, CheckinCalendar } from 'type.global';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { useNotification } from 'components/common/NotificationCenter';
-import { useFirebase } from 'components/common/FirebaseProvider';
+import { useFirebase } from 'context/FirebaseProvider';
 
 dayjs.extend(customParseFormat);
 

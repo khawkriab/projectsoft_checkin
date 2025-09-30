@@ -58,7 +58,7 @@ function HomeLanding() {
                     backgroundImage: 'url(images/four_circles_no_overlap.svg)',
                     // backgroundImage: { xs: 'url(images/three_circles.svg)', lg: 'url(images/four_circles_no_overlap.svg)' },
                     backgroundRepeat: 'no-repeat',
-                    backgroundSize: { xs: 'cover', lg: 'contain' },
+                    backgroundSize: { xs: 'cover' },
                     // filter: 'blur(10px)',
                 },
 
@@ -226,7 +226,7 @@ function TodayCheckIn() {
                 </Box>
             </Grid>
             <Grid display={'flex'} alignItems={'center'} size={{ xs: 'auto', lg: 3 }}>
-                <Button variant='contained' color='primary' sx={{ width: '100%', height: { xs: 'auto', lg: '100%' } }}>
+                <Button variant='contained' color='warning' sx={{ width: '100%', height: { xs: 'auto', lg: '100%' } }}>
                     check-in
                 </Button>
             </Grid>

@@ -91,11 +91,11 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
                     email: res.email || profile.email,
                 };
             }
-            if (uid && !res) {
-                userData = { ...userData, id: uid };
+            // if (uid && !res) {
+            //     userData = { ...userData, id: uid };
 
-                await updateUser(uid, { ...userData, createdAt: dayjs().toISOString() });
-            }
+            //     await updateUser(uid, { ...userData, createdAt: dayjs().toISOString() });
+            // }
 
             setProfile({ ...userData });
         } catch (error) {

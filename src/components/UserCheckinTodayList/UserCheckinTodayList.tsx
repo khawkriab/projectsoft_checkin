@@ -3,14 +3,16 @@ import { useFirebase } from 'context/FirebaseProvider';
 import {
     getCalendarDateOfMonth,
     getCheckinTodayList,
+    getWorkTime,
     updateUserCheckin,
     updateUserCheckinCalendar,
+    updateWorkTime,
 } from 'context/FirebaseProvider/firebaseApi/checkinApi';
 import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/MuiTable';
 import dayjs from 'dayjs';
 import usePageVisibility from 'hooks/usePageVisibility';
 import { useEffect, useRef, useState } from 'react';
-import { CheckinCalendar, UserCheckInData } from 'type.global';
+import { CheckinCalendar, UserCheckInData, UserCheckInDate } from 'type.global';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 
 dayjs.extend(customParseFormat);
@@ -32,27 +34,51 @@ function UserCheckinTodayList({ dateList, afterUndate }: { dateList: CheckinCale
         if (cc) {
             setUpdating(true);
             const parseData = dayjs(cc.date, 'DD-MM-YYYY');
-            const c = await getCalendarDateOfMonth({ year: parseData.year(), month: parseData.month(), date: parseData.date() });
-            await updateUserCheckinCalendar({
-                year: today.get('year'),
-                month: today.get('month'),
-                date: today.get('date'),
-                checkinTodayId: data.id,
+            const t = await getWorkTime({ date: parseData.format('YYYY-MM-DD'), email: data.email });
+
+            const payload: UserCheckInDate = {
+                date: parseData.format('YYYY-MM-DD'),
+                email: data.email,
+                googleId: data.googleId,
+                name: data.name,
+                time: dayjs(Number(data.time)).format('HH:mm'),
+                reason: data.reason,
+                remark: data.remark,
                 approveBy: profile?.name ?? '',
                 approveByGoogleId: profile?.googleId ?? '',
-                userCheckinList: [
-                    ...c.userCheckinList.filter((f) => !!f),
-                    {
-                        email: data.email,
-                        googleId: data.googleId,
-                        reason: data.reason,
-                        remark: data.remark,
-                        time: dayjs(Number(data.time)).format('HH:mm'),
-                        approveBy: profile?.name ?? '',
-                        approveByGoogleId: profile?.googleId ?? '',
-                    },
-                ],
-            });
+                leavePeriod: t?.leavePeriod ?? null,
+                absentId: t?.absentId ?? null,
+                isWFH: data?.remark?.toLowerCase().includes('wfh') ?? false,
+            };
+
+            try {
+                await updateWorkTime(payload, t?.id, data.id);
+                await afterUndate();
+            } catch (error) {
+                console.error('error:', error);
+            }
+
+            // const c = await getCalendarDateOfMonth({ year: parseData.year(), month: parseData.month(), date: parseData.date() });
+            // await updateUserCheckinCalendar({
+            //     year: today.get('year'),
+            //     month: today.get('month'),
+            //     date: today.get('date'),
+            //     checkinTodayId: data.id,
+            //     approveBy: profile?.name ?? '',
+            //     approveByGoogleId: profile?.googleId ?? '',
+            //     userCheckinList: [
+            //         ...c.userCheckinList.filter((f) => !!f),
+            //         {
+            //             email: data.email,
+            //             googleId: data.googleId,
+            //             reason: data.reason,
+            //             remark: data.remark,
+            //             time: dayjs(Number(data.time)).format('HH:mm'),
+            //             approveBy: profile?.name ?? '',
+            //             approveByGoogleId: profile?.googleId ?? '',
+            //         },
+            //     ],
+            // });
             await afterUndate();
             await getCheckinData();
             setUpdating(false);

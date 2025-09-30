@@ -8,27 +8,27 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 import {
     createCalendarMonthOfYears,
     deleteCalendarMonthOfYears,
+    getCalendarConfig,
     getCalendarMonthOfYears,
+    updateCalendarConfig,
     updateCalendarMonthOfYears,
 } from 'context/FirebaseProvider/firebaseApi/checkinApi';
-import { CheckinCalendar, Profile, ProfileRole, UserCheckinList } from 'type.global';
+import { CalendarDateConfig, CheckinCalendar, Profile, ProfileRole, UserCheckinList } from 'type.global';
 import { useNotification } from 'components/common/NotificationCenter';
 import { useFirebase } from 'context/FirebaseProvider';
 
 dayjs.extend(customParseFormat);
 
-type DateSelected = {
-    date: number; // 1-31
-    wfhFlag: boolean;
-    userCheckinList: UserCheckinList[];
-};
-
 function ServerDay(
-    props: PickersDayProps & { role?: ProfileRole; datesSelected: DateSelected[]; onAddMarkWFH: (date: number, wfhFlag: boolean) => void }
+    props: PickersDayProps & {
+        role?: ProfileRole;
+        datesSelected: CalendarDateConfig[];
+        onAddMarkWFH: (date: string, wfhFlag: boolean) => void; // date: 'YYYY-MM-DD'
+    }
 ) {
     const { role, datesSelected = [], day, outsideCurrentMonth, onAddMarkWFH, ...other } = props;
 
-    const findDate = datesSelected.find((f) => f.date === props.day.date());
+    const findDate = datesSelected.find((f) => f.date === props.day.format('YYYY-MM-DD'));
     const isSelected = !props.outsideCurrentMonth && !!findDate;
 
     return (
@@ -46,16 +46,16 @@ function ServerDay(
             badgeContent={
                 <>
                     {isSelected ? <CheckCircleIcon color='success' /> : undefined}
-                    {(isSelected && role === 'ADMIN') || findDate?.wfhFlag ? (
+                    {(isSelected && role === 'ADMIN') || findDate?.isWFH ? (
                         <ToggleButton
                             size='small'
                             value='check'
-                            selected={findDate.wfhFlag}
+                            selected={findDate.isWFH}
                             color='primary'
                             sx={{ borderRadius: 6, padding: '0px 4px', fontSize: '12px', marginLeft: 1 }}
-                            onChange={() => onAddMarkWFH(findDate.date, !findDate.wfhFlag)}
+                            onChange={() => onAddMarkWFH(findDate.date, !findDate.isWFH)}
                         >
-                            mark WFH {findDate.wfhFlag && <CheckCircleIcon color='success' sx={{ fontSize: '16px' }} />}
+                            mark WFH {findDate.isWFH && <CheckCircleIcon color='success' sx={{ fontSize: '16px' }} />}
                         </ToggleButton>
                     ) : undefined}
                 </>
@@ -74,51 +74,48 @@ function CreateMonthCalendar() {
     const [updating, setUpdating] = useState(false);
     const [month, setMonth] = useState(dayjs().get('months')); // 0-11
     const [years, setYears] = useState(dayjs().get('years'));
-    const [datesSelected, setDatesSelected] = useState<DateSelected[]>([]);
-    const [currentFromDatabase, setCurrentFromDatabase] = useState<DateSelected[]>([]);
+    const [datesSelected, setDatesSelected] = useState<CalendarDateConfig[]>([]);
+    const [entryTime, setEntryTime] = useState<string>('08:00'); // HH:mm
+    // const [currentFromDatabase, setCurrentFromDatabase] = useState<CalendarDateConfig[]>([]);
     //
 
     const onUpdateCalendar = async () => {
         // Extract dates
-        const oldDates = currentFromDatabase.map((item) => item.date);
-        const newDates = datesSelected.map((item) => item.date);
-
+        // const oldDates = currentFromDatabase.map((item) => item.date);
+        // const newDates = datesSelected.map((item) => item.date);
         // Find added and removed dates
-        const added = datesSelected.filter((item) => !oldDates.includes(item.date));
-        const removed = currentFromDatabase.filter((item) => !newDates.includes(item.date));
-
-        const m = [...added, ...currentFromDatabase].map((d) => ({
-            year: years,
-            month: month,
-            date: d.date,
-            wfhFlag: d.wfhFlag ? 1 : 0,
-            userCheckinList: d.userCheckinList,
-        }));
-
+        // const added = datesSelected.filter((item) => !oldDates.includes(item.date));
+        // const removed = currentFromDatabase.filter((item) => !newDates.includes(item.date));
+        // const m:CalendarDateConfig[] = [...added, ...currentFromDatabase].map((d) => ({
+        //     year: years,
+        //     month: month,
+        //     date: d.date,
+        //     isWFH: d.wfhFlag ? 1 : 0,
+        // }));
         setUpdating(true);
-        await createCalendarMonthOfYears(m);
-        await deleteCalendarMonthOfYears(removed.map((m) => ({ year: years, month: month, date: m.date })));
-        await getCalendar(years, month);
+        // await createCalendarMonthOfYears(m);
+        // await deleteCalendarMonthOfYears(removed.map((m) => ({ year: years, month: month, date: m.date })));
+        // await getCalendar(years, month);
+        await updateCalendarConfig({ id: `${years}-${month + 1}`, data: datesSelected.map((d) => ({ ...d, entryTime: entryTime })) });
         setUpdating(false);
         openNotify('success', 'update seccess');
     };
     const onTranfer = async (data: CheckinCalendar) => {
-        console.log('data:', data);
-        const date = dayjs(data.date);
-        const day = date.get('date'); // 1-31
-        const findFromDatabase = currentFromDatabase.find((f) => f.date === day);
-
-        if (findFromDatabase) {
-            await updateCalendarMonthOfYears({
-                year: date.get('years'),
-                month: date.get('month'),
-                date: day,
-                wfhFlag: findFromDatabase.wfhFlag ? 1 : 0,
-                userCheckinList: data.userCheckinList,
-            });
-            await getCalendar(date.get('years'), date.get('month'));
-            openNotify('success', 'update seccess');
-        }
+        // console.log('data:', data);
+        // const date = dayjs(data.date);
+        // const day = date.get('date'); // 1-31
+        // const findFromDatabase = currentFromDatabase.find((f) => f.date === day);
+        // if (findFromDatabase) {
+        //     await updateCalendarMonthOfYears({
+        //         year: date.get('years'),
+        //         month: date.get('month'),
+        //         date: day,
+        //         wfhFlag: findFromDatabase.wfhFlag ? 1 : 0,
+        //         userCheckinList: data.userCheckinList,
+        //     });
+        //     await getCalendar(date.get('years'), date.get('month'));
+        //     openNotify('success', 'update seccess');
+        // }
     };
     // const onUpdateCalendar = async () => {
     //     const selectMonth = dayjs().set('months', month).set('years', years).format('YYYY-MM');
@@ -131,18 +128,22 @@ function CreateMonthCalendar() {
 
     // ** month: 0-11
     const getCalendar = async (year: number, month: number) => {
-        const res = await getCalendarMonthOfYears({
-            year: year,
-            month: month,
-        });
+        // const res = await getCalendarMonthOfYears({
+        //     year: year,
+        //     month: month,
+        // });
         // console.log('res:', res);
         // const res1 = await getCheckinCalendar();
         // setAllDays([...res1.filter((f) => f.userCheckinList.length > 0)]);
         // console.log('res1:', res1);
         // setHighlightedDays([...res.map((d) => dayjs(d.date).get('date'))]);
-        const mapData = res.map((d) => ({ date: dayjs(d.date).get('date'), wfhFlag: !!d.wfhFlag, userCheckinList: d.userCheckinList }));
-        setDatesSelected([...mapData]);
-        setCurrentFromDatabase([...mapData]);
+        // const mapData = res.map((d) => ({ date: dayjs(d.date).get('date'), wfhFlag: !!d.wfhFlag, userCheckinList: d.userCheckinList }));
+        // setDatesSelected([...mapData]);
+        // setCurrentFromDatabase([...mapData]);
+
+        // new way
+        const res = await getCalendarConfig({ id: `${year}-${month + 1}` });
+        setDatesSelected([...res.data]);
     };
     useEffect(() => {
         getCalendar(years, month);
@@ -190,15 +191,13 @@ function CreateMonthCalendar() {
                                 {...dayProps}
                                 role={profile?.role}
                                 datesSelected={datesSelected}
-                                onAddMarkWFH={(date: number, wfhFlag: boolean) => {
+                                onAddMarkWFH={(date: string, wfhFlag: boolean) => {
                                     if (profile?.role === 'ADMIN') {
                                         let n = [...datesSelected];
                                         const indexOfDate = n.findIndex((f) => f.date === date);
-
                                         if (indexOfDate >= 0) {
-                                            n[indexOfDate].wfhFlag = wfhFlag;
+                                            n[indexOfDate].isWFH = wfhFlag;
                                         }
-
                                         setDatesSelected([...n]);
                                     }
                                 }}
@@ -206,16 +205,17 @@ function CreateMonthCalendar() {
                         ),
                     }}
                     shouldDisableDate={(day) => {
-                        const date = day.date();
-                        const hasData = currentFromDatabase.filter((f) => f.userCheckinList.length > 0);
-                        return hasData.map((m) => m.date).includes(date);
+                        // const date = day.date();
+                        // const hasData = currentFromDatabase.filter((f) => f.userCheckinList.length > 0);
+                        // return day.isBefore(dayjs(), 'day');
+                        return false;
                     }}
                     onMonthChange={(m) => {
                         setMonth(m.get('months'));
                         setYears(m.get('years'));
                     }}
                     onChange={(newValue) => {
-                        const date = newValue?.get('date') ?? 0;
+                        const date = newValue?.format('YYYY-MM-DD') ?? 0;
                         if (date && profile?.role === 'ADMIN') {
                             let n = [...datesSelected];
                             const index = n.findIndex((f) => f.date === date);
@@ -223,7 +223,7 @@ function CreateMonthCalendar() {
                             if (index >= 0) {
                                 n.splice(index, 1);
                             } else {
-                                n.push({ date: date, wfhFlag: false, userCheckinList: [] });
+                                n.push({ date: date, isWFH: false, isHalfDay: false, isOffDay: false, entryTime: entryTime });
                             }
 
                             setDatesSelected([...n]);

@@ -14,6 +14,7 @@ export type BaseData = {
 };
 
 export type BaseProfile = {
+    suid?: string;
     name: string;
     allowFindLocation?: number;
     googleId: string;
@@ -48,11 +49,37 @@ export type UserCheckInData = Pick<BaseProfile, 'googleId' | 'email' | 'name'> &
         approveByGoogleId: string;
     };
 
+export type UserCheckInDate = Pick<BaseProfile, 'googleId' | 'email' | 'name'> &
+    FirebaseQuery & {
+        date: string; // YYYY-MM-DD
+        time: string;
+        remark: string;
+        reason: string;
+        approveBy: string;
+        approveByGoogleId: string;
+        leavePeriod: LeavePeriods | null;
+        absentId: string | null;
+        isWFH?: boolean;
+    };
+
 export type UserCheckinList = Pick<
     UserCheckInData,
     'email' | 'googleId' | 'reason' | 'remark' | 'time' | 'approveBy' | 'approveByGoogleId'
 >;
 export type CheckinCalendar = FirebaseQuery & { date: string; wfhFlag?: number; userCheckinList: UserCheckinList[] };
+
+export type CalendarDateConfig = {
+    date: string; // YYYY-MM-DD
+    isOffDay: boolean;
+    isHalfDay: boolean;
+    isWFH: boolean;
+    remark?: string;
+    entryTime: string; // HH:mm
+    exitTime?: string; // HH:mm
+    createdAt?: Date; // Date
+    updatedAt?: Date; // Date
+};
+
 export type AbsentData = FirebaseQuery &
     Pick<BaseProfile, 'googleId' | 'email' | 'name'> & {
         leaveType: LeaveTypes;

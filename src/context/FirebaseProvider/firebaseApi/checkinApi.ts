@@ -1,5 +1,5 @@
 import { db } from '../FirebaseProvider';
-import { CheckinCalendar, UserCheckInData, UserCheckinList } from 'type.global';
+import { CalendarDateConfig, CheckinCalendar, UserCheckInData, UserCheckInDate, UserCheckinList } from 'type.global';
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -229,5 +229,93 @@ export const getCalendarDateOfMonth = (payload: {
         } else {
             reject('not found data');
         }
+    });
+};
+
+// --------------------------------------------------------new release-------------------------------------------------
+// id: 'YYYY-M'
+export const getCalendarConfig = ({ id }: { id: string }) => {
+    return new Promise<{ data: CalendarDateConfig[] }>(async (resolve, reject) => {
+        const docRef = doc(db, 'calendarConfig', id);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            resolve(docSnap.data() as { data: CalendarDateConfig[] });
+        } else {
+            resolve({ data: [] });
+        }
+    });
+};
+
+// id: 'YYYY-M'
+export const updateCalendarConfig = ({ id, data }: { id: string; data: CalendarDateConfig[] }) => {
+    return new Promise<any>(async (resolve, reject) => {
+        await setDoc(doc(db, 'calendarConfig', id), {
+            data,
+        });
+
+        resolve('success');
+    });
+};
+
+// startDateString,endDateString: 'YYYY-MM-DD'
+export const getWorkTimeList = ({ startDateString, endDateString }: { startDateString: string; endDateString: string }) => {
+    return new Promise<StandardResponse<UserCheckInDate>[]>(async (resolve, reject) => {
+        const q = query(
+            collection(db, 'workTimeList'),
+            where('date', '>=', startDateString), // Your date field in Firestore
+            where('date', '<=', endDateString)
+        );
+        const querySnapshot = await getDocs(q);
+
+        // const querySnapshot = await getDocs(collection(db, 'workTimeList'));
+        const res: StandardResponse<UserCheckInDate>[] = querySnapshot.docs.map((doc) => ({
+            ...(doc.data() as UserCheckInDate),
+            id: doc.id,
+        }));
+        resolve(res);
+    });
+};
+// date: 'YYYY-MM-DD'
+export const getWorkTime = ({ date, email }: { date: string; email: string }) => {
+    return new Promise<StandardResponse<UserCheckInDate> | null>(async (resolve, reject) => {
+        const q = query(
+            collection(db, 'workTimeList'),
+            where('date', '==', date), // Your date field in Firestore
+            where('email', '==', email)
+        );
+        const querySnapshot = await getDocs(q);
+
+        // const querySnapshot = await getDocs(collection(db, 'workTimeList'));
+        const res: StandardResponse<UserCheckInDate>[] = querySnapshot.docs.map((doc) => ({
+            ...(doc.data() as UserCheckInDate),
+            id: doc.id,
+        }));
+
+        if (res.length === 0) {
+            resolve(null);
+            return;
+        }
+        resolve(res[0]);
+    });
+};
+
+export const updateWorkTime = (payload: UserCheckInDate, id?: string, checkinTodayId?: string) => {
+    return new Promise<string>(async (resolve, reject) => {
+        if (id) {
+            await updateDoc(doc(db, 'workTimeList', id), payload);
+        } else {
+            await addDoc(collection(db, 'workTimeList'), payload);
+            // addDoc(collection(db, 'checkinCalendar'), d)
+        }
+
+        if (checkinTodayId) {
+            await updateDoc(doc(db, 'checkinToday', checkinTodayId), {
+                status: 1,
+                approveBy: payload.approveBy,
+                approveByGoogleId: payload.approveByGoogleId,
+            });
+        }
+        resolve('success');
     });
 };

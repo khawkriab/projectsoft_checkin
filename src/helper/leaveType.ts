@@ -1,4 +1,4 @@
-import { LeavePeriods, LeaveTypes } from 'type.global';
+import { LeavePeriodsType, LeavePeriodsLabel, LeaveTypes } from 'type.global';
 
 export const leaveTypes = [
     { label: 'ลาพักร้อน', value: 'VACATION' },
@@ -6,7 +6,10 @@ export const leaveTypes = [
     { label: 'ลากิจ', value: 'PERSONAL' },
 ];
 
-export const leavePeriods = [
+export const leavePeriods: {
+    label: LeavePeriodsLabel;
+    value: LeavePeriodsType;
+}[] = [
     { label: 'ลาเช้า', value: 'HALF_DAY_AM' },
     { label: 'ลาบ่าย', value: 'HALF_DAY_PM' },
     { label: 'ทั้งวัน', value: 'FULL_DAY' },
@@ -17,8 +20,13 @@ export const getLeaveType = (value: LeaveTypes) => {
 
     return findData?.label;
 };
-export const getLeavePeriod = (value: LeavePeriods) => {
+export const getLeavePeriodLabel = (value: LeavePeriodsType) => {
     const findData = leavePeriods.find((f) => f.value === value);
 
     return findData?.label;
+};
+export const getLeavePeriodType = (value: LeavePeriodsLabel): LeavePeriodsType | null => {
+    const findData = leavePeriods.find((f) => f.label === value);
+
+    return findData?.value || null;
 };

@@ -3,7 +3,7 @@ import { getAbsentList, updateAbsent } from 'context/FirebaseProvider/firebaseAp
 import { updateUserCheckin, updateUserCheckinCalendar } from 'context/FirebaseProvider/firebaseApi/checkinApi';
 import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/MuiTable';
 import dayjs from 'dayjs';
-import { getLeavePeriod, getLeaveType } from 'helper/leaveType';
+import { getLeavePeriodLabel, getLeaveType } from 'helper/leaveType';
 import { useEffect, useState } from 'react';
 import { AbsentData, CheckinCalendar } from 'type.global';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -45,7 +45,7 @@ function UserAbsentList({ dateList = [], afterUndate }: { dateList: CheckinCalen
                 // return updateUserCheckin(cd.id, '', [
                 //     ...userCheckinList,
                 //     {
-                //         remark: `${getLeaveType(data.leaveType)} - ${getLeavePeriod(data.leavePeriod)}`,
+                //         remark: `${getLeaveType(data.leaveType)} - ${getLeavePeriodLabel(data.leavePeriod)}`,
                 //         time: '',
                 //         email: data?.email,
                 //         googleId: data?.googleId ?? '',
@@ -60,7 +60,7 @@ function UserAbsentList({ dateList = [], afterUndate }: { dateList: CheckinCalen
                     userCheckinList: [
                         ...userCheckinList.filter((f) => !!f),
                         {
-                            remark: `${getLeaveType(data.leaveType)} - ${getLeavePeriod(data.leavePeriod)}`,
+                            remark: `${getLeaveType(data.leaveType)} - ${getLeavePeriodLabel(data.leavePeriod)}`,
                             time: '',
                             email: data?.email,
                             googleId: data?.googleId ?? '',
@@ -124,7 +124,9 @@ function UserAbsentList({ dateList = [], afterUndate }: { dateList: CheckinCalen
                                         <TableBodyCell>{`${dayjs(c.startDate).format('DD/MM/YYYY')} - ${dayjs(c.endDate).format(
                                             'DD/MM/YYYY'
                                         )}`}</TableBodyCell>
-                                        <TableBodyCell>{`${getLeaveType(c.leaveType)} - ${getLeavePeriod(c.leavePeriod)}`}</TableBodyCell>
+                                        <TableBodyCell>{`${getLeaveType(c.leaveType)} - ${getLeavePeriodLabel(
+                                            c.leavePeriod
+                                        )}`}</TableBodyCell>
                                         <TableBodyCell sx={{ whiteSpace: 'break-spaces' }}>{c.reason}</TableBodyCell>
                                         <TableBodyCell>
                                             <Button

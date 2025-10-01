@@ -26,16 +26,16 @@ import { LocalizationProvider, MobileDatePicker, MobileDatePickerProps } from '@
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/th';
-import { AbsentData, FirebaseQuery, LeavePeriods, LeaveTypes } from 'type.global';
+import { AbsentData, FirebaseQuery, LeavePeriodsType, LeaveTypes } from 'type.global';
 import { createAbsent, getUserAbsent } from 'context/FirebaseProvider/firebaseApi/absentApi';
 import { useFirebase } from 'context/FirebaseProvider';
-import { getLeavePeriod, getLeaveType, leavePeriods, leaveTypes } from 'helper/leaveType';
+import { getLeavePeriodLabel, getLeaveType, leavePeriods, leaveTypes } from 'helper/leaveType';
 
 dayjs.locale('th');
 
 type AbsentForm = {
     leaveType?: LeaveTypes;
-    leavePeriod?: LeavePeriods;
+    leavePeriod?: LeavePeriodsType;
     startDate: Dayjs | null;
     endDate: Dayjs | null;
     reason: string;
@@ -181,7 +181,7 @@ function Absent() {
                                     <TableBodyCell>{`${dayjs(m.startDate).format('DD/MM/YYYY')} - ${dayjs(m.endDate).format(
                                         'DD/MM/YYYY'
                                     )}`}</TableBodyCell>
-                                    <TableBodyCell>{`${getLeaveType(m.leaveType)} - ${getLeavePeriod(m.leavePeriod)}`}</TableBodyCell>
+                                    <TableBodyCell>{`${getLeaveType(m.leaveType)} - ${getLeavePeriodLabel(m.leavePeriod)}`}</TableBodyCell>
                                     <TableBodyCell>{m.reason}</TableBodyCell>
                                     <TableBodyCell>{m.status}</TableBodyCell>
                                 </TableRow>

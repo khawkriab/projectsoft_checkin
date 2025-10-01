@@ -16,7 +16,7 @@ import {
     Typography,
 } from '@mui/material';
 import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/MuiTable';
-import { CalendarDateConfig, CheckinCalendar, Profile, UserCheckInDate, UserCheckinList } from 'type.global';
+import { CalendarDateConfig, CheckinCalendar, LeavePeriodsType, Profile, UserCheckInDate, UserCheckinList } from 'type.global';
 import utc from 'dayjs/plugin/utc';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { useFirebase } from 'context/FirebaseProvider';
@@ -24,6 +24,7 @@ import {
     getCalendarConfig,
     getCalendarMonthOfYears,
     getWorkTimeList,
+    updateCalendarConfig,
     updateWorkTime,
 } from 'context/FirebaseProvider/firebaseApi/checkinApi';
 import { getUsersList } from 'context/FirebaseProvider/firebaseApi/userApi';
@@ -32,6 +33,9 @@ import { UserCheckinTodayList } from 'components/UserCheckinTodayList';
 import { UserAbsentList } from 'components/UserAbsentList';
 import { UserSelfCheckIn } from 'components/UserSelfCheckIn';
 import { FilterCheckinUser } from 'components/common/FilterCheckinUser';
+import { getAbsentList, getUserAbsentByGoogleIdAndDate } from 'context/FirebaseProvider/firebaseApi/absentApi';
+import { getLeavePeriodType } from 'helper/leaveType';
+import { start } from 'repl';
 
 dayjs.extend(customParseFormat);
 dayjs.extend(utc);
@@ -54,7 +58,6 @@ function Home() {
     const [checkinDataList, setCheckinDataList] = useState<CheckinCalendarExtend[]>([]);
     const [month, setMonth] = useState(dayjs().get('months')); // 0-11
     const [years, setYears] = useState(dayjs().get('years'));
-    const [convertData, setConvertData] = useState<UserCheckInDate[]>([]); // debug
     const [calendarConfig, setCalendarConfig] = useState<CalendarDateConfig[]>([]);
 
     //
@@ -147,7 +150,11 @@ function Home() {
         // setCheckinDataList([...c]);
         const d = dayjs(`${year}-${month + 1}-1`, 'YYYY-M-D');
         const c = await getWorkTimeList({ startDateString: d.format('YYYY-MM-DD'), endDateString: d.endOf('month').format('YYYY-MM-DD') });
+        // console.log('c:', c);
         const x = groupByDate(c, ul || []);
+        // const e = groupByEmail(c);
+        // console.log('e:', e);
+
         const n: CheckinCalendarExtend[] = x.map((item) => ({
             id: item.date,
             ...item,
@@ -180,7 +187,9 @@ function Home() {
 
     useEffect(() => {
         const init = async () => {
-            // const res = await getUsersList();
+            // const u = await getUsersList();
+            // setUserList([...u]);
+
             const c = await getCalendarConfig({ id: `${years}-${month + 1}` });
             setCalendarConfig(c.data);
 
@@ -198,14 +207,73 @@ function Home() {
     //     init();
     // }, [years, month]);
 
-    const onConvertToGoogleCalendar = () => {
+    const onConvertToGoogleCalendar = async (year: number, month: number) => {
         try {
             setLoading(true);
-            const all = convertData.map((d) => updateWorkTime(d));
-            Promise.all(all).then(() => {
-                alert('convert success');
-                setLoading(false);
-            });
+
+            const c = await getCalendarMonthOfYears({ year: year, month: month });
+            const ul = await getUsersList();
+            const al = await getAbsentList('APPROVE');
+
+            let leavePeriod: LeavePeriodsType | null = null;
+
+            // getUserAbsentByGoogleIdAndDate
+
+            // const a = {
+            //     approveBy: 'แพร',
+            //     approveByGoogleId: '100557811553068873527',
+            //     time: '',
+            //     email: 'm.teerapolph@gmail.com',
+            //     reason: 'ไปทำบัตรประชาชน',
+            //     googleId: '105443597185074019229',
+            //     remark: 'ลากิจ - ลาเช้า',
+            // };
+
+            const n: UserCheckInDate[] = [];
+            let r: CalendarDateConfig[] = [];
+
+            // c.forEach((item) => {
+            //     r.push({
+            //         date: dayjs(item.date).format('YYYY-MM-DD'),
+            //         isOffDay: false,
+            //         isHalfDay: false,
+            //         isWFH: Number(item.wfhFlag || 0) === 1,
+            //         remark: '',
+            //         entryTime: '08:00',
+            //         exitTime: '',
+            //     });
+            //     item.userCheckinList.forEach((wt) => {
+            //         if (wt?.absentId) {
+            //             const a = al.find((f) => f.id === wt.absentId);
+            //             leavePeriod = a?.leavePeriod || null;
+            //         }
+
+            //         const u = ul.find((f) => f.email === wt?.email);
+
+            //         n.push({
+            //             date: dayjs(item.date).format('YYYY-MM-DD'), // YYYY-MM-DD
+            //             time: wt.time, // HH:mm
+            //             remark: wt.remark ?? '',
+            //             reason: wt.reason ?? '',
+            //             approveBy: wt?.approveBy ?? '',
+            //             approveByGoogleId: wt?.approveByGoogleId ?? '',
+            //             leavePeriod: leavePeriod,
+            //             absentId: wt?.absentId ?? null,
+            //             isWFH: wt?.remark.toLowerCase().includes('wfh') ?? false,
+            //             googleId: wt?.googleId ?? '',
+            //             email: wt?.email ?? '',
+            //             name: u?.name ?? '',
+            //         });
+            //     });
+            // });
+
+            // await updateCalendarConfig({ id: `${year}-${month + 1}`, data: r });
+            console.log('n:', n);
+            // const all = n.map((d) => updateWorkTime(d));
+            // Promise.all(all).then(() => {
+            //     alert('convert success');
+            //     setLoading(false);
+            // });
         } catch (error) {
             console.error('error:', error);
         }
@@ -225,7 +293,12 @@ function Home() {
                 isSignedIn && (
                     <Box sx={{ marginBottom: 4 }}>
                         {/* <Box>
-                            <Button loading={loading} variant='contained' sx={{ marginRight: 2 }} onClick={onConvertToGoogleCalendar}>
+                            <Button
+                                loading={loading}
+                                variant='contained'
+                                sx={{ marginRight: 2 }}
+                                onClick={() => onConvertToGoogleCalendar(years, month)}
+                            >
                                 convert to google calendar
                             </Button>
                         </Box> */}
@@ -304,7 +377,7 @@ function Home() {
                             <TableHead>
                                 <TableHeadRow>
                                     <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'ชื่อพนักงาน'}</TableHeadCell>
-                                    {userFilterList.map((user, index) => {
+                                    {userList.map((user, index) => {
                                         return (
                                             <TableHeadCell key={index} colSpan={2} align='center' sx={{ borderLeft: '1px solid #fff' }}>
                                                 {user.name}
@@ -314,7 +387,7 @@ function Home() {
                                 </TableHeadRow>
                                 <TableHeadRow>
                                     <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'วันที่'}</TableHeadCell>
-                                    {userFilterList.map((_, index) => {
+                                    {userList.map((_, index) => {
                                         return (
                                             <React.Fragment key={index}>
                                                 <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'เวลาเข้าทำงาน'}</TableHeadCell>
@@ -395,6 +468,19 @@ function groupByDate<T extends { date: string }>(arr: T[], dateConfig: CalendarD
         ...cfg,
         workTimeList: map.get(cfg.date) ?? [],
     }));
+}
+
+// Clone: groupByEmail
+function groupByEmail<T extends { email?: string }>(arr: T[]) {
+    const map = new Map<string, T[]>();
+    arr.forEach((item) => {
+        if (!item.email) return; // skip if no email
+        if (!map.has(item.email)) map.set(item.email, []);
+        map.get(item.email)!.push(item);
+    });
+    // For each email in arr, get info from userList
+    console.log('map.entries():', map.entries());
+    return Array.from(map.entries()).map(([email]) => email);
 }
 
 // Example usage with your data:

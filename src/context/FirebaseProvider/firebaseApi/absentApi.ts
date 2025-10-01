@@ -62,6 +62,26 @@ export const getUserAbsent = (googleId: string) => {
         }
     });
 };
+// startDate format 'YYYY-MM-DD'
+export const getUserAbsentByGoogleIdAndDate = (googleId: string, startDate: string) => {
+    return new Promise<FirebaseQuery & AbsentData>(async (resolve, reject) => {
+        const usersRef = collection(db, 'absentList');
+        const q = query(usersRef, where('googleId', '==', googleId), where('startDate', '==', startDate));
+
+        const querySnapshot = await getDocs(q);
+
+        const matchedUsers = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...(doc.data() as AbsentData),
+        }));
+
+        if (matchedUsers.length > 0) {
+            resolve(matchedUsers[0]);
+        } else {
+            reject('not found data');
+        }
+    });
+};
 
 export const updateAbsent = (abId: string, payload: { status: AbsentStatus; approveBy: string; approveByGoogleId: string }) => {
     return new Promise<string>(async (resolve, reject) => {

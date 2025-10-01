@@ -143,6 +143,8 @@ function UserCheckinTodayForm({
             const findData = dateList.find((f) => f.date === currentDate);
             if (findData) {
                 setUpdateDataForm((prev) => ({ ...prev, dateId: findData.id ?? '' }));
+            } else {
+                setUpdateDataForm((prev) => ({ ...prev, dateId: dateList[0].id ?? '' }));
             }
         }
     }, [JSON.stringify(dateList)]);

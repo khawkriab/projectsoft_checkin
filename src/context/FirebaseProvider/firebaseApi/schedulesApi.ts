@@ -39,3 +39,16 @@ export const getScheduleWeekly = (startDateString: string, endDateString: string
         resolve([...r]);
     });
 };
+
+export const getScheduleWeeklyList = () => {
+    return new Promise<(FirebaseQuery & WeeklyScheduleData)[]>(async (resolve, reject) => {
+        const querySnapshot = await getDocs(collection(db, 'weeklyResponsibilities'));
+
+        const r = querySnapshot.docs.map((doc) => ({
+            ...(doc.data() as WeeklyScheduleData),
+            id: doc.id,
+        }));
+
+        resolve([...r]);
+    });
+};

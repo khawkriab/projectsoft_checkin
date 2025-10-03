@@ -1,23 +1,17 @@
 import { Alert, Box, Button, Paper, Slide, Snackbar, Table, TableBody, TableContainer, TableHead, TableRow } from '@mui/material';
 import { useFirebase } from 'context/FirebaseProvider';
-import {
-    getCalendarDateOfMonth,
-    getCheckinTodayList,
-    getWorkTime,
-    updateUserCheckin,
-    updateUserCheckinCalendar,
-    updateWorkTime,
-} from 'context/FirebaseProvider/firebaseApi/checkinApi';
+import { getCheckinTodayList, getUserWorkTime, updateWorkTime } from 'context/FirebaseProvider/firebaseApi/checkinApi';
 import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/MuiTable';
 import dayjs from 'dayjs';
 import usePageVisibility from 'hooks/usePageVisibility';
 import { useEffect, useRef, useState } from 'react';
-import { CheckinCalendar, UserCheckInData, UserCheckInDate } from 'type.global';
+import { UserCheckInData, UserCheckInDate } from 'type.global';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
+import { CheckinCalendarExtend } from 'pages/Home/HomeFirebase';
 
 dayjs.extend(customParseFormat);
 
-function UserCheckinTodayList({ dateList, afterUndate }: { dateList: CheckinCalendar[]; afterUndate: () => Promise<void> | void }) {
+function UserCheckinTodayList({ dateList, afterUndate }: { dateList: CheckinCalendarExtend[]; afterUndate: () => Promise<void> | void }) {
     const isVisible = usePageVisibility();
     const { profile } = useFirebase();
     //
@@ -34,7 +28,7 @@ function UserCheckinTodayList({ dateList, afterUndate }: { dateList: CheckinCale
         if (cc) {
             setUpdating(true);
             const parseData = dayjs(cc.date, 'DD-MM-YYYY');
-            const t = await getWorkTime({ date: parseData.format('YYYY-MM-DD'), email: data.email });
+            const t = await getUserWorkTime({ startDate: parseData.format('YYYY-MM-DD'), email: data.email });
 
             const payload: UserCheckInDate = {
                 date: parseData.format('YYYY-MM-DD'),
@@ -83,6 +77,8 @@ function UserCheckinTodayList({ dateList, afterUndate }: { dateList: CheckinCale
             await getCheckinData();
             setUpdating(false);
             setOpen(true);
+        } else {
+            alert('ไม่พบข้อมูลปฏิทินวันนี้');
         }
     };
 

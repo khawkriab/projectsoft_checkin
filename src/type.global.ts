@@ -30,6 +30,8 @@ export type EmployeeInfo = {
     phoneNumber?: string;
     jobPosition?: string;
     employmentType?: string;
+    employmentStartDate: string;
+    employmentEndDate?: string;
 };
 
 export type FirebaseQuery = BaseData & {
@@ -48,7 +50,6 @@ export type UserCheckInData = Pick<BaseProfile, 'googleId' | 'email' | 'name'> &
         status: string | number;
         approveBy: string;
         approveByGoogleId: string;
-        absentId?: string | null;
     };
 
 export type UserCheckInDate = Pick<BaseProfile, 'googleId' | 'email' | 'name'> &
@@ -60,15 +61,16 @@ export type UserCheckInDate = Pick<BaseProfile, 'googleId' | 'email' | 'name'> &
         approveBy: string;
         approveByGoogleId: string;
         leavePeriod: LeavePeriodsType | null;
+        leaveType?: LeaveTypes | null;
         absentId: string | null;
         isWFH?: boolean;
     };
 
 export type UserCheckinList = Pick<
     UserCheckInData,
-    'email' | 'googleId' | 'reason' | 'remark' | 'time' | 'approveBy' | 'approveByGoogleId' | 'absentId'
+    'email' | 'googleId' | 'reason' | 'remark' | 'time' | 'approveBy' | 'approveByGoogleId'
 >;
-export type CheckinCalendar = FirebaseQuery & { date: string; wfhFlag?: number; userCheckinList: UserCheckinList[] };
+export type CheckinCalendar = FirebaseQuery & { date: string; wfhFlag?: number; userCheckinList: UserCheckInDate[] };
 
 export type CalendarDateConfig = {
     date: string; // YYYY-MM-DD

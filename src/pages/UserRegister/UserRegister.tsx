@@ -19,6 +19,7 @@ import {
 } from '@mui/material';
 import { useFirebase } from 'context/FirebaseProvider';
 import { addUsersRegister, getUsersRegister } from 'context/FirebaseProvider/firebaseApi/userApi';
+import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 import { Profile } from 'type.global';
 
@@ -29,6 +30,7 @@ function UserRegister() {
     const [isLoading, setIsLoading] = useState(true);
     const [isRegistered, setIsRegistered] = useState(true);
     const [formRegister, setFormRegister] = useState<Profile>({
+        employmentStartDate: dayjs().format('YYYY-MM-DD'),
         email: '',
         name: '',
         fullName: '',
@@ -61,17 +63,7 @@ function UserRegister() {
 
                 setFormRegister((prev) => ({
                     ...prev,
-                    id: res.id,
-                    email: res.email,
-                    employmentType: res.employmentType,
-                    fullName: res.fullName,
-                    googleId: res.googleId,
-                    jobPosition: res.jobPosition,
-                    name: res.name,
-                    phoneNumber: res.phoneNumber,
-                    profileURL: res.profileURL,
-                    role: res.role,
-                    status: res.status,
+                    ...res,
                 }));
 
                 if (res.status !== 'NO_REGIST') {

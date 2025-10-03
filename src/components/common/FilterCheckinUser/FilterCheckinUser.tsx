@@ -46,7 +46,7 @@ export default function FilterCheckinUser({ userList, onChangeFilter }: FilterCh
 
     useEffect(() => {
         onChangeFilter(selectedUsers.length > 0 ? selectedUsers : userList);
-    }, [JSON.stringify(selectedUsers)]);
+    }, [JSON.stringify(selectedUsers), JSON.stringify(userList)]);
 
     return (
         <Box display={'flex'} alignItems={'center'} flexWrap={'wrap'} gap={1}>

@@ -121,6 +121,7 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
                     phoneNumber: '',
                     jobPosition: '',
                     employmentType: '',
+                    employmentStartDate: '',
                 };
 
                 await updateUserInfo(_profile);

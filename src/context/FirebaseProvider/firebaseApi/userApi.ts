@@ -1,4 +1,4 @@
-import { addDoc, collection, deleteDoc, doc, getDocs, query, setDoc, where } from 'firebase/firestore';
+import { addDoc, and, collection, deleteDoc, doc, getDocs, or, query, setDoc, where } from 'firebase/firestore';
 import { Profile } from 'type.global';
 import { db } from '../FirebaseProvider';
 import dayjs from 'dayjs';
@@ -120,23 +120,54 @@ export const getUsersList = () => {
         resolve(usersData.sort((a, b) => a.name?.toLowerCase().localeCompare(b.name?.toLowerCase())));
     });
 };
+
+// today format '2024-06-01'
+export const getUsersListWithMonth = ({ today }: { today: string }) => {
+    return new Promise<Profile[]>(async (resolve, reject) => {
+        const q = query(
+            collection(db, 'usersList'),
+            or(
+                and(where('status', '==', 'APPROVE'), where('employmentStartDate', '<=', today)),
+                and(where('status', '==', 'INACTIVE'), where('employmentStartDate', '<=', today), where('employmentEndDate', '>=', today))
+            )
+        );
+
+        const snapshot = await getDocs(q);
+        const results = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+        //  const usersRef = collection(db, 'usersList');
+        // const q1 = query(collection(db, 'usersList'), where('status', '==', 'APPROVE'), where('employmentStartDate', '<=', today));
+        // const q1 = query(
+        //     collection(db, 'usersList'),
+        //     where('employmentEndDate', '>=', '2025-06-01'),
+        //     where('employmentStartDate', '<=', today)
+        // );
+
+        // Query for INACTIVE
+        // const q2 = query(
+        //     collection(db, 'usersList'),
+        //     where('status', '==', 'INACTIVE'),
+        //     where('employmentStartDate', '<=', today),
+        //     where('employmentEndDate', '>=', today)
+        // );
+
+        // const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+        // const [snap1] = await Promise.all([getDocs(q1)]);
+        // const results = [...snap1.docs, ...snap2.docs].map((doc) => ({ id: doc.id, ...doc.data() }));
+        // const results = [...snap1.docs].map((doc) => ({ id: doc.id, ...doc.data() }));
+
+        resolve(results as Profile[]);
+    });
+};
 export const updateUser = (uId: string, payload: Profile) => {
     return new Promise<string>(async (resolve, reject) => {
         if (!uId) reject('no id');
 
         try {
             await setDoc(doc(db, 'usersList', uId), {
-                googleId: payload.googleId,
-                fullName: payload.fullName,
-                profileURL: payload.profileURL ?? '',
-                email: payload.email,
-                role: payload.role,
-                name: payload.name,
-                phoneNumber: payload.phoneNumber,
-                jobPosition: payload.jobPosition,
-                employmentType: payload.employmentType,
+                ...payload,
                 allowFindLocation: payload?.allowFindLocation || 0,
-                status: payload.status,
+                profileURL: payload.profileURL ?? '',
                 updateAt: dayjs().toISOString(),
             });
             // await deleteDoc(doc(db, 'usersRegister', payload.id ?? ''));

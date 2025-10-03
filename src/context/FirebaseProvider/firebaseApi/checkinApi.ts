@@ -276,12 +276,29 @@ export const getWorkTimeList = ({ startDateString, endDateString }: { startDateS
         resolve(res);
     });
 };
-// date: 'YYYY-MM-DD'
-export const getWorkTime = ({ date, email }: { date: string; email: string }) => {
-    return new Promise<StandardResponse<UserCheckInDate> | null>(async (resolve, reject) => {
+
+// Overload 1: no endDate → single object or null
+export function getUserWorkTime(args: {
+    startDate: string;
+    email: string;
+    endDate?: undefined;
+}): Promise<StandardResponse<UserCheckInDate> | null>;
+
+// Overload 2: with endDate → array or null
+export function getUserWorkTime(args: {
+    startDate: string;
+    endDate: string;
+    email: string;
+}): Promise<StandardResponse<UserCheckInDate>[] | null>;
+
+// Implementation
+// startDate,endDate: 'YYYY-MM-DD'
+export function getUserWorkTime({ startDate, endDate, email }: { startDate: string; endDate?: string; email: string }) {
+    return new Promise(async (resolve, reject) => {
         const q = query(
             collection(db, 'workTimeList'),
-            where('date', '==', date), // Your date field in Firestore
+            where('date', '>=', startDate), // Your startDate field in Firestore
+            where('date', '<=', endDate ?? startDate), // Your startDate field in Firestore
             where('email', '==', email)
         );
         const querySnapshot = await getDocs(q);
@@ -296,9 +313,14 @@ export const getWorkTime = ({ date, email }: { date: string; email: string }) =>
             resolve(null);
             return;
         }
-        resolve(res[0]);
+
+        if (!endDate) {
+            resolve([res[0]]);
+            return;
+        }
+        resolve(res);
     });
-};
+}
 
 export const updateWorkTime = (payload: UserCheckInDate, id?: string, checkinTodayId?: string) => {
     return new Promise<string>(async (resolve, reject) => {

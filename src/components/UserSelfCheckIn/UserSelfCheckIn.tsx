@@ -5,7 +5,7 @@ import { LocationChecker } from 'components/common/LocationChecker';
 import { useNotification } from 'components/common/NotificationCenter';
 import dayjs from 'dayjs';
 import { CheckinDataList } from 'pages/Home/HomeFirebase';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { deviceDetect, isAndroid, isIOS, isMobile } from 'react-device-detect';
 import { LatLng, UserCheckInData } from 'type.global';
 import { useFirebase } from 'context/FirebaseProvider';
@@ -21,6 +21,10 @@ function UserSelfCheckIn({ checkinToday, defaultWfh }: { checkinToday?: CheckinD
     const [allowFindLocation, setAllowFindLocation] = useState(false);
     const [reason, setReason] = useState('');
     const [currentUserData, setCurrentUserData] = useState<UserCheckInData | null | undefined>(undefined);
+    //
+    const userCheckinToday = useMemo(() => {
+        return checkinToday?.userCheckinList.find((f) => f?.email === profile?.email);
+    }, [checkinToday, profile?.email]);
     //
     const onCheckin = async (remark?: string) => {
         if (profile) {
@@ -98,6 +102,7 @@ function UserSelfCheckIn({ checkinToday, defaultWfh }: { checkinToday?: CheckinD
     useEffect(() => {
         getUserCheckinToday();
     }, []);
+
     //
     return (
         <>
@@ -116,7 +121,7 @@ function UserSelfCheckIn({ checkinToday, defaultWfh }: { checkinToday?: CheckinD
                     </Box>
                 </Box>
             )}
-            {checkinToday && !checkinToday.userCheckinList.find((f) => f?.email === profile?.email) && profile?.status === 'APPROVE' && (
+            {!!userCheckinToday && profile?.status === 'APPROVE' && (
                 <LocationChecker
                     checkAvail={findingLocation}
                     sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, marginBottom: 2, marginTop: 2 }}
@@ -131,64 +136,69 @@ function UserSelfCheckIn({ checkinToday, defaultWfh }: { checkinToday?: CheckinD
                         latlng.current = l;
                     }}
                 >
-                    {currentUserData === null && profile?.status === 'APPROVE' && (
-                        <Grid container gap={2} alignItems={'center'} width={'100%'}>
-                            <Grid size={!defaultWfh ? { xs: 12, sm: 12, md: 7 } : 'auto'}>
-                                <Box component={'form'} onSubmit={onCheckinWFH}>
-                                    <Grid container alignItems={'center'} gap={2} sx={{ width: '100%' }}>
-                                        {!defaultWfh && (
-                                            <Grid size={{ xs: 12, sm: 'grow' }}>
-                                                <TextField
-                                                    fullWidth
-                                                    required
-                                                    label='เหตุผลที่ work from home'
-                                                    value={reason}
-                                                    onChange={(e) => setReason(e.target.value)}
-                                                />
+                    {(currentUserData === null || (userCheckinToday?.absentId && !userCheckinToday.time)) &&
+                        profile?.status === 'APPROVE' && (
+                            <Grid container gap={2} alignItems={'center'} width={'100%'}>
+                                <Grid size={!defaultWfh ? { xs: 12, sm: 12, md: 7 } : 'auto'}>
+                                    <Box component={'form'} onSubmit={onCheckinWFH}>
+                                        <Grid container alignItems={'center'} gap={2} sx={{ width: '100%' }}>
+                                            {!defaultWfh && (
+                                                <Grid size={{ xs: 12, sm: 'grow' }}>
+                                                    <TextField
+                                                        fullWidth
+                                                        required
+                                                        label='เหตุผลที่ work from home'
+                                                        value={reason}
+                                                        onChange={(e) => setReason(e.target.value)}
+                                                    />
+                                                </Grid>
+                                            )}
+                                            <Grid flex={'none'}>
+                                                <Button
+                                                    type='submit'
+                                                    size='large'
+                                                    disabled={!!currentUserData}
+                                                    loading={updating}
+                                                    variant='outlined'
+                                                    color='secondary'
+                                                >
+                                                    ลงชื่อเข้างาน WFH
+                                                </Button>
                                             </Grid>
-                                        )}
-                                        <Grid flex={'none'}>
-                                            <Button
-                                                type='submit'
-                                                size='large'
-                                                disabled={!!currentUserData}
-                                                loading={updating}
-                                                variant='outlined'
-                                                color='secondary'
-                                            >
-                                                ลงชื่อเข้างาน WFH
-                                            </Button>
                                         </Grid>
-                                    </Grid>
-                                </Box>
-                            </Grid>
-                            {(((isIOS || isAndroid) && isMobile) || process.env.REACT_APP_TEST === '1') && (
-                                <Grid flex={'auto'} display={'flex'} gap={2}>
-                                    {allowFindLocation && (
+                                    </Box>
+                                </Grid>
+                                {(((isIOS || isAndroid) && isMobile) || process.env.REACT_APP_TEST === '1') && (
+                                    <Grid flex={'auto'} display={'flex'} gap={2}>
+                                        {allowFindLocation && (
+                                            <Button
+                                                disabled={!!currentUserData || !isAvail}
+                                                loading={updating}
+                                                size='large'
+                                                variant='contained'
+                                                color='primary'
+                                                onClick={() => onCheckinOnArea()}
+                                            >
+                                                {findingLocation && !isAvail
+                                                    ? 'กำลังหาตำแหน่ง...'
+                                                    : isAvail
+                                                    ? 'ลงชื่อเข้างาน'
+                                                    : 'ค้นหาตำแหน่ง'}
+                                            </Button>
+                                        )}
                                         <Button
-                                            disabled={!!currentUserData || !isAvail}
                                             loading={updating}
                                             size='large'
                                             variant='contained'
-                                            color='primary'
-                                            onClick={() => onCheckinOnArea()}
+                                            color='error'
+                                            onClick={() => onAllowFindLocation(!allowFindLocation)}
                                         >
-                                            {findingLocation && !isAvail ? 'กำลังหาตำแหน่ง...' : isAvail ? 'ลงชื่อเข้างาน' : 'ค้นหาตำแหน่ง'}
+                                            {allowFindLocation ? 'หยุดค้นหาตำแหน่ง' : 'อนุญาติให้ค้นหาตำแหน่ง'}
                                         </Button>
-                                    )}
-                                    <Button
-                                        loading={updating}
-                                        size='large'
-                                        variant='contained'
-                                        color='error'
-                                        onClick={() => onAllowFindLocation(!allowFindLocation)}
-                                    >
-                                        {allowFindLocation ? 'หยุดค้นหาตำแหน่ง' : 'อนุญาติให้ค้นหาตำแหน่ง'}
-                                    </Button>
-                                </Grid>
-                            )}
-                        </Grid>
-                    )}
+                                    </Grid>
+                                )}
+                            </Grid>
+                        )}
                 </LocationChecker>
             )}
         </>

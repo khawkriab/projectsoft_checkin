@@ -1,53 +1,35 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
-import {
-    Box,
-    Button,
-    FormControl,
-    Grid,
-    MenuItem,
-    Paper,
-    Select,
-    Table,
-    TableBody,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Typography,
-} from '@mui/material';
+import { Box, Button, MenuItem, Paper, Select, Table, TableBody, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
 import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/MuiTable';
 import { CalendarDateConfig, CheckinCalendar, LeavePeriodsType, Profile, UserCheckInDate, UserCheckinList } from 'type.global';
 import utc from 'dayjs/plugin/utc';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { useFirebase } from 'context/FirebaseProvider';
-import {
-    getCalendarConfig,
-    getCalendarMonthOfYears,
-    getWorkTimeList,
-    updateCalendarConfig,
-    updateWorkTime,
-} from 'context/FirebaseProvider/firebaseApi/checkinApi';
-import { getUsersList } from 'context/FirebaseProvider/firebaseApi/userApi';
+import { getCalendarConfig, getCalendarMonthOfYears, getWorkTimeList } from 'context/FirebaseProvider/firebaseApi/checkinApi';
+import { getUsersList, getUsersListWithMonth } from 'context/FirebaseProvider/firebaseApi/userApi';
 import { UserCheckinTodayForm } from 'components/UserCheckinTodayForm';
 import { UserCheckinTodayList } from 'components/UserCheckinTodayList';
 import { UserAbsentList } from 'components/UserAbsentList';
 import { UserSelfCheckIn } from 'components/UserSelfCheckIn';
 import { FilterCheckinUser } from 'components/common/FilterCheckinUser';
-import { getAbsentList, getUserAbsentByGoogleIdAndDate } from 'context/FirebaseProvider/firebaseApi/absentApi';
-import { getLeavePeriodType } from 'helper/leaveType';
-import { start } from 'repl';
+import { getAbsentList } from 'context/FirebaseProvider/firebaseApi/absentApi';
+import { getLeavePeriodLabel, getLeaveType } from 'helper/leaveType';
 
 dayjs.extend(customParseFormat);
 dayjs.extend(utc);
 
+type ExtendText = UserCheckInDate & { statusText: string; lateFlag: number; timeText: string };
+
 export type CheckinDataList = Omit<CheckinCalendar, 'userCheckinList'> & {
-    userCheckinList: (
-        | (UserCheckinList & Profile & { statusText: string; absentFlag: number; lateFlag: number; timeText: string })
-        | null
-    )[];
+    userCheckinList: (ExtendText | null)[];
 };
 
-type CheckinCalendarExtend = CheckinCalendar & Pick<CalendarDateConfig, 'isWFH' | 'entryTime'>;
+export type CheckinCalendarExtend = CheckinDataList & Pick<CalendarDateConfig, 'isWFH' | 'entryTime'>;
+export type CheckinCalendarList = CalendarDateConfig &
+    Omit<CheckinCalendar, 'userCheckinList'> & {
+        userCheckinList: UserCheckInDate[];
+    };
 
 function Home() {
     const { profile, authLoading, isSignedIn } = useFirebase();
@@ -55,57 +37,58 @@ function Home() {
     const [loading, setLoading] = useState<boolean>(true);
     const [userList, setUserList] = useState<Profile[]>([]);
     const [userFilterList, setUserFilterList] = useState<Profile[]>([]);
-    const [checkinDataList, setCheckinDataList] = useState<CheckinCalendarExtend[]>([]);
+    const [checkinDataList, setCheckinDataList] = useState<CheckinCalendarList[]>([]);
     const [month, setMonth] = useState(dayjs().get('months')); // 0-11
     const [years, setYears] = useState(dayjs().get('years'));
     const [calendarConfig, setCalendarConfig] = useState<CalendarDateConfig[]>([]);
 
     //
-    const getCheckinCalendar = (uList: Profile[], calender: CheckinCalendarExtend[]) => {
+    const getCheckinCalendar = (uList: Profile[], calender: CheckinCalendarList[]) => {
         if (uList.length <= 0) return [];
 
-        const m: CheckinDataList[] = calender.map((d) => {
-            let checkinData: CheckinDataList['userCheckinList'] = [];
+        const m: CheckinCalendarExtend[] = calender.map((d) => {
+            let checkinData: CheckinCalendarExtend['userCheckinList'] = [];
             const isBeforeDay = dayjs(d.date).isBefore(dayjs().add(-1, 'day'));
 
             uList.forEach((ul) => {
                 const userCheckin = d.userCheckinList.find((f) => f?.email === ul.email);
-                const startWork = dayjs(ul.createdAt).isAfter(d.date);
+                const startWork = dayjs(ul.employmentStartDate).isAfter(d.date);
 
                 if (userCheckin) {
                     // time: HH:mm
-                    let timeText = userCheckin?.time ? userCheckin.time : '';
+                    let timeText = userCheckin?.time || '';
                     let remark = userCheckin?.remark ?? '';
+                    let reason = userCheckin?.reason ?? '';
                     let statusText = 'ตรงเวลา';
-                    let absentFlag = 0;
                     let lateFlag = 0;
 
-                    if (timeText && dayjs(`${d.date} ${timeText}`).isAfter(dayjs(`${d.date} ${d.entryTime}`))) {
+                    if (remark.includes('ลา') || userCheckin?.absentId) {
+                        statusText = `${remark} ${userCheckin?.leavePeriod && getLeavePeriodLabel(userCheckin?.leavePeriod)}`;
+                        reason = `${userCheckin?.reason}`;
+                    } else if (timeText && dayjs(`${d.date} ${timeText}`).isAfter(dayjs(`${d.date} ${d.entryTime}`))) {
                         statusText = `สาย ${dayjs(`${d.date} ${timeText}`).diff(dayjs(`${d.date} ${d.entryTime}`), 'minutes')} นาที`;
                         lateFlag = 1;
-                    } else if (!timeText && remark.includes('ลา')) {
-                        statusText = remark;
-                        remark = 'ลา';
-                        absentFlag = 1;
                     } else if (!remark && !timeText && isBeforeDay) {
                         statusText = 'หาย';
                         lateFlag = 1;
                     }
-                    checkinData.push({ ...ul, ...userCheckin, statusText, absentFlag, lateFlag, timeText });
+                    checkinData.push({ ...ul, ...userCheckin, statusText, lateFlag, timeText, reason });
                 } else if (isBeforeDay && !startWork) {
                     checkinData.push({
                         ...ul,
                         email: ul.email,
                         googleId: ul.googleId,
                         statusText: 'หาย',
-                        absentFlag: 0,
-                        lateFlag: 1,
+                        lateFlag: 0,
                         timeText: '',
-                        remark: '',
                         reason: '',
+                        remark: '',
                         time: '',
                         approveBy: '',
                         approveByGoogleId: '',
+                        absentId: null,
+                        date: '',
+                        leavePeriod: null,
                     });
                 } else {
                     checkinData.push(null);
@@ -113,9 +96,9 @@ function Home() {
             });
 
             return {
+                ...d,
                 id: d.id,
                 date: dayjs(d.date).format('DD-MM-YYYY'),
-                wfhFlag: d.wfhFlag,
                 userCheckinList: checkinData,
             };
         });
@@ -123,89 +106,62 @@ function Home() {
         return m;
     };
 
-    const calendarCheckin = useMemo(() => {
+    const calendarCheckin: CheckinCalendarExtend[] = useMemo(() => {
         if (userFilterList.length <= 0) return [];
 
         const m = getCheckinCalendar(userFilterList, checkinDataList);
 
         return m;
-
-        // const fl = userFilterList.map((m) => m.email);
-        // return checkinDataList.filter((f) => f.userCheckinList.some((s) => s?.email && fl.includes(s?.email)));
     }, [JSON.stringify(checkinDataList), JSON.stringify(userFilterList)]);
 
-    const calendarCheckinAllList = useMemo(() => {
+    const calendarCheckinAllList: CheckinCalendarExtend[] = useMemo(() => {
         if (userList.length <= 0) return [];
 
         const m = getCheckinCalendar(userList, checkinDataList);
 
         return m;
-
-        // const fl = userFilterList.map((m) => m.email);
-        // return checkinDataList.filter((f) => f.userCheckinList.some((s) => s?.email && fl.includes(s?.email)));
     }, [JSON.stringify(checkinDataList), JSON.stringify(userList)]);
 
-    const getCheckin = async (year: number, month: number, ul: CalendarDateConfig[]) => {
-        // const c = await getCalendarMonthOfYears({ year: year, month: month });
-        // setCheckinDataList([...c]);
-        const d = dayjs(`${year}-${month + 1}-1`, 'YYYY-M-D');
-        const c = await getWorkTimeList({ startDateString: d.format('YYYY-MM-DD'), endDateString: d.endOf('month').format('YYYY-MM-DD') });
-        // console.log('c:', c);
-        const x = groupByDate(c, ul || []);
-        // const e = groupByEmail(c);
-        // console.log('e:', e);
+    const getCheckin = async (year: number, month: number, calendarDateConfig: CalendarDateConfig[]) => {
+        const parseDate = dayjs(`${year}-${month + 1}-1`, 'YYYY-M-D');
+        const workTimeList = await getWorkTimeList({
+            startDateString: parseDate.format('YYYY-MM-DD'),
+            endDateString: parseDate.endOf('month').format('YYYY-MM-DD'),
+        });
+        const n = groupByDate(workTimeList, calendarDateConfig || []);
 
-        const n: CheckinCalendarExtend[] = x.map((item) => ({
-            id: item.date,
-            ...item,
-            date: item.date,
-            wfhFlag: item.isWFH ? 1 : 0,
-            userCheckinList: item.workTimeList.map((wt) => ({
-                remark: wt?.remark ?? '',
-                time: wt?.time ?? '',
-                email: wt?.email,
-                googleId: wt?.googleId ?? '',
-                reason: wt?.reason ?? '',
-                approveBy: wt?.approveBy ?? '',
-                approveByGoogleId: wt?.approveByGoogleId ?? '',
-            })),
-        }));
         setCheckinDataList([...n]);
     };
 
+    // useEffect(() => {
+    //     const init = async () => {
+    //         const res = await getUsersList();
+
+    //         const u = res.filter((f) => f.status !== 'INACTIVE' && f.jobPosition !== 'CEO');
+    //         setUserList([...u]);
+    //         setLoading(false);
+    //     };
+
+    //     init();
+    // }, []);
+
     useEffect(() => {
         const init = async () => {
-            const res = await getUsersList();
-
-            const u = res.filter((f) => f.status !== 'INACTIVE' && f.jobPosition !== 'CEO');
+            setLoading(true);
+            const res = await getUsersListWithMonth({ today: dayjs(`${years}-${month + 1}-01`).format('YYYY-MM-DD') });
+            const u = res.filter((f) => f.jobPosition !== 'CEO');
             setUserList([...u]);
-            setLoading(false);
-        };
-
-        init();
-    }, []);
-
-    useEffect(() => {
-        const init = async () => {
-            // const u = await getUsersList();
-            // setUserList([...u]);
 
             const c = await getCalendarConfig({ id: `${years}-${month + 1}` });
             setCalendarConfig(c.data);
 
-            // const u = res.filter((f) => f.status !== 'INACTIVE' && f.jobPosition !== 'CEO');
             await getCheckin(years, month, c.data);
+
+            setLoading(false);
         };
 
         init();
     }, [years, month]);
-    // useEffect(() => {
-    //     const init = async () => {
-    //         await getCheckin(years, month);
-    //     };
-
-    //     init();
-    // }, [years, month]);
 
     const onConvertToGoogleCalendar = async (year: number, month: number) => {
         try {
@@ -286,7 +242,6 @@ function Home() {
     return (
         <div>
             {/* <LocationChecker /> */}
-
             {authLoading ? (
                 <div>Loading...</div>
             ) : (
@@ -305,27 +260,23 @@ function Home() {
                         {profile?.googleId && (
                             <UserSelfCheckIn
                                 defaultWfh={!!checkinDataList.find((f) => f.id === String(dayjs().get('date')))?.wfhFlag}
-                                checkinToday={calendarCheckinAllList.find((f) => f.date === dayjs().format('DD-MM-YYYY'))}
+                                checkinToday={calendarCheckinAllList.find(
+                                    (f) => f.date === dayjs().format('DD-MM-YYYY') || f.date === dayjs().format('YYYY-MM-DD')
+                                )}
                             />
                         )}
-                        {/* {profile?.email && process.env.REACT_APP_ENV === 'test' && (
-                                <UserSelfCheckIn checkinToday={checkinDataList.find((f) => f.date === dayjs().format('DD-MM-YYYY'))} />
-                            )} */}
                         {(profile?.role === 'ADMIN' || profile?.role === 'STAFF') && (
                             <>
                                 <UserCheckinTodayForm
-                                    dateList={calendarCheckinAllList as CheckinCalendar[]}
+                                    dateList={calendarCheckinAllList}
                                     userList={userList}
                                     afterUndate={() => getCheckin(years, month, calendarConfig)}
                                 />
                                 <UserCheckinTodayList
-                                    dateList={calendarCheckinAllList as CheckinCalendar[]}
+                                    dateList={calendarCheckinAllList}
                                     afterUndate={() => getCheckin(years, month, calendarConfig)}
                                 />
-                                <UserAbsentList
-                                    dateList={calendarCheckinAllList as CheckinCalendar[]}
-                                    afterUndate={() => getCheckin(years, month, calendarConfig)}
-                                />
+                                <UserAbsentList calendar={calendarConfig} afterUndate={() => getCheckin(years, month, calendarConfig)} />
                             </>
                         )}
                     </Box>
@@ -377,7 +328,7 @@ function Home() {
                             <TableHead>
                                 <TableHeadRow>
                                     <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'ชื่อพนักงาน'}</TableHeadCell>
-                                    {userList.map((user, index) => {
+                                    {userFilterList.map((user, index) => {
                                         return (
                                             <TableHeadCell key={index} colSpan={2} align='center' sx={{ borderLeft: '1px solid #fff' }}>
                                                 {user.name}
@@ -387,7 +338,7 @@ function Home() {
                                 </TableHeadRow>
                                 <TableHeadRow>
                                     <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'วันที่'}</TableHeadCell>
-                                    {userList.map((_, index) => {
+                                    {userFilterList.map((_, index) => {
                                         return (
                                             <React.Fragment key={index}>
                                                 <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'เวลาเข้าทำงาน'}</TableHeadCell>
@@ -419,7 +370,7 @@ function Home() {
                                                 >
                                                     {u?.timeText}
                                                     <Box display={'inline-block'} color={'#ff6f00'} fontWeight={700}>
-                                                        {u?.timeText && u?.remark && ' - '}
+                                                        {u?.remark && u?.timeText && ' - '}
                                                         {u?.remark}
                                                     </Box>
                                                 </TableBodyCell>
@@ -434,9 +385,9 @@ function Home() {
                                                         sx={{
                                                             padding: '2px 4px',
                                                             borderRadius: 1,
-                                                            backgroundColor: u?.lateFlag ? '#f00' : u?.absentFlag ? '#ff6f00' : '',
-                                                            color: u?.lateFlag || u?.absentFlag ? '#ffffff' : '',
-                                                            textAlign: u?.lateFlag || u?.absentFlag ? 'center' : '',
+                                                            backgroundColor: u?.lateFlag ? '#f00' : u?.absentId ? '#ff6f00' : '',
+                                                            color: u?.lateFlag || u?.absentId ? '#ffffff' : '',
+                                                            textAlign: u?.lateFlag || u?.absentId ? 'center' : '',
                                                         }}
                                                     >
                                                         {u?.statusText}
@@ -457,35 +408,29 @@ function Home() {
 }
 
 // Utility function to group array by date
-function groupByDate<T extends { date: string }>(arr: T[], dateConfig: CalendarDateConfig[]) {
-    const map = new Map<string, T[]>();
-    arr.forEach((item) => {
-        if (!map.has(item.date)) map.set(item.date, []);
-        map.get(item.date)!.push(item);
+function groupByDate(userCheckInDate: UserCheckInDate[], dateConfig: CalendarDateConfig[]) {
+    const grouped: Record<string, UserCheckInDate[]> = {};
+
+    userCheckInDate.forEach((data) => {
+        if (!grouped[data.date]) grouped[data.date] = [];
+        grouped[data.date].push(data);
     });
-    // Map over dateConfig to ensure all config dates are included, even if no workTimeList
-    return dateConfig.map((cfg) => ({
+
+    // return dateConfig.map((cfg) => ({
+    //     ...cfg,
+    //     workTimeList: grouped[cfg.date] ?? [],
+    // }));
+
+    // convert for old data structure
+    const arr = dateConfig.map((cfg) => ({
         ...cfg,
-        workTimeList: map.get(cfg.date) ?? [],
+        id: cfg.date,
+        wfhFlag: cfg.isWFH ? 1 : 0,
+
+        userCheckinList: grouped[cfg.date] ?? [],
     }));
-}
 
-// Clone: groupByEmail
-function groupByEmail<T extends { email?: string }>(arr: T[]) {
-    const map = new Map<string, T[]>();
-    arr.forEach((item) => {
-        if (!item.email) return; // skip if no email
-        if (!map.has(item.email)) map.set(item.email, []);
-        map.get(item.email)!.push(item);
-    });
-    // For each email in arr, get info from userList
-    console.log('map.entries():', map.entries());
-    return Array.from(map.entries()).map(([email]) => email);
+    return arr;
 }
-
-// Example usage with your data:
-// const data = [ { ...your object... } ];
-// const grouped = groupByDate(data);
-// Result: { "2025-09-01": [ { ... } ] }
 
 export default Home;

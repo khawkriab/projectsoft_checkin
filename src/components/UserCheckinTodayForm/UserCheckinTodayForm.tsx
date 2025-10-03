@@ -5,7 +5,7 @@ import { useFirebase } from 'context/FirebaseProvider';
 import {
     getCalendarDateOfMonth,
     getCalendarMonthOfYears,
-    getWorkTime,
+    getUserWorkTime,
     updateUserCheckinCalendar,
     updateWorkTime,
 } from 'context/FirebaseProvider/firebaseApi/checkinApi';
@@ -14,6 +14,7 @@ import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 import { CheckinCalendar, Profile, UserCheckInDate, UserCheckinList } from 'type.global';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
+import { CheckinCalendarExtend } from 'pages/Home/HomeFirebase';
 
 dayjs.extend(customParseFormat);
 
@@ -29,7 +30,7 @@ function UserCheckinTodayForm({
     userList = [],
     afterUndate,
 }: {
-    dateList: CheckinCalendar[];
+    dateList: CheckinCalendarExtend[];
     userList: Profile[];
     afterUndate: () => Promise<void> | void;
 }) {
@@ -68,7 +69,7 @@ function UserCheckinTodayForm({
 
         if (u && d) {
             const parseData = dayjs(d.date, 'DD-MM-YYYY');
-            const t = await getWorkTime({ date: parseData.format('YYYY-MM-DD'), email: u.email });
+            const t = await getUserWorkTime({ startDate: parseData.format('YYYY-MM-DD'), email: u.email });
 
             const payload: UserCheckInDate = {
                 date: parseData.format('YYYY-MM-DD'),
@@ -147,6 +148,10 @@ function UserCheckinTodayForm({
                 setUpdateDataForm((prev) => ({ ...prev, dateId: dateList[0].id ?? '' }));
             }
         }
+
+        return () => {
+            setUpdateDataForm((prev) => ({ ...prev, dateId: '' }));
+        };
     }, [JSON.stringify(dateList)]);
 
     return (

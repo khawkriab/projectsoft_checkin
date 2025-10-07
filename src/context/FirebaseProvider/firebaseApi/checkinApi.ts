@@ -266,6 +266,7 @@ export const getWorkTimeList = ({ startDateString, endDateString }: { startDateS
             collection(db, 'workTimeList'),
             where('date', '>=', startDateString), // Your date field in Firestore
             where('date', '<=', endDateString)
+            // where('status', '!=', 99)
         );
         const querySnapshot = await getDocs(q);
 

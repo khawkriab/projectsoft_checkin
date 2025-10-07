@@ -132,7 +132,10 @@ function Home() {
             startDateString: parseDate.format('YYYY-MM-DD'),
             endDateString: parseDate.endOf('month').format('YYYY-MM-DD'),
         });
-        const n = groupByDate(workTimeList, calendarDateConfig || []);
+        const n = groupByDate(
+            workTimeList.filter((f) => f.status !== 99),
+            calendarDateConfig
+        );
         setCheckinDataList([...n]);
     };
 

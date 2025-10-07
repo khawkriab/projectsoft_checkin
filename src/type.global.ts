@@ -53,7 +53,8 @@ export type UserCheckInData = Pick<BaseProfile, 'googleId' | 'email' | 'name'> &
     };
 
 export type UserCheckInDate = Pick<BaseProfile, 'googleId' | 'email' | 'name'> &
-    FirebaseQuery & {
+    FirebaseQuery &
+    LocationInfo & {
         date: string; // YYYY-MM-DD
         time: string;
         remark: string;
@@ -71,18 +72,6 @@ export type UserCheckinList = Pick<
     'email' | 'googleId' | 'reason' | 'remark' | 'time' | 'approveBy' | 'approveByGoogleId'
 >;
 export type CheckinCalendar = FirebaseQuery & { date: string; wfhFlag?: number; userCheckinList: UserCheckInDate[] };
-
-export type CalendarDateConfig = {
-    date: string; // YYYY-MM-DD
-    isOffDay: boolean;
-    isHalfDay: boolean;
-    isWFH: boolean;
-    remark?: string;
-    entryTime: string; // HH:mm
-    exitTime?: string; // HH:mm
-    createdAt?: Date; // Date
-    updatedAt?: Date; // Date
-};
 
 export type AbsentData = FirebaseQuery &
     Pick<BaseProfile, 'googleId' | 'email' | 'name'> & {
@@ -106,3 +95,50 @@ export type WeeklyScheduleData = {
     createdAt?: Date; // Date
     updatedAt?: Date; // Date
 };
+
+// ----------------------------- new ------------------------
+
+export type CalendarDateConfig = FirebaseQuery & {
+    date: string; // YYYY-MM-DD
+    isOffDay: boolean;
+    isHalfDay: boolean;
+    isWFH: boolean;
+    remark?: string;
+    entryTime: string; // HH:mm
+    exitTime?: string; // HH:mm
+    createdAt?: Date; // Date
+    updatedAt?: Date; // Date
+};
+
+export type LocationInfo = {
+    device?: any;
+    latlng?: LatLng | null;
+};
+
+export type CheckinStatusInfo = {
+    status: 0 | 1 | 99; // 0:unkown, 1: Approve, 99: Waiting
+    approveBy: string;
+    approveByGoogleId: string;
+};
+
+export type CheckinDate = Pick<BaseProfile, 'googleId' | 'email' | 'name'> &
+    FirebaseQuery &
+    CheckinStatusInfo &
+    LocationInfo & {
+        date: string; // YYYY-MM-DD
+        time?: string;
+        remark?: string;
+        reason?: string;
+        isWFH?: boolean;
+        // leave info
+        absentId?: string | null;
+        leaveType?: LeaveTypes | null;
+        leavePeriod?: LeavePeriodsType | null;
+        createdAt?: string; // Date
+        updatedAt?: string; // Date
+    };
+
+export type CalendarDateList = FirebaseQuery &
+    CalendarDateConfig & {
+        userCheckinList: CheckinDate[];
+    };

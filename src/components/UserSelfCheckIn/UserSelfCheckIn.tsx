@@ -1,16 +1,22 @@
 import { Alert, AlertColor, Box, Button, Grid, Slide, Snackbar, TextField } from '@mui/material';
-import { addUserCheckinToday, deleteOldCheckin, getCheckinToday } from 'context/FirebaseProvider/firebaseApi/checkinApi';
+import {
+    addUserCheckinToday,
+    deleteOldCheckin,
+    getCheckinToday,
+    getUserWorkTime,
+    updateWorkTime,
+} from 'context/FirebaseProvider/firebaseApi/checkinApi';
 import { usersUpdateAllowLocation } from 'context/FirebaseProvider/firebaseApi/userApi';
 import { LocationChecker } from 'components/common/LocationChecker';
 import { useNotification } from 'components/common/NotificationCenter';
 import dayjs from 'dayjs';
-import { CheckinDataList } from 'pages/Home/HomeFirebase';
+import { CalendarDateExtendText } from 'pages/Home/HomeFirebase';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { deviceDetect, isAndroid, isIOS, isMobile } from 'react-device-detect';
-import { LatLng, UserCheckInData } from 'type.global';
+import { CheckinDate, LatLng, UserCheckInData } from 'type.global';
 import { useFirebase } from 'context/FirebaseProvider';
 
-function UserSelfCheckIn({ checkinToday, defaultWfh }: { checkinToday?: CheckinDataList; defaultWfh: boolean }) {
+function UserSelfCheckIn({ checkinToday, defaultWfh }: { checkinToday?: CalendarDateExtendText; defaultWfh: boolean }) {
     const { profile, updateUserInfo } = useFirebase();
     const { openNotify } = useNotification();
     const latlng = useRef<LatLng>({ lat: 0, lng: 0 });
@@ -20,10 +26,14 @@ function UserSelfCheckIn({ checkinToday, defaultWfh }: { checkinToday?: CheckinD
     const [isAvail, setIsAvail] = useState(false);
     const [allowFindLocation, setAllowFindLocation] = useState(false);
     const [reason, setReason] = useState('');
-    const [currentUserData, setCurrentUserData] = useState<UserCheckInData | null | undefined>(undefined);
     //
-    const userCheckinToday = useMemo(() => {
-        return checkinToday?.userCheckinList.find((f) => f?.email === profile?.email);
+    const userCheckinToday: CalendarDateExtendText['userCheckinList'][0] | null = useMemo(() => {
+        if (!checkinToday) return null;
+        const n = checkinToday?.userCheckinList.find((f) => f?.email === profile?.email);
+
+        if (!n) return null;
+
+        return n;
     }, [checkinToday, profile?.email]);
     //
     const onCheckin = async (remark?: string) => {
@@ -32,23 +42,50 @@ function UserSelfCheckIn({ checkinToday, defaultWfh }: { checkinToday?: CheckinD
 
             setUpdating(true);
 
-            const payload: UserCheckInData = {
-                googleId: profile?.googleId,
+            // const payload: UserCheckInData = {
+            //     googleId: profile?.googleId,
+            //     email: profile.email,
+            //     name: profile.name,
+            //     time: String(now),
+            //     remark: remark ?? '',
+            //     reason: reason,
+            //     device: deviceDetect(undefined),
+            //     latlng: latlng.current,
+            //     status: 99,
+            //     approveBy: '',
+            //     approveByGoogleId: '',
+            // };
+            // await addUserCheckinToday(payload);
+            // await getUserCheckinToday();
+
+            const parseData = dayjs().format('YYYY-MM-DD');
+            const res = await getUserWorkTime({ startDate: parseData, email: profile.email });
+
+            const payload: CheckinDate = {
+                date: parseData,
                 email: profile.email,
+                googleId: profile.googleId,
                 name: profile.name,
-                time: String(now),
-                remark: remark ?? '',
-                reason: reason,
+                time: dayjs().format('HH:mm'),
+                remark: remark ?? res?.remark ?? '',
+                reason: res?.reason ?? '',
+                approveBy: profile?.name ?? '',
+                approveByGoogleId: profile?.googleId ?? '',
+                leavePeriod: res?.leavePeriod || null,
+                absentId: res?.absentId || null,
+                isWFH: remark?.toLowerCase().includes('wfh') ?? false,
+                status: 99,
                 device: deviceDetect(undefined),
                 latlng: latlng.current,
-                status: 99,
-                approveBy: '',
-                approveByGoogleId: '',
             };
-            await addUserCheckinToday(payload);
-            await getUserCheckinToday();
 
-            openNotify('success', 'updated successfully');
+            try {
+                await updateWorkTime(payload, res?.id);
+
+                openNotify('success', 'updated successfully');
+            } catch (error) {
+                console.error('error:', error);
+            }
         }
 
         setFindingLocation(false);
@@ -76,52 +113,53 @@ function UserSelfCheckIn({ checkinToday, defaultWfh }: { checkinToday?: CheckinD
         onCheckin(reason);
     };
 
-    const getUserCheckinToday = async () => {
-        try {
-            const res = await getCheckinToday(profile?.googleId ?? '');
+    // const getUserCheckinToday = async () => {
+    //     try {
+    //         const res = await getCheckinToday(profile?.googleId ?? '');
 
-            if (dayjs(Number(res.time)).isSame(dayjs(), 'day')) {
-                setCurrentUserData({ ...res });
-            } else {
-                await deleteOldCheckin(res.id);
-                setCurrentUserData(null);
-            }
-        } catch (error) {
-            setCurrentUserData(null);
-        }
-    };
+    //         if (dayjs(Number(res.time)).isSame(dayjs(), 'day')) {
+    //             setCurrentUserData({ ...res });
+    //         } else {
+    //             await deleteOldCheckin(res.id);
+    //             setCurrentUserData(null);
+    //         }
+    //     } catch (error) {
+    //         setCurrentUserData(null);
+    //     }
+    // };
 
     useEffect(() => {
-        if ((((isIOS || isAndroid) && isMobile) || process.env.REACT_APP_TEST === '1') && currentUserData === null) {
+        if (((isIOS || isAndroid) && isMobile) || process.env.REACT_APP_TEST === '1') {
             // if (currentUserData === null) {
             setAllowFindLocation(!!profile?.allowFindLocation);
             setFindingLocation(!!profile?.allowFindLocation);
         }
-    }, [profile?.allowFindLocation, currentUserData, isIOS, isAndroid, isMobile]);
+    }, [profile?.allowFindLocation, isIOS, isAndroid, isMobile]);
 
-    useEffect(() => {
-        getUserCheckinToday();
-    }, []);
+    // useEffect(() => {
+    //     getUserCheckinToday();
+    // }, []);
 
     //
     return (
         <>
-            {currentUserData && (
+            {!!userCheckinToday && (
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, marginBottom: 2, marginTop: 2 }}>
-                    <Box>เวลาเข้างาน: {dayjs(Number(currentUserData.time)).format('DD-MM-YYYY HH:mm')}</Box>
+                    <Box>เวลาเข้างาน: {dayjs(Number(userCheckinToday.time)).format('DD-MM-YYYY HH:mm')}</Box>
                     <Box
                         sx={(theme) => ({
                             padding: '2px 4px',
                             borderRadius: 1,
                             color: theme.palette.success.contrastText,
-                            backgroundColor: Number(currentUserData.status) === 99 ? '#ff6f00' : theme.palette.success.main,
+                            backgroundColor: Number(userCheckinToday.status) === 99 ? '#ff6f00' : theme.palette.success.main,
                         })}
                     >
-                        สถานะ: {Number(currentUserData.status) === 99 ? 'รอ' : 'อนุมัติแล้ว'}
+                        สถานะ: {Number(userCheckinToday.status) === 99 ? 'รอ' : 'อนุมัติแล้ว'}
                     </Box>
                 </Box>
             )}
-            {!!userCheckinToday && profile?.status === 'APPROVE' && (
+
+            {!userCheckinToday && (
                 <LocationChecker
                     checkAvail={findingLocation}
                     sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, marginBottom: 2, marginTop: 2 }}
@@ -136,69 +174,64 @@ function UserSelfCheckIn({ checkinToday, defaultWfh }: { checkinToday?: CheckinD
                         latlng.current = l;
                     }}
                 >
-                    {(currentUserData === null || (userCheckinToday?.absentId && !userCheckinToday.time)) &&
-                        profile?.status === 'APPROVE' && (
-                            <Grid container gap={2} alignItems={'center'} width={'100%'}>
-                                <Grid size={!defaultWfh ? { xs: 12, sm: 12, md: 7 } : 'auto'}>
-                                    <Box component={'form'} onSubmit={onCheckinWFH}>
-                                        <Grid container alignItems={'center'} gap={2} sx={{ width: '100%' }}>
-                                            {!defaultWfh && (
-                                                <Grid size={{ xs: 12, sm: 'grow' }}>
-                                                    <TextField
-                                                        fullWidth
-                                                        required
-                                                        label='เหตุผลที่ work from home'
-                                                        value={reason}
-                                                        onChange={(e) => setReason(e.target.value)}
-                                                    />
-                                                </Grid>
-                                            )}
-                                            <Grid flex={'none'}>
-                                                <Button
-                                                    type='submit'
-                                                    size='large'
-                                                    disabled={!!currentUserData}
-                                                    loading={updating}
-                                                    variant='outlined'
-                                                    color='secondary'
-                                                >
-                                                    ลงชื่อเข้างาน WFH
-                                                </Button>
+                    {profile?.status === 'APPROVE' && (
+                        <Grid container gap={2} alignItems={'center'} width={'100%'}>
+                            <Grid size={!defaultWfh ? { xs: 12, sm: 12, md: 7 } : 'auto'}>
+                                <Box component={'form'} onSubmit={onCheckinWFH}>
+                                    <Grid container alignItems={'center'} gap={2} sx={{ width: '100%' }}>
+                                        {!defaultWfh && (
+                                            <Grid size={{ xs: 12, sm: 'grow' }}>
+                                                <TextField
+                                                    fullWidth
+                                                    required
+                                                    label='เหตุผลที่ work from home'
+                                                    value={reason}
+                                                    onChange={(e) => setReason(e.target.value)}
+                                                />
                                             </Grid>
-                                        </Grid>
-                                    </Box>
-                                </Grid>
-                                {(((isIOS || isAndroid) && isMobile) || process.env.REACT_APP_TEST === '1') && (
-                                    <Grid flex={'auto'} display={'flex'} gap={2}>
-                                        {allowFindLocation && (
-                                            <Button
-                                                disabled={!!currentUserData || !isAvail}
-                                                loading={updating}
-                                                size='large'
-                                                variant='contained'
-                                                color='primary'
-                                                onClick={() => onCheckinOnArea()}
-                                            >
-                                                {findingLocation && !isAvail
-                                                    ? 'กำลังหาตำแหน่ง...'
-                                                    : isAvail
-                                                    ? 'ลงชื่อเข้างาน'
-                                                    : 'ค้นหาตำแหน่ง'}
-                                            </Button>
                                         )}
+                                        <Grid flex={'none'}>
+                                            <Button
+                                                type='submit'
+                                                size='large'
+                                                // disabled={!!currentUserData}
+                                                loading={updating}
+                                                variant='outlined'
+                                                color='secondary'
+                                            >
+                                                ลงชื่อเข้างาน WFH
+                                            </Button>
+                                        </Grid>
+                                    </Grid>
+                                </Box>
+                            </Grid>
+                            {(((isIOS || isAndroid) && isMobile) || process.env.REACT_APP_TEST === '1') && (
+                                <Grid flex={'auto'} display={'flex'} gap={2}>
+                                    {allowFindLocation && (
                                         <Button
+                                            disabled={!isAvail}
                                             loading={updating}
                                             size='large'
                                             variant='contained'
-                                            color='error'
-                                            onClick={() => onAllowFindLocation(!allowFindLocation)}
+                                            color='primary'
+                                            onClick={() => onCheckinOnArea()}
                                         >
-                                            {allowFindLocation ? 'หยุดค้นหาตำแหน่ง' : 'อนุญาติให้ค้นหาตำแหน่ง'}
+                                            {findingLocation && !isAvail ? 'กำลังหาตำแหน่ง...' : isAvail ? 'ลงชื่อเข้างาน' : 'ค้นหาตำแหน่ง'}
                                         </Button>
-                                    </Grid>
-                                )}
-                            </Grid>
-                        )}
+                                    )}
+                                    <Button
+                                        loading={updating}
+                                        size='large'
+                                        variant='contained'
+                                        color='error'
+                                        onClick={() => onAllowFindLocation(!allowFindLocation)}
+                                    >
+                                        {allowFindLocation ? 'หยุดค้นหาตำแหน่ง' : 'อนุญาติให้ค้นหาตำแหน่ง'}
+                                    </Button>
+                                </Grid>
+                            )}
+                        </Grid>
+                    )}
                 </LocationChecker>
             )}
         </>

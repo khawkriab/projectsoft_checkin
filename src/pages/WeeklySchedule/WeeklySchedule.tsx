@@ -7,7 +7,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { PickersDay, PickersDayProps } from '@mui/x-date-pickers/PickersDay';
 import { useEffect, useMemo, useState } from 'react';
-import { createScheduleWeekly, getScheduleWeekly, getScheduleWeeklyList } from 'context/FirebaseProvider/firebaseApi/schedulesApi';
+import { createScheduleWeekly, getScheduleWeekly } from 'context/FirebaseProvider/firebaseApi/schedulesApi';
 import { useFirebase } from 'context/FirebaseProvider';
 import { useNotification } from 'components/common/NotificationCenter';
 import { TableBodyCell } from 'components/common/MuiTable';
@@ -98,7 +98,6 @@ function WeeklySchedule() {
 
         setLoading(true);
         try {
-            console.log('weeklyInfo:', weeklyInfo);
             const startOfWeek = value.startOf('week');
             const endOfWeek = value.endOf('week');
             // DD-MM_DD-MM-YYYY

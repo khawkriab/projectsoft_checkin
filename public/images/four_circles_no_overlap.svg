@@ -7,12 +7,12 @@
     </linearGradient>
 
     <linearGradient id="deepLayerGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#0054c2ff" />
+      <stop offset="0%" stop-color="#006effff" />
       <stop offset="100%" stop-color="#2196F3" />
     </linearGradient>
   </defs>
 
-  <rect x="0" y="0" width="1000" height="400" fill="#003bc5ff" />
+  <rect x="0" y="0" width="1000" height="400" fill="#206ee3ff" />
 
   <path
     d="M0,400 Q200,300 400,380 T1000,300 L1000,400 L0,400 Z"
@@ -34,7 +34,7 @@
 
   <path
     d="M0,200 Q350,100 700,180 T1000,80 L1000,400 L0,400 Z"
-    fill="#00aeffff"
+    fill="#46afffff"
     opacity="0.7"
   />
 

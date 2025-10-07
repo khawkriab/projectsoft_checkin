@@ -59,7 +59,7 @@ function HomeLanding() {
                     // backgroundImage: { xs: 'url(images/three_circles.svg)', lg: 'url(images/four_circles_no_overlap.svg)' },
                     backgroundRepeat: 'no-repeat',
                     backgroundSize: { xs: 'cover' },
-                    // filter: 'blur(10px)',
+                    // filter: 'blur(5px)',
                 },
 
                 // Make sure content is above the blurred bg
@@ -504,8 +504,9 @@ function HomeAppBar() {
             position='relative'
             sx={{
                 height: '75px',
-                // bgcolor: 'var(--main-accent)',
-                bgcolor: 'transparent',
+                bgcolor: 'var(--main-accent)',
+                boxShadow: '0 1px 10px #000000ce',
+                // bgcolor: 'transparent',
             }}
         >
             <Toolbar

@@ -1,17 +1,22 @@
 import { Alert, Box, Button, Paper, Slide, Snackbar, Table, TableBody, TableContainer, TableHead, TableRow } from '@mui/material';
 import { useFirebase } from 'context/FirebaseProvider';
-import { getCheckinTodayList, getUserWorkTime, updateWorkTime } from 'context/FirebaseProvider/firebaseApi/checkinApi';
+import {
+    getCheckinTodayList,
+    getUserWorkTime,
+    getWorkTimeListWithStatus,
+    updateWorkTime,
+} from 'context/FirebaseProvider/firebaseApi/checkinApi';
 import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/MuiTable';
 import dayjs from 'dayjs';
 import usePageVisibility from 'hooks/usePageVisibility';
 import { useEffect, useRef, useState } from 'react';
-import { UserCheckInData, UserCheckInDate } from 'type.global';
+import { CheckinDate } from 'type.global';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import { CheckinCalendarExtend } from 'pages/Home/HomeFirebase';
+import { CalendarDateExtendText } from 'pages/Home/HomeFirebase';
 
 dayjs.extend(customParseFormat);
 
-function UserCheckinTodayList({ dateList, afterUndate }: { dateList: CheckinCalendarExtend[]; afterUndate: () => Promise<void> | void }) {
+function UserCheckinTodayList({ dateList, afterUndate }: { dateList: CalendarDateExtendText[]; afterUndate: () => Promise<void> | void }) {
     const isVisible = usePageVisibility();
     const { profile } = useFirebase();
     //
@@ -19,34 +24,39 @@ function UserCheckinTodayList({ dateList, afterUndate }: { dateList: CheckinCale
     //
     const [updating, setUpdating] = useState(false);
     const [open, setOpen] = useState(false);
-    const [checkinList, setCheckinList] = useState<UserCheckInData[]>([]);
+    const [checkinList, setCheckinList] = useState<CheckinDate[]>([]);
 
-    const onApprove = async (data: UserCheckInData) => {
+    const onApprove = async (data: CheckinDate) => {
         const today = dayjs();
-        const cc = dateList.find((f) => f.date === today.format('DD-MM-YYYY'));
+        const cc = dateList.find((f) => f.date === today.format('YYYY-MM-DD'));
 
         if (cc) {
             setUpdating(true);
-            const parseData = dayjs(cc.date, 'DD-MM-YYYY');
-            const t = await getUserWorkTime({ startDate: parseData.format('YYYY-MM-DD'), email: data.email });
+            const parseData = dayjs(cc.date);
+            const res = await getUserWorkTime({ startDate: parseData.format('YYYY-MM-DD'), email: data.email });
+            console.log('res:', res);
 
-            const payload: UserCheckInDate = {
-                date: parseData.format('YYYY-MM-DD'),
-                email: data.email,
-                googleId: data.googleId,
-                name: data.name,
-                time: dayjs(Number(data.time)).format('HH:mm'),
-                reason: data.reason,
-                remark: data.remark,
+            const payload: CheckinDate = {
+                ...data,
+                device: null,
+                latlng: null,
+                status: 1,
+                // date: parseData.format('YYYY-MM-DD'),
+                // email: data.email,
+                // googleId: data.googleId,
+                // name: data.name,
+                // time: dayjs(Number(data.time)).format('HH:mm'),
+                // reason: data.reason,
+                // remark: data.remark,
                 approveBy: profile?.name ?? '',
                 approveByGoogleId: profile?.googleId ?? '',
-                leavePeriod: t?.leavePeriod ?? null,
-                absentId: t?.absentId ?? null,
-                isWFH: data?.remark?.toLowerCase().includes('wfh') ?? false,
+                // leavePeriod: res?.leavePeriod ||undefined,
+                // absentId: res?.absentId ||undefined,
+                // isWFH: data?.remark?.toLowerCase().includes('wfh') ?? false,
             };
 
             try {
-                await updateWorkTime(payload, t?.id, data.id);
+                await updateWorkTime(payload, res?.id);
                 await afterUndate();
             } catch (error) {
                 console.error('error:', error);
@@ -84,9 +94,12 @@ function UserCheckinTodayList({ dateList, afterUndate }: { dateList: CheckinCale
 
     const getCheckinData = async () => {
         // get all
-        const res = await getCheckinTodayList();
+        // const res = await getCheckinTodayList();
+        const date = dayjs().format('YYYY-MM-DD');
+        const res = await getWorkTimeListWithStatus({ startDateString: date, endDateString: date, status: 99 });
 
-        setCheckinList([...res.filter((f) => f.status === 99 && dayjs(Number(f.time)).isSame(dayjs(), 'day'))]);
+        // setCheckinList([...res.filter((f) => f.status === 99 && dayjs(Number(f.time)).isSame(dayjs(), 'day'))]);
+        setCheckinList([...res]);
     };
 
     const isTimeBetween = (timeString: string) => {
@@ -132,13 +145,13 @@ function UserCheckinTodayList({ dateList, afterUndate }: { dateList: CheckinCale
                                 {checkinList.map((c) => (
                                     <TableRow key={c.googleId}>
                                         <TableBodyCell>{c.name}</TableBodyCell>
-                                        <TableBodyCell>{dayjs(Number(c.time)).format('DD-MM-YYYY HH:mm')}</TableBodyCell>
+                                        <TableBodyCell>{dayjs(`${c.date} ${c.time}`).format('DD-MM-YYYY HH:mm')}</TableBodyCell>
                                         <TableBodyCell>{c.remark}</TableBodyCell>
                                         <TableBodyCell>{c.reason}</TableBodyCell>
                                         <TableBodyCell sx={{ whiteSpace: 'break-spaces' }}>
                                             {`${c.device?.osName || c.device?.os}-${c.device?.browserName || c.device?.ua}`}
                                             <br />
-                                            {`[${c.latlng.lat},${c.latlng.lng}]`}
+                                            {`[${c?.latlng?.lat},${c?.latlng?.lng}]`}
                                         </TableBodyCell>
                                         <TableBodyCell>
                                             <Button

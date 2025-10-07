@@ -75,7 +75,7 @@ function CreateMonthCalendar() {
     const [month, setMonth] = useState(dayjs().get('months')); // 0-11
     const [years, setYears] = useState(dayjs().get('years'));
     const [datesSelected, setDatesSelected] = useState<CalendarDateConfig[]>([]);
-    const [entryTime, setEntryTime] = useState<string>('08:00'); // HH:mm
+    const [entryTime, setEntryTime] = useState<string>('08:30'); // HH:mm
     // const [currentFromDatabase, setCurrentFromDatabase] = useState<CalendarDateConfig[]>([]);
     //
 
@@ -143,7 +143,7 @@ function CreateMonthCalendar() {
 
         // new way
         const res = await getCalendarConfig({ id: `${year}-${month + 1}` });
-        setDatesSelected([...res.data]);
+        setDatesSelected([...res]);
     };
     useEffect(() => {
         getCalendar(years, month);

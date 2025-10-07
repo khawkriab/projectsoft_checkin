@@ -2,19 +2,13 @@ import { Box, Button, FormControl, Grid, InputLabel, MenuItem, Select, SelectCha
 import { DesktopTimePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { useFirebase } from 'context/FirebaseProvider';
-import {
-    getCalendarDateOfMonth,
-    getCalendarMonthOfYears,
-    getUserWorkTime,
-    updateUserCheckinCalendar,
-    updateWorkTime,
-} from 'context/FirebaseProvider/firebaseApi/checkinApi';
+import { getUserWorkTime, updateUserCheckinCalendar, updateWorkTime } from 'context/FirebaseProvider/firebaseApi/checkinApi';
 import { useNotification } from 'components/common/NotificationCenter';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
-import { CheckinCalendar, Profile, UserCheckInDate, UserCheckinList } from 'type.global';
+import { CheckinCalendar, CheckinDate, Profile, UserCheckInDate, UserCheckinList } from 'type.global';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import { CheckinCalendarExtend } from 'pages/Home/HomeFirebase';
+import { CalendarDateExtendText } from 'pages/Home/HomeFirebase';
 
 dayjs.extend(customParseFormat);
 
@@ -30,7 +24,7 @@ function UserCheckinTodayForm({
     userList = [],
     afterUndate,
 }: {
-    dateList: CheckinCalendarExtend[];
+    dateList: CalendarDateExtendText[];
     userList: Profile[];
     afterUndate: () => Promise<void> | void;
 }) {
@@ -41,25 +35,6 @@ function UserCheckinTodayForm({
     const [updateDataForm, setUpdateDataForm] = useState<UpdateFormData>({ dateId: '', email: '', remark: '' });
     const [updating, setUpdating] = useState(false);
     //
-    const updateCheckin = async (payload: { date: string; email: string; userCheckinList: UserCheckinList[] }) => {
-        setUpdating(true);
-        try {
-            const d = dayjs(payload.date, 'DD-MM-YYYY');
-            await updateUserCheckinCalendar({
-                year: d.get('years'),
-                month: d.get('month'),
-                date: d.get('date'),
-                userCheckinList: payload.userCheckinList,
-            });
-            await afterUndate();
-
-            setUpdateDataForm((prev) => ({ ...prev, email: '', remark: '' }));
-            openNotify('success', 'updated successfully');
-        } catch (error) {
-            console.error('error:', error);
-        }
-        setUpdating(false);
-    };
 
     const onSubmit = async (e: React.ChangeEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -68,26 +43,27 @@ function UserCheckinTodayForm({
         const d = dateList.find((f) => f.id === updateDataForm.dateId);
 
         if (u && d) {
-            const parseData = dayjs(d.date, 'DD-MM-YYYY');
-            const t = await getUserWorkTime({ startDate: parseData.format('YYYY-MM-DD'), email: u.email });
+            const parseData = dayjs(d.date);
+            const res = await getUserWorkTime({ startDate: parseData.format('YYYY-MM-DD'), email: u.email });
 
-            const payload: UserCheckInDate = {
+            const payload: CheckinDate = {
                 date: parseData.format('YYYY-MM-DD'),
                 email: u.email,
                 googleId: u.googleId,
                 name: u.name,
-                time: updateDataForm.time ?? t?.time ?? '',
-                remark: updateDataForm.remark ?? t?.remark ?? '',
-                reason: t?.reason ?? '',
+                time: updateDataForm.time ?? res?.time ?? '',
+                remark: updateDataForm.remark ?? res?.remark ?? '',
+                reason: res?.reason ?? '',
                 approveBy: profile?.name ?? '',
                 approveByGoogleId: profile?.googleId ?? '',
-                leavePeriod: t?.leavePeriod ?? null,
-                absentId: t?.absentId ?? null,
+                leavePeriod: res?.leavePeriod || undefined,
+                absentId: res?.absentId || undefined,
                 isWFH: updateDataForm?.remark?.toLowerCase().includes('wfh') ?? false,
+                status: 1,
             };
 
             try {
-                await updateWorkTime(payload, t?.id);
+                await updateWorkTime(payload, res?.id);
                 await afterUndate();
 
                 setUpdateDataForm((prev) => ({ ...prev, email: '', remark: '' }));
@@ -96,38 +72,6 @@ function UserCheckinTodayForm({
                 console.error('error:', error);
             }
         }
-
-        // if (u && d) {
-        //     const parseData = dayjs(d.date, 'DD-MM-YYYY');
-        //     const c = await getCalendarDateOfMonth({ year: parseData.year(), month: parseData.month(), date: parseData.date() });
-        //     const userCheckinList = c.userCheckinList
-        //         .filter((f) => f && f?.email !== u.email)
-        //         .map((f) => ({
-        //             remark: f.remark ?? '',
-        //             time: f.time ?? '',
-        //             email: f?.email,
-        //             googleId: f?.googleId ?? '',
-        //             reason: f.reason ?? '',
-        //             approveBy: f.approveBy ?? '',
-        //             approveByGoogleId: f.approveByGoogleId ?? '',
-        //         }));
-        //     updateCheckin({
-        //         date: d.date,
-        //         email: '',
-        //         userCheckinList: [
-        //             ...userCheckinList,
-        //             {
-        //                 remark: updateDataForm.remark ?? '',
-        //                 time: updateDataForm.time ?? '',
-        //                 email: u?.email.replace(/\s+/g, ''),
-        //                 googleId: u?.googleId ?? '',
-        //                 reason: '',
-        //                 approveBy: profile?.name ?? '',
-        //                 approveByGoogleId: profile?.googleId ?? '',
-        //             },
-        //         ],
-        //     });
-        // }
     };
 
     const onChangeData = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent) => {
@@ -140,7 +84,7 @@ function UserCheckinTodayForm({
     useEffect(() => {
         // set form data current date
         if (dateList.length > 0) {
-            const currentDate = dayjs().format('DD-MM-YYYY');
+            const currentDate = dayjs().format('YYYY-MM-DD');
             const findData = dateList.find((f) => f.date === currentDate);
             if (findData) {
                 setUpdateDataForm((prev) => ({ ...prev, dateId: findData.id ?? '' }));

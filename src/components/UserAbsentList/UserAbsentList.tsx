@@ -63,83 +63,13 @@ function UserAbsentList({ calendar = [], afterUndate }: { calendar: CalendarDate
                     approveBy: profile?.name ?? '',
                     approveByGoogleId: profile?.googleId ?? '',
                     leavePeriod: absentData.leavePeriod,
-                    absentId: absentData.id ?? null,
+                    absentId: absentData.id,
                     isWFH: dateOfCalendarConfig?.isWFH ?? false,
+                    status: 1,
                 },
-                checkInCurrentDate?.id,
-                undefined
+                checkInCurrentDate?.id
             );
         });
-        // const output = {
-        //     date: '2025-10-03',
-        //     isHalfDay: false,
-        //     entryTime: '08:30',
-        //     isWFH: false,
-        //     isOffDay: false,
-        // }[];
-
-        // let currentDate = startLeave;
-        // // add all date in range to array
-        // while (currentDate.isBefore(endLeave) || currentDate.isSame(endLeave)) {
-        //     datesInRange.push(currentDate.format('DD-MM-YYYY'));
-        //     currentDate = currentDate.add(1, 'day');
-        // }
-
-        // // check has date in calendar
-        // const datesToCheckSet = new Set(calendar.map((entry) => entry.date)); // return set of date string in DD-MM-YYYY
-        // const isRangeInDates = datesInRange.every((date) => datesToCheckSet.has(date));
-
-        // if (!isRangeInDates) return alert('date not match');
-
-        // const all = datesInRange.map((d) => {
-        //     // DD-MM-YYYY
-        //     const cd = calendar.find((f) => f.date === d);
-
-        //             const payload: UserCheckInDate = {
-        //                 date: parseData.format('YYYY-MM-DD'),
-        //                 email: data.email,
-        //                 googleId: data.googleId,
-        //                 name: data.name,
-        //                 time: dayjs(Number(data.time)).format('HH:mm'),
-        //                 reason: data.reason,
-        //                 remark: data.remark,
-        //                 approveBy: profile?.name ?? '',
-        //                 approveByGoogleId: profile?.googleId ?? '',
-        //                 leavePeriod: t?.leavePeriod ?? null,
-        //                 absentId: t?.absentId ?? null,
-        //                 isWFH: data?.remark?.toLowerCase().includes('wfh') ?? false,
-        //             };
-
-        //             try {
-        //                 await updateWorkTime(payload, t?.id, data.id);
-        //                 await afterUndate();
-        //             } catch (error) {
-        //                 console.error('error:', error);
-        //             }
-
-        // if (cd && cd?.id) {
-        //     const userCheckinList = cd.userCheckinList.filter((f) => f && f.email !== data.email);
-
-        //     const rd = dayjs(d, 'DD-MM-YYYY');
-        //     return updateUserCheckinCalendar({
-        //         year: rd.get('year'),
-        //         month: rd.get('month'),
-        //         date: rd.get('date'),
-        //         userCheckinList: [
-        //             ...userCheckinList.filter((f) => !!f),
-        //             {
-        //                 remark: `${getLeaveType(data.leaveType)} - ${getLeavePeriodLabel(data.leavePeriod)}`,
-        //                 time: '',
-        //                 email: data?.email,
-        //                 googleId: data?.googleId ?? '',
-        //                 reason: data?.reason ?? '',
-        //                 approveBy: profile?.name ?? '',
-        //                 approveByGoogleId: profile?.googleId ?? '',
-        //             },
-        //         ],
-        //     });
-        // }
-        // });
 
         setUpdating(true);
         Promise.all(all).then(async () => {

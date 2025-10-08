@@ -5,14 +5,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useEffect, useState } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import {
-    createCalendarMonthOfYears,
-    deleteCalendarMonthOfYears,
-    getCalendarConfig,
-    getCalendarMonthOfYears,
-    updateCalendarConfig,
-    updateCalendarMonthOfYears,
-} from 'context/FirebaseProvider/firebaseApi/checkinApi';
+import { getCalendarConfig, updateCalendarConfig } from 'context/FirebaseProvider/firebaseApi/checkinApi';
 import { CalendarDateConfig, CheckinCalendar, Profile, ProfileRole, UserCheckinList } from 'type.global';
 import { useNotification } from 'components/common/NotificationCenter';
 import { useFirebase } from 'context/FirebaseProvider';
@@ -46,16 +39,16 @@ function ServerDay(
             badgeContent={
                 <>
                     {isSelected ? <CheckCircleIcon color='success' /> : undefined}
-                    {(isSelected && role === 'ADMIN') || findDate?.isWFH ? (
+                    {(isSelected && role === 'ADMIN') || findDate?.isCanWorkOutside ? (
                         <ToggleButton
                             size='small'
                             value='check'
-                            selected={findDate.isWFH}
+                            selected={findDate.isCanWorkOutside}
                             color='primary'
                             sx={{ borderRadius: 6, padding: '0px 4px', fontSize: '12px', marginLeft: 1 }}
-                            onChange={() => onAddMarkWFH(findDate.date, !findDate.isWFH)}
+                            onChange={() => onAddMarkWFH(findDate.date, !findDate.isCanWorkOutside)}
                         >
-                            mark WFH {findDate.isWFH && <CheckCircleIcon color='success' sx={{ fontSize: '16px' }} />}
+                            mark WFH {findDate.isCanWorkOutside && <CheckCircleIcon color='success' sx={{ fontSize: '16px' }} />}
                         </ToggleButton>
                     ) : undefined}
                 </>
@@ -90,7 +83,7 @@ function CreateMonthCalendar() {
         //     year: years,
         //     month: month,
         //     date: d.date,
-        //     isWFH: d.wfhFlag ? 1 : 0,
+        //     isWorkOutside: d.wfhFlag ? 1 : 0,
         // }));
         setUpdating(true);
         // await createCalendarMonthOfYears(m);
@@ -196,7 +189,7 @@ function CreateMonthCalendar() {
                                         let n = [...datesSelected];
                                         const indexOfDate = n.findIndex((f) => f.date === date);
                                         if (indexOfDate >= 0) {
-                                            n[indexOfDate].isWFH = wfhFlag;
+                                            n[indexOfDate].isCanWorkOutside = wfhFlag;
                                         }
                                         setDatesSelected([...n]);
                                     }
@@ -223,7 +216,7 @@ function CreateMonthCalendar() {
                             if (index >= 0) {
                                 n.splice(index, 1);
                             } else {
-                                n.push({ date: date, isWFH: false, isHalfDay: false, isOffDay: false, entryTime: entryTime });
+                                n.push({ date: date, isCanWorkOutside: false, isHalfDay: false, isOffDay: false, entryTime: entryTime });
                             }
 
                             setDatesSelected([...n]);

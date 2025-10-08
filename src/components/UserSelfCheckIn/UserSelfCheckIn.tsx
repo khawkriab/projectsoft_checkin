@@ -1,22 +1,15 @@
-import { Alert, AlertColor, Box, Button, Grid, Slide, Snackbar, TextField } from '@mui/material';
-import {
-    addUserCheckinToday,
-    deleteOldCheckin,
-    getCheckinToday,
-    getUserWorkTime,
-    updateWorkTime,
-} from 'context/FirebaseProvider/firebaseApi/checkinApi';
+import { Box, Button, Grid, TextField } from '@mui/material';
+import { getUserWorkTime, updateWorkTime } from 'context/FirebaseProvider/firebaseApi/checkinApi';
 import { usersUpdateAllowLocation } from 'context/FirebaseProvider/firebaseApi/userApi';
 import { LocationChecker } from 'components/common/LocationChecker';
 import { useNotification } from 'components/common/NotificationCenter';
 import dayjs from 'dayjs';
-import { CalendarDateExtendText } from 'pages/Home/HomeFirebase';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { deviceDetect, isAndroid, isIOS, isMobile } from 'react-device-detect';
-import { CheckinDate, LatLng, UserCheckInData } from 'type.global';
+import { CheckinDate, LatLng } from 'type.global';
 import { useFirebase } from 'context/FirebaseProvider';
 
-function UserSelfCheckIn({ checkinToday, defaultWfh }: { checkinToday?: CalendarDateExtendText; defaultWfh: boolean }) {
+function UserSelfCheckIn({ defaultWfh }: { defaultWfh: boolean }) {
     const { profile, updateUserInfo } = useFirebase();
     const { openNotify } = useNotification();
     const latlng = useRef<LatLng>({ lat: 0, lng: 0 });
@@ -26,39 +19,19 @@ function UserSelfCheckIn({ checkinToday, defaultWfh }: { checkinToday?: Calendar
     const [isAvail, setIsAvail] = useState(false);
     const [allowFindLocation, setAllowFindLocation] = useState(false);
     const [reason, setReason] = useState('');
+    const [userCheckinToday, setUserCheckinToday] = useState<CheckinDate | null | undefined>(undefined);
     //
-    const userCheckinToday: CalendarDateExtendText['userCheckinList'][0] | null = useMemo(() => {
-        if (!checkinToday) return null;
-        const n = checkinToday?.userCheckinList.find((f) => f?.email === profile?.email);
-
-        if (!n) return null;
-
-        return n;
-    }, [checkinToday, profile?.email]);
+    const parseData = dayjs().format('YYYY-MM-DD');
     //
-    const onCheckin = async (remark?: string) => {
+    const allowThisSize = useMemo(() => {
+        // return true;
+        return ((isIOS || isAndroid) && isMobile) || process.env.REACT_APP_TEST === '1';
+    }, [isIOS, isAndroid, isMobile]);
+
+    const onCheckin = async (isWorkOutside = false, remark?: string) => {
         if (profile) {
-            const now = dayjs().utc().valueOf();
-
             setUpdating(true);
 
-            // const payload: UserCheckInData = {
-            //     googleId: profile?.googleId,
-            //     email: profile.email,
-            //     name: profile.name,
-            //     time: String(now),
-            //     remark: remark ?? '',
-            //     reason: reason,
-            //     device: deviceDetect(undefined),
-            //     latlng: latlng.current,
-            //     status: 99,
-            //     approveBy: '',
-            //     approveByGoogleId: '',
-            // };
-            // await addUserCheckinToday(payload);
-            // await getUserCheckinToday();
-
-            const parseData = dayjs().format('YYYY-MM-DD');
             const res = await getUserWorkTime({ startDate: parseData, email: profile.email });
 
             const payload: CheckinDate = {
@@ -68,12 +41,12 @@ function UserSelfCheckIn({ checkinToday, defaultWfh }: { checkinToday?: Calendar
                 name: profile.name,
                 time: dayjs().format('HH:mm'),
                 remark: remark ?? res?.remark ?? '',
-                reason: res?.reason ?? '',
+                reason: reason ?? res?.reason ?? '',
                 approveBy: profile?.name ?? '',
                 approveByGoogleId: profile?.googleId ?? '',
                 leavePeriod: res?.leavePeriod || null,
                 absentId: res?.absentId || null,
-                isWFH: remark?.toLowerCase().includes('wfh') ?? false,
+                isWorkOutside: isWorkOutside,
                 status: 99,
                 device: deviceDetect(undefined),
                 latlng: latlng.current,
@@ -81,6 +54,7 @@ function UserSelfCheckIn({ checkinToday, defaultWfh }: { checkinToday?: Calendar
 
             try {
                 await updateWorkTime(payload, res?.id);
+                getUserCheckinToday();
 
                 openNotify('success', 'updated successfully');
             } catch (error) {
@@ -94,7 +68,7 @@ function UserSelfCheckIn({ checkinToday, defaultWfh }: { checkinToday?: Calendar
 
     const onCheckinWFH = (e: React.ChangeEvent<HTMLFormElement>) => {
         e.preventDefault();
-        onCheckin('WFH');
+        onCheckin(true, 'WFH');
     };
 
     const onAllowFindLocation = async (isAllow: boolean) => {
@@ -110,42 +84,41 @@ function UserSelfCheckIn({ checkinToday, defaultWfh }: { checkinToday?: Calendar
         }
     };
     const onCheckinOnArea = async () => {
-        onCheckin(reason);
+        onCheckin();
     };
 
-    // const getUserCheckinToday = async () => {
-    //     try {
-    //         const res = await getCheckinToday(profile?.googleId ?? '');
+    const getUserCheckinToday = async () => {
+        try {
+            const res = await getUserWorkTime({ startDate: parseData, email: profile?.email || '' });
 
-    //         if (dayjs(Number(res.time)).isSame(dayjs(), 'day')) {
-    //             setCurrentUserData({ ...res });
-    //         } else {
-    //             await deleteOldCheckin(res.id);
-    //             setCurrentUserData(null);
-    //         }
-    //     } catch (error) {
-    //         setCurrentUserData(null);
-    //     }
-    // };
+            if (res) {
+                setUserCheckinToday({ ...res });
+            } else {
+                setUserCheckinToday(null);
+            }
+        } catch (error) {
+            console.error('error:', error);
+            setUserCheckinToday(null);
+        }
+    };
 
     useEffect(() => {
-        if (((isIOS || isAndroid) && isMobile) || process.env.REACT_APP_TEST === '1') {
-            // if (currentUserData === null) {
+        if (allowThisSize && userCheckinToday === null) {
             setAllowFindLocation(!!profile?.allowFindLocation);
             setFindingLocation(!!profile?.allowFindLocation);
         }
-    }, [profile?.allowFindLocation, isIOS, isAndroid, isMobile]);
+    }, [profile?.allowFindLocation, allowThisSize, userCheckinToday]);
 
-    // useEffect(() => {
-    //     getUserCheckinToday();
-    // }, []);
+    useEffect(() => {
+        getUserCheckinToday();
+    }, []);
 
     //
     return (
         <>
-            {!!userCheckinToday && (
+            {userCheckinToday && (
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, marginBottom: 2, marginTop: 2 }}>
-                    <Box>เวลาเข้างาน: {dayjs(Number(userCheckinToday.time)).format('DD-MM-YYYY HH:mm')}</Box>
+                    <Box>เวลาเข้างาน: {dayjs(`${userCheckinToday.date} ${userCheckinToday.time}`).format('DD-MM-YYYY HH:mm')}</Box>
                     <Box
                         sx={(theme) => ({
                             padding: '2px 4px',
@@ -159,7 +132,7 @@ function UserSelfCheckIn({ checkinToday, defaultWfh }: { checkinToday?: Calendar
                 </Box>
             )}
 
-            {!userCheckinToday && (
+            {userCheckinToday === null && (
                 <LocationChecker
                     checkAvail={findingLocation}
                     sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, marginBottom: 2, marginTop: 2 }}
@@ -205,7 +178,7 @@ function UserSelfCheckIn({ checkinToday, defaultWfh }: { checkinToday?: Calendar
                                     </Grid>
                                 </Box>
                             </Grid>
-                            {(((isIOS || isAndroid) && isMobile) || process.env.REACT_APP_TEST === '1') && (
+                            {allowThisSize && (
                                 <Grid flex={'auto'} display={'flex'} gap={2}>
                                     {allowFindLocation && (
                                         <Button

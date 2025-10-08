@@ -8,11 +8,13 @@ import { Absent } from 'pages/Absent';
 import { PrivacyPolicy } from 'pages/PrivacyPolicy';
 import { WeeklySchedule } from 'pages/WeeklySchedule';
 import HomeLanding from 'pages/HomeLanding';
+import Demo from 'pages/Demo';
 
 function RoutesManagement() {
     return (
         <Routes>
             <Route path={`/landing`} element={<HomeLanding />} />
+            <Route path={`/demo`} element={<Demo />} />
             <Route element={<Layout />}>
                 <Route path='/' element={<Home />} />
                 <Route path={`/member`} element={<Member />} />

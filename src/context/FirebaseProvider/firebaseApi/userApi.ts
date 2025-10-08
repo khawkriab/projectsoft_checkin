@@ -1,4 +1,4 @@
-import { addDoc, and, collection, deleteDoc, doc, getDocs, or, query, setDoc, where } from 'firebase/firestore';
+import { addDoc, and, collection, deleteDoc, doc, getDocs, or, query, setDoc, updateDoc, where } from 'firebase/firestore';
 import { Profile } from 'type.global';
 import { db } from '../FirebaseProvider';
 import dayjs from 'dayjs';
@@ -29,13 +29,9 @@ export const addUsersRegister = (payload: Profile) => {
 };
 export const usersUpdateAllowLocation = (uId: string, allowFindLocation: number) => {
     return new Promise<string>(async (resolve) => {
-        await setDoc(
-            doc(db, 'usersList', uId),
-            {
-                allowFindLocation: allowFindLocation,
-            },
-            { merge: true }
-        );
+        await updateDoc(doc(db, 'usersList', uId), {
+            allowFindLocation: allowFindLocation,
+        });
 
         resolve('success');
     });

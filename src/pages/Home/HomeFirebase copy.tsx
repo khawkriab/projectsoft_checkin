@@ -25,7 +25,7 @@
 //     userCheckinList: (ExtendText | null)[];
 // };
 
-// export type CheckinCalendarExtend = CheckinDataList & Pick<CalendarDateConfig, 'isWFH' | 'entryTime'>;
+// export type CheckinCalendarExtend = CheckinDataList & Pick<CalendarDateConfig, 'isWorkOutside' | 'entryTime'>;
 // export type CheckinCalendarList = CalendarDateConfig &
 //     Omit<CheckinCalendar, 'userCheckinList'> & {
 //         userCheckinList: UserCheckInDate[];
@@ -194,7 +194,7 @@
 //             //         date: dayjs(item.date).format('YYYY-MM-DD'),
 //             //         isOffDay: false,
 //             //         isHalfDay: false,
-//             //         isWFH: Number(item.wfhFlag || 0) === 1,
+//             //         isWorkOutside: Number(item.wfhFlag || 0) === 1,
 //             //         remark: '',
 //             //         entryTime: '08:00',
 //             //         exitTime: '',
@@ -216,7 +216,7 @@
 //             //             approveByGoogleId: wt?.approveByGoogleId ?? '',
 //             //             leavePeriod: leavePeriod,
 //             //             absentId: wt?.absentId ?? null,
-//             //             isWFH: wt?.remark.toLowerCase().includes('wfh') ?? false,
+//             //             isWorkOutside: wt?.remark.toLowerCase().includes('wfh') ?? false,
 //             //             googleId: wt?.googleId ?? '',
 //             //             email: wt?.email ?? '',
 //             //             name: u?.name ?? '',
@@ -426,7 +426,7 @@
 //     const arr = dateConfig.map((cfg) => ({
 //         ...cfg,
 //         id: cfg.date,
-//         wfhFlag: cfg.isWFH ? 1 : 0,
+//         wfhFlag: cfg.isWorkOutside ? 1 : 0,
 
 //         userCheckinList: grouped[cfg.date] ?? [],
 //     }));

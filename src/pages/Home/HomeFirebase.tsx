@@ -61,13 +61,19 @@ function Home() {
                 if (userCheckin) {
                     // time: HH:mm
                     let timeText = userCheckin?.time || '';
-                    let remark = userCheckin?.remark ?? '';
+                    let remark =
+                        userCheckin.isWorkOutside && !userCheckin?.remark?.toLowerCase().includes('wfh')
+                            ? 'WFH'
+                            : userCheckin?.remark || '';
                     let reason = userCheckin?.reason ?? '';
                     let statusText = 'ตรงเวลา';
                     let lateFlag = 0;
+                    const lpl = userCheckin?.leavePeriod ? getLeavePeriodLabel(userCheckin?.leavePeriod) : '';
+                    const ltl = userCheckin?.leaveType ? getLeaveType(userCheckin.leaveType) : '';
+                    const wfhText = userCheckin?.isWorkOutside ? 'WFH' : '';
 
                     if (remark.includes('ลา') || userCheckin?.absentId) {
-                        statusText = `${remark} ${userCheckin?.leavePeriod && getLeavePeriodLabel(userCheckin?.leavePeriod)}`;
+                        statusText = `${remark} ${wfhText} ${lpl && `${lpl}-${ltl}`}`;
                         reason = `${userCheckin?.reason}`;
                     } else if (
                         timeText &&
@@ -139,18 +145,6 @@ function Home() {
         setCheckinDataList([...n]);
     };
 
-    // useEffect(() => {
-    //     const init = async () => {
-    //         const res = await getUsersList();
-
-    //         const u = res.filter((f) => f.status !== 'INACTIVE' && f.jobPosition !== 'CEO');
-    //         setUserList([...u]);
-    //         setLoading(false);
-    //     };
-
-    //     init();
-    // }, []);
-
     useEffect(() => {
         const init = async () => {
             setLoading(true);
@@ -168,78 +162,6 @@ function Home() {
 
         init();
     }, [years, month]);
-
-    const onConvertToGoogleCalendar = async (year: number, month: number) => {
-        try {
-            setLoading(true);
-
-            const c = await getCalendarMonthOfYears({ year: year, month: month });
-            const ul = await getUsersList();
-            const al = await getAbsentList('APPROVE');
-
-            let leavePeriod: LeavePeriodsType | null = null;
-
-            // getUserAbsentByGoogleIdAndDate
-
-            // const a = {
-            //     approveBy: 'แพร',
-            //     approveByGoogleId: '100557811553068873527',
-            //     time: '',
-            //     email: 'm.teerapolph@gmail.com',
-            //     reason: 'ไปทำบัตรประชาชน',
-            //     googleId: '105443597185074019229',
-            //     remark: 'ลากิจ - ลาเช้า',
-            // };
-
-            const n: UserCheckInDate[] = [];
-            let r: CalendarDateConfig[] = [];
-
-            // c.forEach((item) => {
-            //     r.push({
-            //         date: dayjs(item.date).format('YYYY-MM-DD'),
-            //         isOffDay: false,
-            //         isHalfDay: false,
-            //         isWFH: Number(item.wfhFlag || 0) === 1,
-            //         remark: '',
-            //         entryTime: '08:00',
-            //         exitTime: '',
-            //     });
-            //     item.userCheckinList.forEach((wt) => {
-            //         if (wt?.absentId) {
-            //             const a = al.find((f) => f.id === wt.absentId);
-            //             leavePeriod = a?.leavePeriod || null;
-            //         }
-
-            //         const u = ul.find((f) => f.email === wt?.email);
-
-            //         n.push({
-            //             date: dayjs(item.date).format('YYYY-MM-DD'), // YYYY-MM-DD
-            //             time: wt.time, // HH:mm
-            //             remark: wt.remark ?? '',
-            //             reason: wt.reason ?? '',
-            //             approveBy: wt?.approveBy ?? '',
-            //             approveByGoogleId: wt?.approveByGoogleId ?? '',
-            //             leavePeriod: leavePeriod,
-            //             absentId: wt?.absentId ?? null,
-            //             isWFH: wt?.remark.toLowerCase().includes('wfh') ?? false,
-            //             googleId: wt?.googleId ?? '',
-            //             email: wt?.email ?? '',
-            //             name: u?.name ?? '',
-            //         });
-            //     });
-            // });
-
-            // await updateCalendarConfig({ id: `${year}-${month + 1}`, data: r });
-            console.log('n:', n);
-            // const all = n.map((d) => updateWorkTime(d));
-            // Promise.all(all).then(() => {
-            //     alert('convert success');
-            //     setLoading(false);
-            // });
-        } catch (error) {
-            console.error('error:', error);
-        }
-    };
 
     if (loading) {
         return <div>Loading...</div>;
@@ -265,10 +187,8 @@ function Home() {
                         </Box> */}
                         {profile?.googleId && (
                             <UserSelfCheckIn
-                                defaultWfh={!!calendarConfig.find((f) => f.date === dayjs().format('YYYY-MM-DD'))?.isWFH}
-                                checkinToday={calendarCheckinAllList.find(
-                                    (f) => f.date === dayjs().format('DD-MM-YYYY') || f.date === dayjs().format('YYYY-MM-DD')
-                                )}
+                                // defaultWfh
+                                defaultWfh={!!calendarConfig.find((f) => f.date === dayjs().format('YYYY-MM-DD'))?.isCanWorkOutside}
                             />
                         )}
                         {(profile?.role === 'ADMIN' || profile?.role === 'STAFF') && (
@@ -437,7 +357,7 @@ function groupByDate(userCheckInDate: CheckinDate[], dateConfig: CalendarDateCon
     // const arr = dateConfig.map((cfg) => ({
     //     ...cfg,
     //     id: cfg.date,
-    //     wfhFlag: cfg.isWFH ? 1 : 0,
+    //     wfhFlag: cfg.isWorkOutside ? 1 : 0,
 
     //     userCheckinList: grouped[cfg.date] ?? [],
     // }));

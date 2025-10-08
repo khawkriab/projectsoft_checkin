@@ -308,18 +308,10 @@ export const getWorkTimeListWithStatus = ({
 };
 
 // Overload 1: no endDate → single object or null
-export function getUserWorkTime(args: {
-    startDate: string;
-    email: string;
-    endDate?: undefined;
-}): Promise<StandardResponse<UserCheckInDate> | null>;
+export function getUserWorkTime(args: { startDate: string; email: string; endDate?: undefined }): Promise<CheckinDate | null>;
 
 // Overload 2: with endDate → array or null
-export function getUserWorkTime(args: {
-    startDate: string;
-    endDate: string;
-    email: string;
-}): Promise<StandardResponse<UserCheckInDate>[] | null>;
+export function getUserWorkTime(args: { startDate: string; endDate: string; email: string }): Promise<CheckinDate[] | null>;
 
 // Implementation
 // startDate,endDate: 'YYYY-MM-DD'
@@ -334,8 +326,8 @@ export function getUserWorkTime({ startDate, endDate, email }: { startDate: stri
         const querySnapshot = await getDocs(q);
 
         // const querySnapshot = await getDocs(collection(db, 'workTimeList'));
-        const res: StandardResponse<UserCheckInDate>[] = querySnapshot.docs.map((doc) => ({
-            ...(doc.data() as UserCheckInDate),
+        const res: CheckinDate[] = querySnapshot.docs.map((doc) => ({
+            ...(doc.data() as CheckinDate),
             id: doc.id,
         }));
 

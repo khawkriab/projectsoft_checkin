@@ -47,24 +47,24 @@ function UserAbsentList({ calendar = [], afterUndate }: { calendar: CalendarDate
             email: absentData.email,
         });
 
-        const all = datesInRange.map((d) => {
-            const dateOfCalendarConfig = calendarMap.get(d)!;
-            const checkInCurrentDate = checkInList?.find((tt) => tt.date === d);
+        const all = datesInRange.map((date) => {
+            const checkInCurrentDate = checkInList?.find((tt) => tt.date === date);
 
             return updateWorkTime(
                 {
-                    date: d,
+                    date: date,
                     email: absentData.email,
                     googleId: absentData.googleId,
+                    absentId: absentData.id,
                     name: absentData.name,
+                    leavePeriod: absentData.leavePeriod,
+                    leaveType: absentData.leaveType,
+                    reason: absentData.reason ?? checkInCurrentDate?.reason ?? '',
                     time: checkInCurrentDate?.time ?? '',
-                    reason: absentData.reason ?? checkInCurrentDate?.reason,
-                    remark: checkInCurrentDate?.remark ?? '',
+                    remark: checkInCurrentDate?.remark || '',
+                    isWorkOutside: checkInCurrentDate?.isWorkOutside ?? false,
                     approveBy: profile?.name ?? '',
                     approveByGoogleId: profile?.googleId ?? '',
-                    leavePeriod: absentData.leavePeriod,
-                    absentId: absentData.id,
-                    isWFH: dateOfCalendarConfig?.isWFH ?? false,
                     status: 1,
                 },
                 checkInCurrentDate?.id

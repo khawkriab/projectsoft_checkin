@@ -6,8 +6,14 @@ import DateTime from 'components/common/DateTime/DateTime';
 import dayjs, { Dayjs } from 'dayjs';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
+import { useEffect, useState } from 'react';
+import { getCalendarConfig, getUserWorkTime } from 'context/FirebaseProvider/firebaseApi/checkinApi';
+import { useFirebase } from 'context/FirebaseProvider';
+import { CheckinDate } from 'type.global';
 
 type StatusCode = keyof typeof STATUS;
+
+type CheckinDataExtend = Record<string, (CheckinDate & { statusCode: StatusCode }) | null>;
 
 export const STATUS = {
     // TODAY: { code: 'TODAY', label: 'วันนี้', color: 'var(--status-normal-color)', bgc: 'var(--status-normal-bgc)' },
@@ -15,6 +21,7 @@ export const STATUS = {
     LATE: { code: 'LATE', label: 'สาย', color: 'var(--status-late-color)', bgc: 'var(--status-late-bgc)' },
     LEAVE: { code: 'LEAVE', label: 'ลา', color: 'var(--status-leave-color)', bgc: 'var(--status-leave-bgc)' },
     HOLIDAY: { code: 'HOLIDAY', label: 'วันหยุด', color: 'var(--status-holiday-color)', bgc: 'var(--status-holiday-bgc)' },
+    ABSENT: { code: 'ABSENT', label: 'ขาด', color: 'var(--status-miss-color)', bgc: 'var(--status-miss-bgc)' },
 } as const;
 
 const dataList: Record<string, StatusCode> = {
@@ -27,7 +34,71 @@ const dataList: Record<string, StatusCode> = {
 
 function HomeLanding() {
     const desktopSize = useMediaQuery((t) => t.breakpoints.up('lg'));
-    console.log('desktopSize:', desktopSize);
+    const { profile } = useFirebase();
+    //
+    const [checkInCalendar, setCheckInCalendar] = useState<CheckinDataExtend>({});
+
+    useEffect(() => {
+        const init = async () => {
+            if (!profile?.email) return;
+
+            const c = await getCalendarConfig({ id: dayjs().format('YYYY-M') });
+            const res = await getUserWorkTime({
+                startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
+                endDate: dayjs().format('YYYY-MM-DD'),
+                email: profile?.email,
+            });
+
+            if (!res) return;
+            const grouped: CheckinDataExtend = {};
+
+            c.forEach((data) => {
+                const td = res.find((f) => f.date === data.date);
+
+                if (dayjs(data.date).isAfter(dayjs())) return;
+
+                if (!grouped[data.date]) grouped[data.date] = null;
+                if (td) {
+                    let statusCode: StatusCode = 'NORMAL';
+                    if (td && dayjs(`${td.date} ${td.time}`).isAfter(dayjs(`${data.date} ${data.entryTime}`))) statusCode = 'LATE';
+
+                    if (td.absentId) statusCode = 'LEAVE';
+
+                    grouped[data.date] = { ...td, statusCode: statusCode };
+                } else {
+                    grouped[data.date] = {
+                        googleId: '',
+                        email: '',
+                        name: '',
+                        date: data.date,
+                        statusCode: 'ABSENT',
+                        status: 0,
+                        approveBy: '',
+                        approveByGoogleId: '',
+                    };
+                }
+            });
+            // res.forEach((data) => {
+            //     let statusCode: StatusCode = 'NORMAL';
+            //     if (data.absentId) statusCode = 'LEAVE';
+
+            //     const td = c.find((f) => f.date === data.date);
+
+            //     if (td && dayjs(`${data.date} ${data.time}`).isAfter(dayjs(`${td.date} ${td.entryTime}`))) statusCode = 'LATE';
+
+            //     const isBeforeDay = dayjs(data.date).isBefore(dayjs().add(-1, 'day'));
+            //     if (!data.remark && !data.time && isBeforeDay) statusCode = 'ABSENT';
+            //     console.log('statusCode:', statusCode);
+            //     //
+            //     if (!grouped[data.date]) grouped[data.date] = { ...data, statusCode: statusCode };
+            // });
+
+            setCheckInCalendar({ ...grouped });
+        };
+
+        init();
+    }, [profile?.email]);
+
     return (
         <Box
             sx={(theme) => ({
@@ -126,7 +197,7 @@ function HomeLanding() {
                                     })}
                                     slots={{
                                         calendarHeader: CustomCalendarHeader, // 👈 override header
-                                        day: (dayProps) => <CustomDay dataList={dataList} desktopSize={desktopSize} {...dayProps} />,
+                                        day: (dayProps) => <CustomDay dataList={checkInCalendar} desktopSize={desktopSize} {...dayProps} />,
                                     }}
                                     // slots={{
                                     //     day: (dayProps) => (
@@ -212,7 +283,7 @@ function TodayCheckIn() {
                         fontWeight: 500,
                         alignItems: { xs: 'flex-start', lg: 'center' },
                         flexDirection: { xs: 'column', md: 'row' },
-                        background: { xs: 'transparent', lg: 'linear-gradient(to right, #3572EF,#47D7EB)' },
+                        background: { xs: 'transparent', lg: 'linear-gradient(to right, #085aff,#47D7EB)' },
                     })}
                 >
                     <Box>
@@ -225,10 +296,15 @@ function TodayCheckIn() {
                     </Box>
                 </Box>
             </Grid>
-            <Grid display={'flex'} alignItems={'center'} size={{ xs: 'auto', lg: 3 }}>
-                <Button variant='contained' color='warning' sx={{ width: '100%', height: { xs: 'auto', lg: '100%' } }}>
+            <Grid size={{ xs: 'auto', lg: 3 }} display={'flex'} flexWrap={'wrap'} gap={'6px'}>
+                {/* <Box width={'100%'} flex={'auto'}> */}
+                <Button variant='contained' color='secondary' sx={{ width: '100%', height: { xs: 'auto' } }}>
+                    ลงชื่อ WFH
+                </Button>
+                <Button variant='contained' color='warning' sx={{ width: '100%', height: { xs: 'auto' } }}>
                     check-in
                 </Button>
+                {/* </Box> */}
             </Grid>
         </Grid>
     );
@@ -333,7 +409,7 @@ function MenuBox({ children, sx, ...props }: { children: React.ReactNode } & Box
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    boxShadow: '0 0 10px 5px #bababa3b',
+                    boxShadow: '0 0 10px 5px #a0a0a03a',
                     borderRadius: '6px',
                     overflow: 'hidden',
                     backgroundColor: '#ffffff',
@@ -461,10 +537,10 @@ function CustomDay({
     dataList,
     desktopSize,
     ...props
-}: PickersDayProps & { dataList: Record<string, StatusCode>; desktopSize?: boolean }) {
+}: PickersDayProps & { dataList: CheckinDataExtend; desktopSize?: boolean }) {
     const key = day.format('YYYY-MM-DD');
-    const statusCode = dataList[key];
-    const status = statusCode ? STATUS[statusCode] : null;
+    const data = dataList[key];
+    const status = data?.statusCode ? STATUS[data.statusCode] : null;
 
     return (
         <Box

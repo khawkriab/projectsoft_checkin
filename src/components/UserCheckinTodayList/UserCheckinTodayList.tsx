@@ -52,12 +52,11 @@ function UserCheckinTodayList({ dateList, afterUndate }: { dateList: CalendarDat
                 approveByGoogleId: profile?.googleId ?? '',
                 // leavePeriod: res?.leavePeriod ||undefined,
                 // absentId: res?.absentId ||undefined,
-                // isWFH: data?.remark?.toLowerCase().includes('wfh') ?? false,
+                // isWorkOutside: data?.remark?.toLowerCase().includes('wfh') ?? false,
             };
 
             try {
                 await updateWorkTime(payload, res?.id);
-                await afterUndate();
             } catch (error) {
                 console.error('error:', error);
             }

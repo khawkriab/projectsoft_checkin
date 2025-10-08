@@ -64,7 +64,7 @@ export type UserCheckInDate = Pick<BaseProfile, 'googleId' | 'email' | 'name'> &
         leavePeriod: LeavePeriodsType | null;
         leaveType?: LeaveTypes | null;
         absentId: string | null;
-        isWFH?: boolean;
+        isWorkOutside?: boolean;
     };
 
 export type UserCheckinList = Pick<
@@ -102,7 +102,7 @@ export type CalendarDateConfig = FirebaseQuery & {
     date: string; // YYYY-MM-DD
     isOffDay: boolean;
     isHalfDay: boolean;
-    isWFH: boolean;
+    isCanWorkOutside: boolean;
     remark?: string;
     entryTime: string; // HH:mm
     exitTime?: string; // HH:mm
@@ -129,6 +129,7 @@ export type CheckinDate = Pick<BaseProfile, 'googleId' | 'email' | 'name'> &
         time?: string;
         remark?: string;
         reason?: string;
+        isWorkOutside?: boolean;
         isWFH?: boolean;
         // leave info
         absentId?: string | null;

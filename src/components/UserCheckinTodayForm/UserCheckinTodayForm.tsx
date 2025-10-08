@@ -56,9 +56,10 @@ function UserCheckinTodayForm({
                 reason: res?.reason ?? '',
                 approveBy: profile?.name ?? '',
                 approveByGoogleId: profile?.googleId ?? '',
-                leavePeriod: res?.leavePeriod || undefined,
-                absentId: res?.absentId || undefined,
-                isWFH: updateDataForm?.remark?.toLowerCase().includes('wfh') ?? false,
+                leavePeriod: res?.leavePeriod || null,
+                leaveType: res?.leaveType || null,
+                absentId: res?.absentId || null,
+                isWorkOutside: updateDataForm?.remark?.toLowerCase().includes('wfh') ?? false,
                 status: 1,
             };
 

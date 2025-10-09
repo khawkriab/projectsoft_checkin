@@ -1,15 +1,39 @@
-import { ArrowBack, ArrowForward, ArrowBackIosNewRounded, ArrowForwardIosRounded } from '@mui/icons-material';
-import { AppBar, Box, BoxProps, Button, CardMedia, Grid, IconButton, Stack, Toolbar, Typography, useMediaQuery } from '@mui/material';
+import { CheckCircle, ArrowBackIosNewRounded, ArrowForwardIosRounded } from '@mui/icons-material';
+import {
+    AppBar,
+    Avatar,
+    Box,
+    BoxProps,
+    Button,
+    CardMedia,
+    Grid,
+    IconButton,
+    Modal,
+    Stack,
+    styled,
+    TextField,
+    Toolbar,
+    Typography,
+    useMediaQuery,
+} from '@mui/material';
 import { DateCalendar, LocalizationProvider, PickersCalendarHeaderProps, PickersDay, PickersDayProps } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import DateTime from 'components/common/DateTime/DateTime';
 import dayjs, { Dayjs } from 'dayjs';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
-import { useEffect, useState } from 'react';
-import { getCalendarConfig, getUserWorkTime } from 'context/FirebaseProvider/firebaseApi/checkinApi';
+import { useEffect, useRef, useState } from 'react';
+import { getCalendarConfig, getUserWorkTime, updateWorkTime } from 'context/FirebaseProvider/firebaseApi/checkinApi';
 import { useFirebase } from 'context/FirebaseProvider';
-import { CheckinDate } from 'type.global';
+import { CheckinDate, LatLng } from 'type.global';
+import { GoogleMap, Marker, useLoadScript } from '@react-google-maps/api';
+import { AdvancedMarker } from 'components/common/GoogleMaps';
+import { css, keyframes } from '@emotion/react';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import isWithinRadius from 'helper/checkDistance';
+import ApartmentIcon from '@mui/icons-material/Apartment';
+import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
+import { deviceDetect } from 'react-device-detect';
 
 type StatusCode = keyof typeof STATUS;
 
@@ -32,11 +56,15 @@ const dataList: Record<string, StatusCode> = {
     '2025-09-11': 'HOLIDAY',
 };
 
+const libraries = ['places', 'marker'];
+
 function HomeLanding() {
     const desktopSize = useMediaQuery((t) => t.breakpoints.up('lg'));
     const { profile } = useFirebase();
     //
     const [checkInCalendar, setCheckInCalendar] = useState<CheckinDataExtend>({});
+    const [dateSelect, setDateSelect] = useState(dayjs().format('YYYY-MM-DD'));
+    //
 
     useEffect(() => {
         const init = async () => {
@@ -144,7 +172,7 @@ function HomeLanding() {
             <Box className='body-content' padding={'12px'}>
                 {/* date */}
                 {!desktopSize && <TodayCheckIn />}
-                <Grid container spacing={2} direction={{ xs: 'column', lg: 'row-reverse' }}>
+                <Grid container spacing={2} direction={{ xs: 'column', lg: 'row' }}>
                     {/* calendar */}
                     <Grid size={{ xs: 12, lg: 6 }}>
                         <Box
@@ -153,6 +181,7 @@ function HomeLanding() {
                                 backgroundColor: { xs: 'transparent', lg: '#ffffff' },
                                 overflow: { xs: 'visible', lg: 'hidden' },
                                 borderRadius: '12px',
+                                mb: '24px',
                             }}
                         >
                             <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -229,21 +258,12 @@ function HomeLanding() {
                                     //     setMonth(m.get('months'));
                                     //     setYears(m.get('years'));
                                     // }}
-                                    // onChange={(newValue) => {
-                                    //     const date = newValue?.get('date') ?? 0;
-                                    //     if (date && profile?.role === 'ADMIN') {
-                                    //         let n = [...datesSelected];
-                                    //         const index = n.findIndex((f) => f.date === date);
-
-                                    //         if (index >= 0) {
-                                    //             n.splice(index, 1);
-                                    //         } else {
-                                    //             n.push({ date: date, wfhFlag: false, userCheckinList: [] });
-                                    //         }
-
-                                    //         setDatesSelected([...n]);
-                                    //     }
-                                    // }}
+                                    onChange={(newValue) => {
+                                        const date = newValue?.format('YYYY-MM-DD');
+                                        if (date) {
+                                            setDateSelect(date);
+                                        }
+                                    }}
                                 />
                             </LocalizationProvider>
                             {/* status */}
@@ -255,6 +275,7 @@ function HomeLanding() {
                                 <StatusBox color='var(--status-miss-color)' bgc='var(--status-miss-bgc)' label='ขาด' />
                             </Box>
                         </Box>
+                        <CheckinHistory desktopSize={desktopSize} dateSelect={dateSelect} data={checkInCalendar} />
                     </Grid>
                     {/* menu */}
                     <Grid size={{ xs: 12, lg: 6 }}>
@@ -266,47 +287,295 @@ function HomeLanding() {
     );
 }
 
-function TodayCheckIn() {
+const flip = keyframes`
+  0% { transform: rotateY(0deg) scale(0.7); }
+  50% { transform: rotateY(360deg) scale(1.2); }
+  100% { transform: rotateY(720deg) scale(1); }
+`;
+
+function FlipIcon() {
+    const [flipping, setFlipping] = useState(false);
+
+    const handleClick = () => {
+        setFlipping(true);
+        setTimeout(() => setFlipping(false), 1000);
+    };
+
     return (
-        <Grid container spacing={1} mb={'12px'} height={{ xs: 'auto', lg: '100px' }}>
-            <Grid size={{ xs: 'grow', lg: 9 }}>
-                <Box
-                    sx={(theme) => ({
-                        borderRadius: '6px',
-                        padding: '12px',
-                        height: '100%',
-                        display: 'flex',
-                        justifyContent: { xs: 'flex-start', lg: 'center' },
-                        gap: '2px 12px',
-                        fontSize: theme.typography.h5.fontSize,
-                        color: theme.palette.primary.contrastText,
-                        fontWeight: 500,
-                        alignItems: { xs: 'flex-start', lg: 'center' },
-                        flexDirection: { xs: 'column', md: 'row' },
-                        background: { xs: 'transparent', lg: 'linear-gradient(to right, #085aff,#47D7EB)' },
-                    })}
-                >
-                    <Box>
-                        <span>วันนี้ </span>
-                        <DateTime show='date' />
+        <IconButton
+            onClick={handleClick}
+            sx={{
+                perspective: '1000px',
+                '& svg': {
+                    animation: `${flip} 1s ease-in-out`,
+                },
+            }}
+        >
+            <CheckCircle sx={{ fontSize: '300px' }} color='success' />
+        </IconButton>
+    );
+}
+
+function logError(error: GeolocationPositionError) {
+    switch (error.code) {
+        case error.PERMISSION_DENIED:
+            return 'User denied the request for Geolocation.';
+        case error.POSITION_UNAVAILABLE:
+            return 'Location information is unavailable.';
+        case error.TIMEOUT:
+            return 'The request to get user location timed out.';
+        default:
+            return 'An unknown error';
+    }
+}
+
+function TodayCheckIn() {
+    const target: LatLng = { lat: 16.455647329319532, lng: 102.81962779039188 };
+    const withinRang = 100;
+    const parseData = dayjs().format('YYYY-MM-DD');
+
+    //
+    const { profile } = useFirebase();
+    const watchId = useRef<number>(0);
+    const [open, setOpen] = useState(false);
+    const [checkAvail, setCheckAvail] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [currentLocation, setCurrentLocation] = useState<LatLng | null>(null);
+    const [userCheckinToday, setUserCheckinToday] = useState<CheckinDate | null | undefined>(undefined);
+
+    const { isLoaded, loadError } = useLoadScript({
+        googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY as string,
+        libraries: libraries as any,
+    });
+
+    //
+    const onCheckin = async (isWorkOutside = false, remark?: string, latlng?: LatLng) => {
+        if (profile) {
+            const res = await getUserWorkTime({ startDate: parseData, email: profile.email });
+
+            const payload: CheckinDate = {
+                date: parseData,
+                email: profile.email,
+                googleId: profile.googleId,
+                name: profile.name,
+                time: dayjs().format('HH:mm'),
+                remark: remark ?? res?.remark ?? '',
+                reason: res?.reason ?? '',
+                approveBy: profile?.name ?? '',
+                approveByGoogleId: profile?.googleId ?? '',
+                leavePeriod: res?.leavePeriod || null,
+                absentId: res?.absentId || null,
+                isWorkOutside: isWorkOutside,
+                status: 99,
+                device: deviceDetect(undefined),
+                latlng: latlng || null,
+            };
+
+            try {
+                await updateWorkTime(payload, res?.id);
+                // getUserCheckinToday();
+
+                // openNotify('success', 'updated successfully');
+            } catch (error) {
+                console.error('error:', error);
+            }
+        }
+
+        setCheckAvail(false);
+        setIsLoading(false);
+    };
+
+    const getUserCheckinToday = async () => {
+        try {
+            const res = await getUserWorkTime({ startDate: parseData, email: profile?.email || '' });
+            console.log('res:', res);
+
+            if (res) {
+                setUserCheckinToday({ ...res });
+            } else {
+                setUserCheckinToday(null);
+            }
+        } catch (error) {
+            console.error('error:', error);
+            setUserCheckinToday(null);
+        }
+    };
+
+    useEffect(() => {
+        if (checkAvail) {
+            watchId.current = navigator.geolocation.watchPosition(
+                (position) => {
+                    console.log('watchPosition');
+                    const { latitude, longitude } = position.coords;
+                    const current = { lat: latitude, lng: longitude };
+                    const within = isWithinRadius(current, target, withinRang); // in meters
+                    setCurrentLocation(current);
+                    // setIsWithin(within);
+                    // onMatchTarget(within, current);
+                    console.log('within:', within);
+                    if (within) {
+                        navigator.geolocation.clearWatch(watchId.current);
+                        onCheckin();
+                    }
+                },
+                (error) => {
+                    console.error('Error getting location:', error);
+                    // onErrorLocation(logError(error));
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000, // max time to wait for *each* update
+                    maximumAge: 0, // don’t reuse cached position
+                }
+            );
+        }
+
+        return () => navigator.geolocation.clearWatch(watchId.current);
+    }, [checkAvail]);
+
+    useEffect(() => {
+        if (profile) getUserCheckinToday();
+    }, [profile]);
+
+    const handleOpen = () => {
+        setOpen(true);
+        setCheckAvail(true);
+    };
+    const handleClose = () => setOpen(false);
+
+    return (
+        <Box component={'form'}>
+            <Modal open={open} onClose={handleClose} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <Box>
+                    <Box
+                        sx={{
+                            bgcolor: '#fff',
+                            borderRadius: '100%',
+                            width: '300px',
+                            height: '300px',
+                            overflow: 'hidden',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            border: '4px solid #878787',
+                        }}
+                    >
+                        {isLoaded && checkAvail && (
+                            <GoogleMap
+                                options={{
+                                    mapId: 'ab108a809fd161a2fadf6a75',
+                                    disableDefaultUI: true,
+                                }}
+                                mapContainerStyle={{
+                                    width: '100%',
+                                    height: '400px',
+                                }}
+                                zoom={17}
+                                center={target}
+                                onLoad={(map) => {
+                                    new google.maps.Circle({
+                                        map,
+                                        center: target,
+                                        radius: withinRang, // in meters
+                                        fillColor: '#FF0000',
+                                        fillOpacity: 0.2,
+                                        strokeColor: '#FF0000',
+                                        strokeOpacity: 0.7,
+                                        strokeWeight: 2,
+                                    });
+                                }}
+                            >
+                                <AdvancedMarker position={target} label='Target' imgUrl='images/apartmentIcon.svg' />
+                                {currentLocation && (
+                                    <AdvancedMarker
+                                        position={currentLocation}
+                                        label='You'
+                                        imgUrl='images/personPinCircleIcon.svg'
+                                        color='#00ff48'
+                                    />
+                                )}
+                            </GoogleMap>
+                        )}
+                        {!isLoading && !checkAvail && <FlipIcon />}
                     </Box>
-                    <Box>
-                        <span>เวลา </span>
-                        <DateTime show='time' />
+                    <Box
+                        sx={(theme) => ({
+                            mt: 1,
+                            textAlign: 'center',
+                            color: theme.palette.primary.contrastText,
+                            fontSize: theme.typography.h5,
+                        })}
+                    >
+                        กำลังค้นหาตำแหน่ง....
                     </Box>
                 </Box>
-            </Grid>
-            <Grid size={{ xs: 'auto', lg: 3 }} display={'flex'} flexWrap={'wrap'} gap={'6px'}>
-                {/* <Box width={'100%'} flex={'auto'}> */}
-                <Button variant='contained' color='secondary' sx={{ width: '100%', height: { xs: 'auto' } }}>
-                    ลงชื่อ WFH
-                </Button>
-                <Button variant='contained' color='warning' sx={{ width: '100%', height: { xs: 'auto' } }}>
-                    check-in
-                </Button>
-                {/* </Box> */}
-            </Grid>
-        </Grid>
+            </Modal>
+            <Box display={'flex'} flexDirection={{ xs: 'column', lg: 'column' }}>
+                <Grid container spacing={1} mb={'12px'} height={{ xs: 'auto', lg: '100px' }}>
+                    <Grid size={{ xs: 'grow', lg: 9 }}>
+                        <Box
+                            sx={(theme) => ({
+                                borderRadius: '6px',
+                                padding: '12px',
+                                height: '100%',
+                                display: 'flex',
+                                justifyContent: { xs: 'flex-start', lg: 'center' },
+                                gap: '2px 12px',
+                                fontSize: theme.typography.h5.fontSize,
+                                color: theme.palette.primary.contrastText,
+                                fontWeight: 500,
+                                alignItems: { xs: 'flex-start', lg: 'center' },
+                                flexDirection: { xs: 'column', md: 'row' },
+                                background: { xs: 'transparent', lg: 'linear-gradient(to right, #085aff,#47D7EB)' },
+                            })}
+                        >
+                            <Box>
+                                <span>วันนี้ </span>
+                                <DateTime show='date' />
+                            </Box>
+                            <Box>
+                                <span>เวลา </span>
+                                <DateTime show='time' />
+                            </Box>
+                        </Box>
+                    </Grid>
+                    <Grid size={{ xs: 'auto', lg: 3 }} display={'flex'} flexWrap={'wrap'} gap={'6px'}>
+                        {userCheckinToday === null && (
+                            <>
+                                <Button type='submit' variant='contained' color='secondary' sx={{ width: '100%', height: { xs: 'auto' } }}>
+                                    ลงชื่อ WFH
+                                </Button>
+                                <Button
+                                    variant='contained'
+                                    color='warning'
+                                    sx={{ width: '100%', height: { xs: 'auto' } }}
+                                    onClick={handleOpen}
+                                >
+                                    check-in
+                                </Button>
+                            </>
+                        )}
+                        {userCheckinToday && (
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, marginBottom: 2, marginTop: 2 }}>
+                                {/* <Box>
+                                    เวลาเข้างาน: {dayjs(`${userCheckinToday.date} ${userCheckinToday.time}`).format('DD-MM-YYYY HH:mm')}
+                                </Box> */}
+                                <Box
+                                    sx={(theme) => ({
+                                        padding: '2px 4px',
+                                        borderRadius: 1,
+                                        color: theme.palette.success.contrastText,
+                                        backgroundColor: Number(userCheckinToday.status) === 99 ? '#ff6f00' : theme.palette.success.main,
+                                    })}
+                                >
+                                    สถานะ: {Number(userCheckinToday.status) === 99 ? 'รอ' : 'อนุมัติแล้ว'}
+                                </Box>
+                            </Box>
+                        )}
+                    </Grid>
+                </Grid>
+            </Box>
+        </Box>
     );
 }
 
@@ -333,27 +602,42 @@ function RemainingAmountOfLeave() {
     );
 }
 
-function CheckinHistory({ desktopSize }: { desktopSize: boolean }) {
+function CheckinHistory({ desktopSize, data, dateSelect }: { desktopSize: boolean; data: CheckinDataExtend; dateSelect: string }) {
+    const arr = Object.values(data);
+    const f = arr.find((r) => r?.date === dateSelect);
+    const status = f ? STATUS[f.statusCode] : null;
+    // console.log('arr:', arr);
+    //    {status && !outsideCurrentMonth && (
+    //             <StatusBox
+    //                 label={status.label}
+    //                 color={status.color}
+    //                 bgc={status.bgc}
+    //                 showBackground={desktopSize}
+    //                 showLabel={desktopSize}
+    //             />
+    //         )}
     return (
         <Stack>
-            <MenuBox minHeight={`${50 * 2}px`} marginBottom={'12px'}>
-                <Box>
-                    <Typography variant='h6' sx={(theme) => ({ color: theme.palette.primary.light, fontWeight: 500 })}>
-                        12 สิงหาคม 2567
-                    </Typography>
-                    <Typography>เข้า: --:-- ออก: --:--</Typography>
-                </Box>
-                <Box
-                    sx={{
-                        color: 'var(--status-holiday-color)',
-                        bgcolor: 'var(--status-holiday-bgc)',
-                        padding: '6px 12px',
-                        borderRadius: '6px',
-                    }}
-                >
-                    วันหยุด
-                </Box>
-            </MenuBox>
+            {f && (
+                <MenuBox minHeight={`${50 * 2}px`} marginBottom={'12px'}>
+                    <Box>
+                        <Typography variant='h6' sx={(theme) => ({ color: theme.palette.primary.light, fontWeight: 500 })}>
+                            {dayjs(f.date).format('LL')}
+                        </Typography>
+                        {f.time && <Typography>เข้า: {f.time}</Typography>}
+                    </Box>
+                    <Box
+                        sx={{
+                            color: status?.color,
+                            bgcolor: status?.bgc,
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                        }}
+                    >
+                        {status?.label}
+                    </Box>
+                </MenuBox>
+            )}
             {desktopSize && (
                 <>
                     <MenuBox minHeight={`${50 * 2}px`} marginBottom={'12px'}>
@@ -383,7 +667,6 @@ function MenuList({ desktopSize }: { desktopSize: boolean }) {
         <Box>
             {desktopSize && <TodayCheckIn />}
             <Stack spacing={1} direction={{ xs: 'column', lg: 'column-reverse' }}>
-                <CheckinHistory desktopSize={desktopSize} />
                 <Grid container spacing={1}>
                     <Grid size={{ xs: 8, lg: 6 }} display={'flex'}>
                         <RemainingAmountOfLeave />
@@ -519,7 +802,7 @@ function CustomCalendarHeader(props: PickersCalendarHeaderProps) {
             </IconButton>
 
             {/* Month & Year (center) */}
-            <Typography variant='h5' fontWeight={600}>
+            <Typography variant='h5' fontWeight={600} sx={(theme) => ({ color: { xs: theme.palette.primary.contrastText, lg: '#000' } })}>
                 {currentMonth.format('MMMM YYYY')}
             </Typography>
 
@@ -575,6 +858,7 @@ export default HomeLanding;
 
 // New component for AppBar
 function HomeAppBar() {
+    const { authLoading, isSignedIn, profile, signInWithGoogle, signOutUser } = useFirebase();
     return (
         <AppBar
             position='relative'
@@ -615,7 +899,30 @@ function HomeAppBar() {
                             <Typography variant='h5'>Projectsoft Check-In</Typography>
                         </Box>
                     </Box>
-                    <Box>login</Box>
+
+                    <Box alignItems={'center'} sx={{ display: 'flex', gap: 1 }}>
+                        {authLoading ? (
+                            'Loading...'
+                        ) : (
+                            <>
+                                {isSignedIn ? (
+                                    <>
+                                        {/* <Avatar />
+                                        <Typography>{profile?.fullName}</Typography> */}
+                                        <Button variant='contained' color='error' onClick={signOutUser}>
+                                            Logout
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Button variant='contained' color='secondary' onClick={signInWithGoogle}>
+                                            Signin with google
+                                        </Button>
+                                    </>
+                                )}
+                            </>
+                        )}
+                    </Box>
                 </Box>
             </Toolbar>
         </AppBar>

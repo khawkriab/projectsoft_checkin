@@ -331,7 +331,7 @@ function logError(error: GeolocationPositionError) {
 
 function TodayCheckIn() {
     const target: LatLng = { lat: 16.455647329319532, lng: 102.81962779039188 };
-    const withinRang = 100;
+    const withinRang = 20;
     const parseData = dayjs().format('YYYY-MM-DD');
 
     //
@@ -373,7 +373,7 @@ function TodayCheckIn() {
 
             try {
                 await updateWorkTime(payload, res?.id);
-                // getUserCheckinToday();
+                getUserCheckinToday();
 
                 // openNotify('success', 'updated successfully');
             } catch (error) {
@@ -383,6 +383,10 @@ function TodayCheckIn() {
 
         setCheckAvail(false);
         setIsLoading(false);
+
+        setTimeout(() => {
+            setOpen(false);
+        }, 1000);
     };
 
     const getUserCheckinToday = async () => {

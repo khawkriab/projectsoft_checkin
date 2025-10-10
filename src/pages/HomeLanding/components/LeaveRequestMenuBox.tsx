@@ -1,6 +1,4 @@
 import {
-    Alert,
-    AlertColor,
     Box,
     Button,
     Drawer,
@@ -8,32 +6,25 @@ import {
     FormLabel,
     Grid,
     IconButton,
-    Slide,
-    Snackbar,
-    Table,
-    TableBody,
-    TableContainer,
-    TableRow,
     TextField,
     ToggleButton,
     ToggleButtonGroup,
     Typography,
 } from '@mui/material';
-import { TableBodyCell } from 'components/common/MuiTable';
-import CloseIcon from '@mui/icons-material/Close';
-import { useEffect, useMemo, useState } from 'react';
+import { MenuBox } from './MenuBox';
+import { Close, MailOutline } from '@mui/icons-material';
+import { useMemo, useState } from 'react';
 import { LocalizationProvider, MobileDatePicker, MobileDatePickerProps } from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
-import 'dayjs/locale/th';
-import { AbsentData, FirebaseQuery, LeavePeriodsType, LeaveTypes } from 'type.global';
-import { createAbsent, getUserAbsent } from 'context/FirebaseProvider/firebaseApi/absentApi';
+import { LeavePeriodsType, LeaveTypes } from 'type.global';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { useFirebase } from 'context/FirebaseProvider';
-import { getLeavePeriodLabel, getLeaveType, leavePeriods, leaveTypes } from 'helper/leaveType';
+import { createLeave, getUserLeave } from 'context/FirebaseProvider/firebaseApi/leaveApi';
+import { leavePeriods, leaveTypes } from 'helper/leaveType';
 
 dayjs.locale('th');
 
-type AbsentForm = {
+type LeaveForm = {
     leaveType?: LeaveTypes;
     leavePeriod?: LeavePeriodsType;
     startDate: Dayjs | null;
@@ -43,6 +34,9 @@ type AbsentForm = {
 
 function CustomMobileDatePicker(props: MobileDatePickerProps) {
     const [showDialog, setShowDialog] = useState(false);
+
+    //
+
     return (
         <MobileDatePicker
             {...props}
@@ -70,34 +64,37 @@ function CustomMobileDatePicker(props: MobileDatePickerProps) {
     );
 }
 
-function Absent() {
+export function LeaveRequestMenuBox() {
     const { profile } = useFirebase();
     //
     const [open, setOpen] = useState(false);
     const [isSending, setIsSending] = useState(false);
-    const [absentList, setAbsentList] = useState<(FirebaseQuery & AbsentData)[]>([]);
-    const [alertOptions, setAlertOptions] = useState({
-        message: '',
-        color: '',
-        open: false,
-    });
-    const [absentForm, setAbsentForm] = useState<AbsentForm>({
+    const [leaveForm, setLeaveForm] = useState<LeaveForm>({
         leaveType: undefined,
         leavePeriod: undefined,
         startDate: null,
         endDate: null,
         reason: '',
     });
+    //
 
+    // const getLeave = async (googleId: string) => {
+    //     try {
+    //         const res = await getUserLeave(googleId);
+    //         setLeaveList([...res]);
+    //     } catch (error) {
+    //         console.log('error:', error);
+    //     }
+    // };
     const onSubmit = async (e: React.ChangeEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         if (
-            !absentForm.leaveType ||
-            !absentForm.leavePeriod ||
-            !absentForm.leaveType ||
-            !absentForm.startDate ||
-            !absentForm.endDate ||
+            !leaveForm.leaveType ||
+            !leaveForm.leavePeriod ||
+            !leaveForm.leaveType ||
+            !leaveForm.startDate ||
+            !leaveForm.endDate ||
             !profile?.email ||
             !profile?.googleId
         )
@@ -105,92 +102,68 @@ function Absent() {
 
         setIsSending(true);
         try {
-            await createAbsent({
+            await createLeave({
                 name: profile.name,
                 email: profile.email,
                 googleId: profile.googleId,
-                leaveType: absentForm.leaveType,
-                leavePeriod: absentForm.leavePeriod,
-                startDate: absentForm.startDate.format('YYYY-MM-DD'),
-                endDate: absentForm.endDate.format('YYYY-MM-DD'),
-                reason: absentForm.reason,
+                leaveType: leaveForm.leaveType,
+                leavePeriod: leaveForm.leavePeriod,
+                startDate: leaveForm.startDate.format('YYYY-MM-DD'),
+                endDate: leaveForm.endDate.format('YYYY-MM-DD'),
+                reason: leaveForm.reason,
                 status: 'WAITING',
                 approveBy: '',
                 approveByGoogleId: '',
             });
 
-            await getAbsent(profile.googleId);
+            // await getLeave(profile.googleId);
 
-            setAlertOptions((prev) => ({
-                ...prev,
-                message: 'success send',
-                color: 'success',
-                open: true,
-            }));
+            // setAlertOptions((prev) => ({
+            //     ...prev,
+            //     message: 'success send',
+            //     color: 'success',
+            //     open: true,
+            // }));
         } catch (error) {
             console.error('error:', error);
 
-            setAlertOptions((prev) => ({
-                ...prev,
-                message: 'error',
-                color: 'error',
-                open: true,
-            }));
+            // setAlertOptions((prev) => ({
+            //     ...prev,
+            //     message: 'error',
+            //     color: 'error',
+            //     open: true,
+            // }));
         }
         setIsSending(false);
         setOpen(false);
     };
 
     const isOneDay = useMemo(() => {
-        const isRangeValid = absentForm.startDate && absentForm.endDate && absentForm.endDate.diff(absentForm.startDate, 'day') > 0;
+        const isRangeValid = leaveForm.startDate && leaveForm.endDate && leaveForm.endDate.diff(leaveForm.startDate, 'day') > 0;
         if (!isRangeValid) {
-            setAbsentForm((prev) => ({ ...prev, leavePeriod: 'FULL_DAY' }));
+            setLeaveForm((prev) => ({ ...prev, leavePeriod: 'FULL_DAY' }));
         }
 
         return !isRangeValid;
-    }, [absentForm.startDate, absentForm.endDate]);
-
-    const getAbsent = async (googleId: string) => {
-        try {
-            const res = await getUserAbsent(googleId);
-            setAbsentList([...res]);
-        } catch (error) {
-            console.log('error:', error);
-        }
-    };
-
-    useEffect(() => {
-        if (profile?.googleId) getAbsent(profile.googleId);
-    }, [profile?.googleId]);
+    }, [leaveForm.startDate, leaveForm.endDate]);
 
     return (
-        <Box>
-            <Box display={'flex'} justifyContent={'end'}>
-                <Button variant='contained' color='error' onClick={() => setOpen(true)}>
-                    <Typography variant='subtitle1'>เขียนใบลา</Typography>
-                </Button>
-            </Box>
-            <Typography variant='h5'>ประวัติการลา</Typography>
-            <hr style={{ width: '100%', margin: '12px 0 24px' }} />
-            <Box>
-                <TableContainer>
-                    <Table>
-                        <TableBody>
-                            {absentList.map((m) => (
-                                <TableRow key={m.id}>
-                                    <TableBodyCell>{`${dayjs(m.startDate).format('DD/MM/YYYY')} - ${dayjs(m.endDate).format(
-                                        'DD/MM/YYYY'
-                                    )}`}</TableBodyCell>
-                                    <TableBodyCell>{`${getLeaveType(m.leaveType)} - ${getLeavePeriodLabel(m.leavePeriod)}`}</TableBodyCell>
-                                    <TableBodyCell>{m.reason}</TableBodyCell>
-                                    <TableBodyCell>{m.status}</TableBodyCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            </Box>
-
+        <>
+            <MenuBox
+                onClick={() => setOpen(true)}
+                sx={(theme) => ({
+                    minHeight: '50px',
+                    flex: 'auto',
+                    width: { xs: '100%', lg: '50%' },
+                    bgcolor: '#FF5252',
+                    color: theme.palette.primary.contrastText,
+                    justifyContent: 'center',
+                    gap: '6px',
+                })}
+            >
+                <Typography>เขียนใบลา</Typography>
+                <MailOutline />
+            </MenuBox>
             <Drawer
                 anchor='right'
                 slotProps={{
@@ -210,7 +183,7 @@ function Absent() {
                 <Box display={'flex'} justifyContent={'space-between'}>
                     <Typography variant='h5'>ใบลา</Typography>
                     <IconButton onClick={() => setOpen(false)}>
-                        <CloseIcon color='error' />
+                        <Close color='error' />
                     </IconButton>
                 </Box>
                 <hr style={{ width: '100%', margin: '12px 0 24px' }} />
@@ -222,14 +195,14 @@ function Absent() {
                                     <CustomMobileDatePicker
                                         label='วันเริ่มต้น'
                                         minDate={dayjs()}
-                                        maxDate={absentForm.endDate || undefined}
+                                        maxDate={leaveForm.endDate || undefined}
                                         onAccept={(newValue) => {
-                                            setAbsentForm((prev) => ({ ...prev, startDate: newValue }));
+                                            setLeaveForm((prev) => ({ ...prev, startDate: newValue }));
                                         }}
                                         slotProps={{
                                             textField: {
                                                 required: true,
-                                                error: !absentForm.startDate,
+                                                error: !leaveForm.startDate,
                                             },
                                         }}
                                     />
@@ -239,29 +212,29 @@ function Absent() {
                                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                                     <CustomMobileDatePicker
                                         label='วันสิ้นสุด'
-                                        // value={absentForm.endDate}
-                                        minDate={absentForm.startDate || undefined}
+                                        // value={leaveForm.endDate}
+                                        minDate={leaveForm.startDate || undefined}
                                         onAccept={(newValue) => {
-                                            setAbsentForm((prev) => ({ ...prev, endDate: newValue }));
+                                            setLeaveForm((prev) => ({ ...prev, endDate: newValue }));
                                         }}
                                         slotProps={{
                                             textField: {
                                                 required: true,
-                                                error: !absentForm.endDate,
+                                                error: !leaveForm.endDate,
                                             },
                                         }}
                                     />
                                 </LocalizationProvider>
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>
-                                <FormControl required fullWidth error={!absentForm.leaveType}>
+                                <FormControl required fullWidth error={!leaveForm.leaveType}>
                                     <FormLabel sx={{ fontSize: '0.9rem' }}>ประเภทการลา</FormLabel>
                                     <ToggleButtonGroup
                                         fullWidth
-                                        value={absentForm.leaveType}
+                                        value={leaveForm.leaveType}
                                         exclusive
                                         onChange={(_, value) => {
-                                            setAbsentForm((prev) => ({ ...prev, leaveType: value }));
+                                            setLeaveForm((prev) => ({ ...prev, leaveType: value }));
                                         }}
                                         color='primary'
                                     >
@@ -274,15 +247,15 @@ function Absent() {
                                 </FormControl>
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>
-                                <FormControl required fullWidth error={!absentForm.leavePeriod}>
+                                <FormControl required fullWidth error={!leaveForm.leavePeriod}>
                                     <FormLabel sx={{ fontSize: '0.9rem' }}>ช่วงเวลา</FormLabel>
                                     <ToggleButtonGroup
                                         fullWidth
-                                        value={absentForm.leavePeriod}
+                                        value={leaveForm.leavePeriod}
                                         disabled={!isOneDay}
                                         exclusive
                                         onChange={(_, value) => {
-                                            setAbsentForm((prev) => ({ ...prev, leavePeriod: value }));
+                                            setLeaveForm((prev) => ({ ...prev, leavePeriod: value }));
                                         }}
                                         color='primary'
                                     >
@@ -300,8 +273,8 @@ function Absent() {
                                     label='เหตุผลการลา'
                                     multiline
                                     rows={4}
-                                    value={absentForm.reason}
-                                    onChange={(e) => setAbsentForm((prev) => ({ ...prev, reason: e.target.value }))}
+                                    value={leaveForm.reason}
+                                    onChange={(e) => setLeaveForm((prev) => ({ ...prev, reason: e.target.value }))}
                                     fullWidth
                                 />
                             </Grid>
@@ -314,38 +287,6 @@ function Absent() {
                     </Box>
                 </Box>
             </Drawer>
-            <Snackbar
-                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-                slots={{ transition: Slide }}
-                open={alertOptions.open}
-                autoHideDuration={6000}
-                onClose={() =>
-                    setAlertOptions((prev) => ({
-                        ...prev,
-                        message: '',
-                        color: '',
-                        open: false,
-                    }))
-                }
-            >
-                <Alert
-                    onClose={() =>
-                        setAlertOptions((prev) => ({
-                            ...prev,
-                            message: '',
-                            color: '',
-                            open: false,
-                        }))
-                    }
-                    severity={alertOptions.color as AlertColor}
-                    variant='filled'
-                    sx={{ width: '100%' }}
-                >
-                    {alertOptions.message}
-                </Alert>
-            </Snackbar>
-        </Box>
+        </>
     );
 }
-
-export default Absent;

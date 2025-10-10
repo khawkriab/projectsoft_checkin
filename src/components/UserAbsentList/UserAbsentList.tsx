@@ -1,5 +1,5 @@
 import { Box, Button, Paper, Table, TableBody, TableContainer, TableHead, TableRow } from '@mui/material';
-import { getAbsentList, updateAbsent } from 'context/FirebaseProvider/firebaseApi/absentApi';
+import { getLeaveList, updateLeave } from 'context/FirebaseProvider/firebaseApi/leaveApi';
 import {
     getUserWorkTime,
     updateUserCheckin,
@@ -10,7 +10,7 @@ import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/Mu
 import dayjs from 'dayjs';
 import { getLeavePeriodLabel, getLeaveType } from 'helper/leaveType';
 import { useEffect, useState } from 'react';
-import { AbsentData, CalendarDateConfig, CheckinCalendar } from 'type.global';
+import { LeaveData, CalendarDateConfig, CheckinCalendar } from 'type.global';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { useNotification } from 'components/common/NotificationCenter';
 import { useFirebase } from 'context/FirebaseProvider';
@@ -21,10 +21,10 @@ function UserAbsentList({ calendar = [], afterUndate }: { calendar: CalendarDate
     const { openNotify } = useNotification();
     const { profile } = useFirebase();
     const [updating, setUpdating] = useState(false);
-    const [absentList, setAbsentList] = useState<AbsentData[]>([]);
+    const [absentList, setAbsentList] = useState<LeaveData[]>([]);
     //
 
-    const onApprove = async (absentData: AbsentData) => {
+    const onApprove = async (absentData: LeaveData) => {
         const startLeave = dayjs(absentData.startDate);
         const endLeave = dayjs(absentData.endDate);
 
@@ -74,7 +74,7 @@ function UserAbsentList({ calendar = [], afterUndate }: { calendar: CalendarDate
         setUpdating(true);
         Promise.all(all).then(async () => {
             if (absentData.id) {
-                await updateAbsent(absentData.id, {
+                await updateLeave(absentData.id, {
                     status: 'APPROVE',
                     approveBy: profile?.name ?? '',
                     approveByGoogleId: profile?.googleId ?? '',
@@ -90,7 +90,7 @@ function UserAbsentList({ calendar = [], afterUndate }: { calendar: CalendarDate
 
     const getAbsentData = async () => {
         // get all
-        const res = await getAbsentList('WAITING');
+        const res = await getLeaveList('WAITING');
         setAbsentList([...res]);
 
         // setCheckinList([...res.filter((f) => f.status === 99 && dayjs(Number(f.time)).isSame(dayjs(), 'day'))]);

@@ -22,7 +22,7 @@ import { UserCheckinTodayList } from 'components/UserCheckinTodayList';
 import { UserAbsentList } from 'components/UserAbsentList';
 import { UserSelfCheckIn } from 'components/UserSelfCheckIn';
 import { FilterCheckinUser } from 'components/common/FilterCheckinUser';
-import { getAbsentList } from 'context/FirebaseProvider/firebaseApi/absentApi';
+import { getLeaveList } from 'context/FirebaseProvider/firebaseApi/leaveApi';
 import { getLeavePeriodLabel, getLeaveType } from 'helper/leaveType';
 
 dayjs.extend(customParseFormat);

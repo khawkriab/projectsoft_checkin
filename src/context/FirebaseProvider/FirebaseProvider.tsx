@@ -3,8 +3,7 @@ import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signO
 import { initializeFirestore } from 'firebase/firestore';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Profile } from 'type.global';
-import { deleteUser, getUsersWithEmail, updateUser } from './firebaseApi/userApi';
-import dayjs from 'dayjs';
+import { getUsersWithEmail } from './firebaseApi/userApi';
 
 interface FirebaseContextType {
     profile: Profile | null;
@@ -16,7 +15,6 @@ interface FirebaseContextType {
 }
 
 // Firebase config
-console.log('process.env.REACT_APP_API_KEY:', process.env.REACT_APP_API_KEY);
 const firebaseConfig = {
     apiKey: process.env.REACT_APP_API_KEY,
     authDomain: process.env.REACT_APP_AUTH_DOMAIN,
@@ -91,11 +89,6 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
                     email: res.email || profile.email,
                 };
             }
-            // if (uid && !res) {
-            //     userData = { ...userData, id: uid };
-
-            //     await updateUser(uid, { ...userData, createdAt: dayjs().toISOString() });
-            // }
 
             setProfile({ ...userData });
         } catch (error) {
@@ -107,31 +100,38 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const auth = getAuth();
 
-        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            if (currentUser) {
-                console.log('currentUser:', currentUser);
-                let _profile: Profile = {
-                    googleId: currentUser.providerData[0]?.uid,
-                    fullName: currentUser.displayName ?? '',
-                    profileURL: currentUser.photoURL ?? '',
-                    email: currentUser.email ?? '',
-                    name: '',
-                    role: 'USER',
-                    status: 'NO_REGIST',
-                    phoneNumber: '',
-                    jobPosition: '',
-                    employmentType: '',
-                    employmentStartDate: '',
-                };
+        const unsubscribe = onAuthStateChanged(
+            auth,
+            async (currentUser) => {
+                if (currentUser) {
+                    console.log('currentUser:', currentUser);
+                    let _profile: Profile = {
+                        googleId: currentUser.providerData[0]?.uid,
+                        fullName: currentUser.displayName ?? '',
+                        profileURL: currentUser.photoURL ?? '',
+                        email: currentUser.email ?? '',
+                        name: '',
+                        role: 'USER',
+                        status: 'NO_REGIST',
+                        phoneNumber: '',
+                        jobPosition: '',
+                        employmentType: '',
+                        employmentStartDate: '',
+                    };
 
-                await updateUserInfo(_profile);
+                    await updateUserInfo(_profile);
 
-                setIsSignedIn(true);
-            } else {
-                setIsSignedIn(false);
+                    setIsSignedIn(true);
+                } else {
+                    console.warn('User token expired or signed out');
+                    setIsSignedIn(false);
+                }
+                setAuthLoading(false);
+            },
+            (err) => {
+                console.error('err:', err);
             }
-            setAuthLoading(false);
-        });
+        );
 
         // Cleanup listener
         return () => unsubscribe();

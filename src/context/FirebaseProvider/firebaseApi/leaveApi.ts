@@ -1,12 +1,12 @@
 import { db } from '../FirebaseProvider';
-import { AbsentData, AbsentStatus, BaseData, FirebaseQuery } from 'type.global';
+import { LeaveData, LeaveStatus, FirebaseQuery } from 'type.global';
 import { addDoc, collection, doc, getDocs, query, setDoc, where } from 'firebase/firestore';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 
 dayjs.extend(customParseFormat);
 
-export const createAbsent = (payload: AbsentData) => {
+export const createLeave = (payload: LeaveData) => {
     return new Promise<string>(async (resolve, reject) => {
         await addDoc(collection(db, 'absentList'), {
             name: payload.name,
@@ -28,8 +28,8 @@ export const createAbsent = (payload: AbsentData) => {
     });
 };
 
-export const getAbsentList = (status: AbsentStatus = 'WAITING') => {
-    return new Promise<(FirebaseQuery & AbsentData)[]>(async (resolve, reject) => {
+export const getLeaveList = (status: LeaveStatus = 'WAITING') => {
+    return new Promise<(FirebaseQuery & LeaveData)[]>(async (resolve, reject) => {
         const usersRef = collection(db, 'absentList');
         const q = query(usersRef, where('status', '==', status));
 
@@ -37,14 +37,14 @@ export const getAbsentList = (status: AbsentStatus = 'WAITING') => {
 
         const r = querySnapshot.docs.map((doc) => ({
             id: doc.id,
-            ...(doc.data() as AbsentData),
+            ...(doc.data() as LeaveData),
         }));
 
         resolve([...r]);
     });
 };
-export const getUserAbsent = (googleId: string) => {
-    return new Promise<(FirebaseQuery & AbsentData)[]>(async (resolve, reject) => {
+export const getUserLeave = (googleId: string) => {
+    return new Promise<(FirebaseQuery & LeaveData)[]>(async (resolve, reject) => {
         const usersRef = collection(db, 'absentList');
         const q = query(usersRef, where('googleId', '==', googleId));
 
@@ -52,7 +52,7 @@ export const getUserAbsent = (googleId: string) => {
 
         const matchedUsers = querySnapshot.docs.map((doc) => ({
             id: doc.id,
-            ...(doc.data() as AbsentData),
+            ...(doc.data() as LeaveData),
         }));
 
         if (matchedUsers.length > 0) {
@@ -63,8 +63,8 @@ export const getUserAbsent = (googleId: string) => {
     });
 };
 // startDate format 'YYYY-MM-DD'
-export const getUserAbsentByGoogleIdAndDate = (googleId: string, startDate: string) => {
-    return new Promise<FirebaseQuery & AbsentData>(async (resolve, reject) => {
+export const getUserLeaveByGoogleIdAndDate = (googleId: string, startDate: string) => {
+    return new Promise<FirebaseQuery & LeaveData>(async (resolve, reject) => {
         const usersRef = collection(db, 'absentList');
         const q = query(usersRef, where('googleId', '==', googleId), where('startDate', '==', startDate));
 
@@ -72,7 +72,7 @@ export const getUserAbsentByGoogleIdAndDate = (googleId: string, startDate: stri
 
         const matchedUsers = querySnapshot.docs.map((doc) => ({
             id: doc.id,
-            ...(doc.data() as AbsentData),
+            ...(doc.data() as LeaveData),
         }));
 
         if (matchedUsers.length > 0) {
@@ -83,7 +83,7 @@ export const getUserAbsentByGoogleIdAndDate = (googleId: string, startDate: stri
     });
 };
 
-export const updateAbsent = (abId: string, payload: { status: AbsentStatus; approveBy: string; approveByGoogleId: string }) => {
+export const updateLeave = (abId: string, payload: { status: LeaveStatus; approveBy: string; approveByGoogleId: string }) => {
     return new Promise<string>(async (resolve, reject) => {
         await setDoc(
             doc(db, 'absentList', abId),

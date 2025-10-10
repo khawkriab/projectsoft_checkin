@@ -13,7 +13,7 @@
 // import { UserAbsentList } from 'components/UserAbsentList';
 // import { UserSelfCheckIn } from 'components/UserSelfCheckIn';
 // import { FilterCheckinUser } from 'components/common/FilterCheckinUser';
-// import { getAbsentList } from 'context/FirebaseProvider/firebaseApi/absentApi';
+// import { getLeaveList } from 'context/FirebaseProvider/firebaseApi/absentApi';
 // import { getLeavePeriodLabel, getLeaveType } from 'helper/leaveType';
 
 // dayjs.extend(customParseFormat);
@@ -170,11 +170,11 @@
 
 //             const c = await getCalendarMonthOfYears({ year: year, month: month });
 //             const ul = await getUsersList();
-//             const al = await getAbsentList('APPROVE');
+//             const al = await getLeaveList('APPROVE');
 
 //             let leavePeriod: LeavePeriodsType | null = null;
 
-//             // getUserAbsentByGoogleIdAndDate
+//             // getUserLeaveByGoogleIdAndDate
 
 //             // const a = {
 //             //     approveBy: 'แพร',

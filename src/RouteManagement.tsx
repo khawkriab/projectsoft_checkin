@@ -4,7 +4,7 @@ import { Layout } from 'components/common/Layout';
 import { Member } from 'pages/Member';
 import { UserRegister } from 'pages/UserRegister';
 import { CreateMonthCalendar } from 'pages/CreateMonthCalendar';
-import { Absent } from 'pages/Absent';
+import { LeaveRequest } from 'pages/LeaveRequest';
 import { PrivacyPolicy } from 'pages/PrivacyPolicy';
 import { WeeklySchedule } from 'pages/WeeklySchedule';
 import HomeLanding from 'pages/HomeLanding';
@@ -20,7 +20,7 @@ function RoutesManagement() {
                 <Route path={`/member`} element={<Member />} />
                 <Route path={`/register`} element={<UserRegister />} />
                 <Route path={`/create-calendar`} element={<CreateMonthCalendar />} />
-                <Route path={`/absent`} element={<Absent />} />
+                <Route path={`/absent`} element={<LeaveRequest />} />
                 <Route path={`/privacy`} element={<PrivacyPolicy />} />
                 <Route path={`/weekly-schedule`} element={<WeeklySchedule />} />
                 <Route path={'*'} element={<div>Page not found</div>} />

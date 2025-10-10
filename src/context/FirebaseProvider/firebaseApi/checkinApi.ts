@@ -1,5 +1,13 @@
 import { db } from '../FirebaseProvider';
-import { CalendarDateConfig, CheckinCalendar, CheckinDate, UserCheckInData, UserCheckInDate, UserCheckinList } from 'type.global';
+import {
+    CalendarDateConfig,
+    CheckinCalendar,
+    CheckinDate,
+    SystemAreaConfig,
+    UserCheckInData,
+    UserCheckInDate,
+    UserCheckinList,
+} from 'type.global';
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -270,7 +278,6 @@ export const getWorkTimeList = ({ startDateString, endDateString }: { startDateS
         );
         const querySnapshot = await getDocs(q);
 
-        // const querySnapshot = await getDocs(collection(db, 'workTimeList'));
         const res: CheckinDate[] = querySnapshot.docs.map((doc) => ({
             ...(doc.data() as CheckinDate),
             id: doc.id,
@@ -298,7 +305,6 @@ export const getWorkTimeListWithStatus = ({
         );
         const querySnapshot = await getDocs(q);
 
-        // const querySnapshot = await getDocs(collection(db, 'workTimeList'));
         const res: CheckinDate[] = querySnapshot.docs.map((doc) => ({
             ...(doc.data() as CheckinDate),
             id: doc.id,
@@ -325,7 +331,6 @@ export function getUserWorkTime({ startDate, endDate, email }: { startDate: stri
         );
         const querySnapshot = await getDocs(q);
 
-        // const querySnapshot = await getDocs(collection(db, 'workTimeList'));
         const res: CheckinDate[] = querySnapshot.docs.map((doc) => ({
             ...(doc.data() as CheckinDate),
             id: doc.id,
@@ -352,13 +357,22 @@ export const updateWorkTime = (payload: CheckinDate, id?: string) => {
             await addDoc(collection(db, 'workTimeList'), payload);
         }
 
-        // if (checkinTodayId) {
-        //     await updateDoc(doc(db, 'checkinToday', checkinTodayId), {
-        //         status: 1,
-        //         approveBy: payload.approveBy,
-        //         approveByGoogleId: payload.approveByGoogleId,
-        //     });
-        // }
         resolve('success');
+    });
+};
+
+export const getSystemAreaConfig = () => {
+    return new Promise<SystemAreaConfig>(async (resolve, reject) => {
+        const dateCollectionRef = doc(db, 'systemConfig', 'area');
+
+        const querySnapshot = await getDoc(dateCollectionRef);
+
+        if (querySnapshot.exists()) {
+            const data = querySnapshot.data() as SystemAreaConfig;
+
+            resolve(data);
+        } else {
+            reject('not found data');
+        }
     });
 };

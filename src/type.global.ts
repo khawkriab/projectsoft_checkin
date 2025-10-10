@@ -1,6 +1,6 @@
 export type ProfileRole = 'ADMIN' | 'STAFF' | 'USER';
 export type ProfileStatus = 'APPROVE' | 'WAITING' | 'NO_REGIST' | 'INACTIVE';
-export type AbsentStatus = 'APPROVE' | 'WAITING' | 'REJECT';
+export type LeaveStatus = 'APPROVE' | 'WAITING' | 'REJECT';
 export type LeaveTypes = 'VACATION' | 'SICK' | 'PERSONAL';
 export type LeavePeriodsType = 'HALF_DAY_AM' | 'HALF_DAY_PM' | 'FULL_DAY';
 export type LeavePeriodsLabel = 'ลาเช้า' | 'ลาบ่าย' | 'ทั้งวัน';
@@ -73,14 +73,14 @@ export type UserCheckinList = Pick<
 >;
 export type CheckinCalendar = FirebaseQuery & { date: string; wfhFlag?: number; userCheckinList: UserCheckInDate[] };
 
-export type AbsentData = FirebaseQuery &
+export type LeaveData = FirebaseQuery &
     Pick<BaseProfile, 'googleId' | 'email' | 'name'> & {
         leaveType: LeaveTypes;
         leavePeriod: LeavePeriodsType;
         startDate: string; // date format: YYYY-MM-DD
         endDate: string; // date format: YYYY-MM-DD
         reason: string;
-        status: AbsentStatus;
+        status: LeaveStatus;
         rejectReason?: string;
         approveBy: string;
         approveByGoogleId: string;
@@ -143,3 +143,5 @@ export type CalendarDateList = FirebaseQuery &
     CalendarDateConfig & {
         userCheckinList: CheckinDate[];
     };
+
+export type SystemAreaConfig = FirebaseQuery & LatLng & { radius: number };

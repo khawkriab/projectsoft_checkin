@@ -277,7 +277,14 @@ function Layout() {
                     backgroundColor: theme.palette.background.default,
                 })}
             >
-                <Outlet />
+                {!authLoading && profile && <Outlet />}
+                {!authLoading && !profile && (
+                    <Box display={'flex'} justifyContent={'center'} alignItems={'center'} height={'80vh'}>
+                        <Button variant='contained' color='primary' onClick={signInWithGoogle}>
+                            Signin with google
+                        </Button>
+                    </Box>
+                )}
             </Box>
         </Box>
     );

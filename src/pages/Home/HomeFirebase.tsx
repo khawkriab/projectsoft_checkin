@@ -185,12 +185,12 @@ function Home() {
                                 convert to google calendar
                             </Button>
                         </Box> */}
-                        {profile?.googleId && (
+                        {/* {profile?.googleId && (
                             <UserSelfCheckIn
                                 // defaultWfh
-                                defaultWfh={!!calendarConfig.find((f) => f.date === dayjs().format('YYYY-MM-DD'))?.isCanWorkOutside}
+                                defaultWfh={!!calendarConfig.find((f) => f.date === dayjs().format('YYYY-MM-DD'))?.isWFH}
                             />
-                        )}
+                        )} */}
                         {(profile?.role === 'ADMIN' || profile?.role === 'STAFF') && (
                             <>
                                 <UserCheckinTodayForm

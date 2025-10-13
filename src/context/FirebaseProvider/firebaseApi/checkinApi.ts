@@ -7,6 +7,8 @@ import {
     UserCheckInData,
     UserCheckInDate,
     UserCheckinList,
+    WeeklyWorkingDays,
+    WorkTimes,
 } from 'type.global';
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore';
 import dayjs from 'dayjs';
@@ -369,6 +371,36 @@ export const getSystemAreaConfig = () => {
 
         if (querySnapshot.exists()) {
             const data = querySnapshot.data() as SystemAreaConfig;
+
+            resolve(data);
+        } else {
+            reject('not found data');
+        }
+    });
+};
+export const getSystemWeeklyWorkingDaysConfig = () => {
+    return new Promise<WeeklyWorkingDays>(async (resolve, reject) => {
+        const dateCollectionRef = doc(db, 'systemConfig', 'weeklyWorkingDays');
+
+        const querySnapshot = await getDoc(dateCollectionRef);
+
+        if (querySnapshot.exists()) {
+            const data = querySnapshot.data() as WeeklyWorkingDays;
+
+            resolve(data);
+        } else {
+            reject('not found data');
+        }
+    });
+};
+export const getSystemWorkTimesConfig = () => {
+    return new Promise<WorkTimes>(async (resolve, reject) => {
+        const dateCollectionRef = doc(db, 'systemConfig', 'workTimes');
+
+        const querySnapshot = await getDoc(dateCollectionRef);
+
+        if (querySnapshot.exists()) {
+            const data = querySnapshot.data() as WorkTimes;
 
             resolve(data);
         } else {

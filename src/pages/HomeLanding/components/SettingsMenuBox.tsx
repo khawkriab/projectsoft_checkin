@@ -6,17 +6,18 @@ export function SettingsMenuBox() {
     return (
         <MenuBox
             sx={(theme) => ({
-                minHeight: '50px',
+                minHeight: `${50 * 2}px`,
                 flex: 'auto',
-                width: { xs: '100%', lg: '50%' },
-                bgcolor: theme.palette.primary.light,
+                // width: { xs: '100%', lg: '50%' },
+                bgcolor: theme.palette.mode === 'light' ? theme.palette.primary.light : 'transparent',
                 color: theme.palette.primary.contrastText,
                 justifyContent: 'center',
                 gap: '6px',
+                flexDirection: { xs: 'column-reverse', lg: 'row' },
             })}
         >
             <Typography>ตั้งค่า</Typography>
-            <SettingsOutlined />
+            <SettingsOutlined sx={{ fontSize: { xs: '2.5rem', lg: '1.5rem' } }} />
         </MenuBox>
     );
 }

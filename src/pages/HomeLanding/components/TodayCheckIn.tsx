@@ -6,10 +6,11 @@ import { useFirebase } from 'context/FirebaseProvider';
 import { getSystemAreaConfig, getUserWorkTime, updateWorkTime } from 'context/FirebaseProvider/firebaseApi/checkinApi';
 import dayjs from 'dayjs';
 import isWithinRadius from 'helper/checkDistance';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { deviceDetect } from 'react-device-detect';
 import { CheckinDate, LatLng, SystemAreaConfig } from 'type.global';
 import { FlipIcon } from './FlipIcon';
+import { useUserCalendarContext } from 'context/UserCalendarProvider';
 
 const libraries = ['places', 'marker'];
 
@@ -31,6 +32,7 @@ export function TodayCheckIn() {
 
     //
     const { profile } = useFirebase();
+    const { calendarConfig, calendarDateList, getUserCheckin } = useUserCalendarContext();
     //
     const watchId = useRef<number>(0);
     const submitButtonRemark = useRef('');
@@ -38,7 +40,7 @@ export function TodayCheckIn() {
     const [checkAvail, setCheckAvail] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [currentLocation, setCurrentLocation] = useState<LatLng | null>(null);
-    const [userCheckinToday, setUserCheckinToday] = useState<CheckinDate | null | undefined>(undefined);
+    // const [userCheckinToday, setUserCheckinToday] = useState<CheckinDate | null | undefined>(undefined);
     const [areaConfig, setAreaConfig] = useState<SystemAreaConfig | null>(null);
     const [openModalOutsideArea, setOpenModalOutsideArea] = useState(false);
     const [reason, setReason] = useState('');
@@ -51,7 +53,26 @@ export function TodayCheckIn() {
     });
 
     //
+
+    const todayConfig = useMemo(() => {
+        const d = calendarConfig.find((f) => f.date === dayjs().format('YYYY-MM-DD'));
+
+        return {
+            isWorkDay: !!d && !d?.isHoliDay,
+            isWFH: d?.isWFH,
+        };
+    }, [calendarConfig.length]);
+
+    const userCheckinToday = useMemo(() => {
+        if (calendarDateList.length <= 0) return null;
+
+        const d = calendarDateList.find((f) => f.date === dayjs().format('YYYY-MM-DD'));
+
+        return d?.checkinData;
+    }, [JSON.stringify(calendarDateList)]);
+
     const onCheckin = async (isWorkOutside = false, remark?: string, latlng?: LatLng) => {
+        setIsSending(true);
         if (profile) {
             const res = await getUserWorkTime({ startDate: parseData, email: profile.email });
 
@@ -75,7 +96,7 @@ export function TodayCheckIn() {
 
             try {
                 await updateWorkTime(payload, res?.id);
-                getUserCheckinToday();
+                await getUserCheckin();
 
                 // openNotify('success', 'updated successfully');
             } catch (error) {
@@ -97,27 +118,26 @@ export function TodayCheckIn() {
 
     const onSubmit = (e: React.ChangeEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setIsSending(true);
         onCheckin(true, submitButtonRemark.current);
     };
 
-    const getUserCheckinToday = async () => {
-        if (!profile?.email) return;
-        console.log('getUserCheckinToday');
+    // const getUserCheckinToday = async () => {
+    //     if (!profile?.email) return;
+    //     console.log('getUserCheckinToday');
 
-        try {
-            const res = await getUserWorkTime({ startDate: parseData, email: profile?.email || '' });
+    //     try {
+    //         const res = await getUserWorkTime({ startDate: parseData, email: profile?.email || '' });
 
-            if (res) {
-                setUserCheckinToday({ ...res });
-            } else {
-                setUserCheckinToday(null);
-            }
-        } catch (error) {
-            console.error('error:', error);
-            setUserCheckinToday(null);
-        }
-    };
+    //         if (res) {
+    //             setUserCheckinToday({ ...res });
+    //         } else {
+    //             setUserCheckinToday(null);
+    //         }
+    //     } catch (error) {
+    //         console.error('error:', error);
+    //         setUserCheckinToday(null);
+    //     }
+    // };
 
     const handleOpen = () => {
         setCheckAvail(true);
@@ -169,12 +189,7 @@ export function TodayCheckIn() {
     }, [checkAvail, JSON.stringify(areaConfig)]);
 
     useEffect(() => {
-        getUserCheckinToday();
-    }, [JSON.stringify(profile)]);
-
-    useEffect(() => {
         const getAreaConfig = async () => {
-            console.log('getAreaConfig');
             try {
                 const res = await getSystemAreaConfig();
 
@@ -205,7 +220,11 @@ export function TodayCheckIn() {
                                 fontWeight: 500,
                                 alignItems: { xs: 'flex-start', lg: 'center' },
                                 flexDirection: { xs: 'column', md: 'row' },
-                                background: { xs: 'transparent', lg: 'linear-gradient(to right, #085aff,#47D7EB)' },
+                                border: theme.palette.mode === 'light' ? 'none' : '2px solid #a0a0a03a',
+                                background:
+                                    theme.palette.mode === 'light'
+                                        ? { xs: 'transparent', lg: 'linear-gradient(to right, #085aff,#47D7EB)' }
+                                        : 'transparent',
                             })}
                         >
                             <Box>
@@ -219,48 +238,88 @@ export function TodayCheckIn() {
                         </Box>
                     </Grid>
                     <Grid size={{ xs: 'auto', lg: 3 }} display={'flex'} flexDirection={'column'} gap={'6px'}>
-                        {userCheckinToday === null && (
+                        {todayConfig.isWorkDay ? (
                             <>
-                                <Button variant='contained' color='warning' sx={{ height: 'calc(50% - 4px)' }} onClick={handleOpen}>
-                                    check-in
-                                </Button>
-                                <Button
-                                    variant='contained'
-                                    color='secondary'
-                                    sx={{ height: 'calc(50% - 4px)' }}
-                                    onClick={() => setOpenModalOutsideArea(true)}
-                                >
-                                    ทำงานนอกสถานที่
-                                </Button>
-                            </>
-                        )}
-                        {userCheckinToday && (
-                            <>
-                                {/* <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, marginBottom: 2, marginTop: 2 }}> */}
+                                {userCheckinToday === null && (
+                                    <>
+                                        {todayConfig.isWFH ? (
+                                            <Button
+                                                loading={isSending}
+                                                variant='contained'
+                                                color='warning'
+                                                sx={{ height: 'calc(50% - 4px)' }}
+                                                onClick={() => onCheckin(true, 'WFH')}
+                                            >
+                                                check-in WFH
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                variant='contained'
+                                                color='warning'
+                                                sx={{ height: 'calc(50% - 4px)' }}
+                                                onClick={handleOpen}
+                                            >
+                                                check-in
+                                            </Button>
+                                        )}
+                                        <Button
+                                            variant='contained'
+                                            color='secondary'
+                                            sx={{ height: 'calc(50% - 4px)' }}
+                                            onClick={() => setOpenModalOutsideArea(true)}
+                                        >
+                                            ทำงานนอกสถานที่
+                                        </Button>
+                                    </>
+                                )}
+                                {userCheckinToday && (
+                                    <>
+                                        {/* <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, marginBottom: 2, marginTop: 2 }}> */}
 
-                                <Box
-                                    sx={(theme) => ({
-                                        display: 'flex',
-                                        flexWrap: 'wrap',
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        flexDirection: 'column',
-                                        width: '100%',
-                                        height: '100%',
-                                        padding: '2px',
-                                        borderRadius: 1,
-                                        color: theme.palette.success.contrastText,
-                                        backgroundColor: Number(userCheckinToday.status) === 99 ? '#ff6f00' : theme.palette.success.main,
-                                    })}
-                                >
-                                    <Typography>สถานะ: {Number(userCheckinToday.status) === 99 ? 'รอ' : 'อนุมัติแล้ว'}</Typography>
-                                    <Typography>เวลาเข้างาน:</Typography>
-                                    <Typography>
-                                        {dayjs(`${userCheckinToday.date} ${userCheckinToday.time}`).format('DD-MM-YYYY HH:mm')}
-                                    </Typography>
-                                </Box>
-                                {/* </Box> */}
+                                        <Box
+                                            sx={(theme) => ({
+                                                display: 'flex',
+                                                flexWrap: 'wrap',
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                                flexDirection: 'column',
+                                                width: '100%',
+                                                height: '100%',
+                                                padding: '2px',
+                                                borderRadius: 1,
+                                                color: theme.palette.success.contrastText,
+                                                backgroundColor:
+                                                    Number(userCheckinToday.status) === 99 ? '#ff6f00' : theme.palette.success.main,
+                                            })}
+                                        >
+                                            <Typography>สถานะ: {Number(userCheckinToday.status) === 99 ? 'รอ' : 'อนุมัติแล้ว'}</Typography>
+                                            <Typography>เวลาเข้างาน:</Typography>
+                                            <Typography>
+                                                {dayjs(`${userCheckinToday.date} ${userCheckinToday.time}`).format('DD-MM-YYYY HH:mm')}
+                                            </Typography>
+                                        </Box>
+                                        {/* </Box> */}
+                                    </>
+                                )}
                             </>
+                        ) : (
+                            <Box
+                                sx={(theme) => ({
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    flexDirection: 'column',
+                                    width: '100%',
+                                    height: '100%',
+                                    padding: '2px 12px',
+                                    borderRadius: 1,
+                                    color: theme.palette.success.contrastText,
+                                    backgroundColor: '#909090',
+                                })}
+                            >
+                                หยุด
+                            </Box>
                         )}
                     </Grid>
                 </Grid>

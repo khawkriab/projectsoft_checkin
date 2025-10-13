@@ -1,4 +1,4 @@
-export type ProfileRole = 'ADMIN' | 'STAFF' | 'USER';
+export type ProfileRole = 'ADMIN' | 'STAFF' | 'USER' | 'ORGANIZATION';
 export type ProfileStatus = 'APPROVE' | 'WAITING' | 'NO_REGIST' | 'INACTIVE';
 export type LeaveStatus = 'APPROVE' | 'WAITING' | 'REJECT';
 export type LeaveTypes = 'VACATION' | 'SICK' | 'PERSONAL';
@@ -97,18 +97,29 @@ export type WeeklyScheduleData = {
 };
 
 // ----------------------------- new ------------------------
-
-export type CalendarDateConfig = FirebaseQuery & {
-    date: string; // YYYY-MM-DD
-    isOffDay: boolean;
-    isHalfDay: boolean;
-    isCanWorkOutside: boolean;
-    remark?: string;
+export type WorkTimes = {
     entryTime: string; // HH:mm
-    exitTime?: string; // HH:mm
-    createdAt?: Date; // Date
-    updatedAt?: Date; // Date
+    exitTime: string; // HH:mm
 };
+
+export type WeeklyWorkingDays = {
+    Friday: boolean;
+    Monday: boolean;
+    Saturday: boolean;
+    Sunday: boolean;
+    Thursday: boolean;
+    Tuesday: boolean;
+    Wednesday: boolean;
+};
+export type CalendarDateConfig = FirebaseQuery &
+    WorkTimes & {
+        date: string; // YYYY-MM-DD
+        isHoliDay: boolean;
+        isWFH?: boolean;
+        remark?: string;
+        createdAt?: Date; // Date
+        updatedAt?: Date; // Date
+    };
 
 export type LocationInfo = {
     device?: any;
@@ -130,7 +141,6 @@ export type CheckinDate = Pick<BaseProfile, 'googleId' | 'email' | 'name'> &
         remark?: string;
         reason?: string;
         isWorkOutside?: boolean;
-        isWFH?: boolean;
         // leave info
         absentId?: string | null;
         leaveType?: LeaveTypes | null;

@@ -3,8 +3,11 @@ import { TodayCheckIn } from './TodayCheckIn';
 import { LeaveRemainingMenuBox } from './LeaveRemainingMenuBox';
 import { LeaveRequestMenuBox } from './LeaveRequestMenuBox';
 import { SettingsMenuBox } from './SettingsMenuBox';
+import ManageUserCheckinMenuBox from './ManageUserCheckinMenuBox';
+import { useFirebase } from 'context/FirebaseProvider';
 
 export function MenuList() {
+    const { profile } = useFirebase();
     const desktopSize = useMediaQuery((t) => t.breakpoints.up('lg'));
     return (
         <Box>
@@ -14,11 +17,16 @@ export function MenuList() {
                     <Grid size={{ xs: 8, lg: 6 }} display={'flex'}>
                         <LeaveRemainingMenuBox />
                     </Grid>
-                    <Grid size={{ xs: 4, lg: 6 }}>
-                        <Stack spacing={1} direction={{ xs: 'column', lg: 'row' }} height={'100%'}>
-                            <LeaveRequestMenuBox />
-                            <SettingsMenuBox />
-                        </Stack>
+                    <Grid size={{ xs: 4, lg: 3 }} display={'flex'}>
+                        <LeaveRequestMenuBox />
+                    </Grid>
+                    {(profile?.role === 'ADMIN' || profile?.role === 'STAFF' || profile?.role === 'ORGANIZATION') && (
+                        <Grid size={{ xs: 4, lg: 3 }} display={'flex'}>
+                            <ManageUserCheckinMenuBox />
+                        </Grid>
+                    )}
+                    <Grid size={{ xs: 4, lg: 3 }} display={'flex'}>
+                        <SettingsMenuBox />
                     </Grid>
                 </Grid>
             </Stack>

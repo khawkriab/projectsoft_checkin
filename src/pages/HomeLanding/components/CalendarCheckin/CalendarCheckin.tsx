@@ -4,19 +4,11 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import { CustomCalendarHeader } from './CustomCalendarHeader';
 import { CustomDay } from './CustomDay';
-import { CheckinDataExtend } from 'pages/HomeLanding/HomeLanding';
 import { StatusBox } from '../StatusBox';
+import { useUserCalendarContext } from 'context/UserCalendarProvider';
 
-function CalendarCheckin({
-    checkInCalendar,
-    dateSelect,
-    setDateSelect,
-}: {
-    checkInCalendar: CheckinDataExtend;
-
-    dateSelect: string;
-    setDateSelect: (date: string) => void;
-}) {
+function CalendarCheckin() {
+    const { dateSelect, calendarDateList, onSelectDate } = useUserCalendarContext();
     const desktopSize = useMediaQuery((t) => t.breakpoints.up('lg'));
     return (
         <Box
@@ -53,6 +45,10 @@ function CalendarCheckin({
                             height: 'auto',
                             maxHeight: 'unset',
                             overflow: 'visible',
+
+                            '.MuiDayCalendar-monthContainer': {
+                                position: 'relative',
+                            },
                         },
 
                         '& .MuiPickersDay-root': {
@@ -75,78 +71,25 @@ function CalendarCheckin({
                     })}
                     slots={{
                         calendarHeader: CustomCalendarHeader, // 👈 override header
-                        day: (dayProps) => <CustomDay dataList={checkInCalendar} desktopSize={desktopSize} {...dayProps} />,
+                        day: (dayProps) => <CustomDay dataList={calendarDateList} desktopSize={desktopSize} {...dayProps} />,
                     }}
-                    // slots={{
-                    //     day: (dayProps) => (
-                    //         <ServerDay
-                    //             {...dayProps}
-                    //             role={profile?.role}
-                    //             datesSelected={datesSelected}
-                    //             onAddMarkWFH={(date: number, wfhFlag: boolean) => {
-                    //                 if (profile?.role === 'ADMIN') {
-                    //                     let n = [...datesSelected];
-                    //                     const indexOfDate = n.findIndex((f) => f.date === date);
-
-                    //                     if (indexOfDate >= 0) {
-                    //                         n[indexOfDate].wfhFlag = wfhFlag;
-                    //                     }
-
-                    //                     setDatesSelected([...n]);
-                    //                 }
-                    //             }}
-                    //         />
-                    //     ),
-                    // }}
-                    // shouldDisableDate={(day) => {
-                    //     const date = day.date();
-                    //     const hasData = currentFromDatabase.filter((f) => f.userCheckinList.length > 0);
-                    //     return hasData.map((m) => m.date).includes(date);
-                    // }}
-                    // onMonthChange={(m) => {
-                    //     setMonth(m.get('months'));
-                    //     setYears(m.get('years'));
-                    // }}
                     onChange={(newValue) => {
                         const date = newValue?.format('YYYY-MM-DD');
                         if (date) {
-                            setDateSelect(date);
+                            onSelectDate(date);
                         }
                     }}
                 />
             </LocalizationProvider>
             {/* status */}
             <Box display={'flex'} gap={'12px'} padding={'12px'} justifyContent={{ xs: 'flex-start', lg: 'center' }}>
-                <StatusBox
-                    color={(theme) => theme.palette.text.primary}
-                    dotColor='var(--status-normal-color)'
-                    bgc='var(--status-normal-bgc)'
-                    label='ปกติ'
-                />
-                <StatusBox
-                    color={(theme) => theme.palette.text.primary}
-                    dotColor='var(--status-late-color)'
-                    bgc='var(--status-late-bgc)'
-                    label='สาย'
-                />
-                <StatusBox
-                    color={(theme) => theme.palette.text.primary}
-                    dotColor='var(--status-leave-color)'
-                    bgc='var(--status-leave-bgc)'
-                    label='ลา'
-                />
-                <StatusBox
-                    color={(theme) => theme.palette.text.primary}
-                    dotColor='var(--status-holiday-color)'
-                    bgc='var(--status-holiday-bgc)'
-                    label='วันหยุด'
-                />
-                <StatusBox
-                    color={(theme) => theme.palette.text.primary}
-                    dotColor='var(--status-miss-color)'
-                    bgc='var(--status-miss-bgc)'
-                    label='ขาด'
-                />
+                <StatusBox color={(theme) => theme.palette.text.primary} shape='triangle' status='WORK_DAY' />
+                <StatusBox color={(theme) => theme.palette.text.primary} shape='triangle' status='HOLIDAY' />
+                <StatusBox color={(theme) => theme.palette.text.primary} shape='triangle' status='WFH_DAY' />
+                <StatusBox color={(theme) => theme.palette.text.primary} status='NORMAL' />
+                <StatusBox color={(theme) => theme.palette.text.primary} status='LATE' />
+                <StatusBox color={(theme) => theme.palette.text.primary} status='LEAVE' />
+                <StatusBox color={(theme) => theme.palette.text.primary} status='ABSENT' />
             </Box>
         </Box>
     );

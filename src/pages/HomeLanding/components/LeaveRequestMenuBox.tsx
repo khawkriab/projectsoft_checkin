@@ -152,17 +152,18 @@ export function LeaveRequestMenuBox() {
             <MenuBox
                 onClick={() => setOpen(true)}
                 sx={(theme) => ({
-                    minHeight: '50px',
+                    minHeight: `${50 * 2}px`,
                     flex: 'auto',
-                    width: { xs: '100%', lg: '50%' },
-                    bgcolor: '#FF5252',
+                    // width: { xs: '100%', lg: '50%' },
+                    bgcolor: theme.palette.mode === 'light' ? '#FF5252' : 'transparent',
                     color: theme.palette.primary.contrastText,
                     justifyContent: 'center',
                     gap: '6px',
+                    flexDirection: { xs: 'column-reverse', lg: 'row' },
                 })}
             >
                 <Typography>เขียนใบลา</Typography>
-                <MailOutline />
+                <MailOutline sx={{ fontSize: { xs: '2.5rem', lg: '1.5rem' } }} />
             </MenuBox>
             <Drawer
                 anchor='right'

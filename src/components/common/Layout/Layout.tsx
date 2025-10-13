@@ -67,32 +67,32 @@ function Layout() {
         {
             condition: true,
             label: 'Home',
-            to: '/',
+            to: '/manage',
         },
         {
-            condition: !!profile?.googleId,
+            condition: !!profile?.googleId && profile.status === 'APPROVE',
             label: 'Calendar',
-            to: '/create-calendar',
+            to: '/manage/create-calendar',
         },
         {
-            condition: !!profile?.googleId,
+            condition: !!profile?.googleId && profile.status === 'APPROVE',
             label: 'Schedule',
-            to: '/weekly-schedule',
+            to: '/manage/weekly-schedule',
         },
         {
-            condition: !!profile?.googleId,
+            condition: !!profile?.googleId && profile.status === 'APPROVE',
             label: 'เขียนใบลา',
-            to: '/absent',
+            to: '/manage/absent',
         },
         {
-            condition: !!profile?.googleId,
+            condition: !!profile?.googleId && profile.status === 'APPROVE',
             label: 'Member',
-            to: '/member',
+            to: '/manage/member',
         },
         {
-            condition: !!profile?.googleId,
+            condition: !!profile?.googleId && profile.status === 'APPROVE',
             label: 'Register',
-            to: '/register',
+            to: '/manage/register',
         },
     ];
 

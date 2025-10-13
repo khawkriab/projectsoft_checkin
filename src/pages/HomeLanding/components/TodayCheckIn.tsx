@@ -52,7 +52,7 @@ export function TodayCheckIn() {
     const { isLoaded, loadError } = useLoadScript({
         googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY as string,
         libraries: libraries as any,
-        mapIds: [process.env.REACT_APP_GOOGLE_MAPS_ID as string, process.env.REACT_APP_GOOGLE_MAPS_STYLE_ID as string],
+        mapIds: [process.env.REACT_APP_GOOGLE_MAPS_ID as string],
     });
 
     //

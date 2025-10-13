@@ -50,7 +50,7 @@ export function TodayCheckIn() {
     const { isLoaded, loadError } = useLoadScript({
         googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY as string,
         libraries: libraries as any,
-        mapIds: ['811a91f045c720527445f4f8'],
+        mapIds: [process.env.REACT_APP_GOOGLE_MAPS_ID as string],
     });
 
     //
@@ -344,7 +344,7 @@ export function TodayCheckIn() {
                         {isLoaded && checkAvail && areaConfig && (
                             <GoogleMap
                                 options={{
-                                    mapId: '811a91f045c720527445f4f8',
+                                    mapId: process.env.REACT_APP_GOOGLE_MAPS_STYLE_ID,
                                     disableDefaultUI: true,
                                 }}
                                 mapContainerStyle={{

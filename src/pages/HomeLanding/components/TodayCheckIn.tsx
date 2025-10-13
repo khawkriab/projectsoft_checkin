@@ -47,10 +47,12 @@ export function TodayCheckIn() {
     const [isSending, setIsSending] = useState(false);
     //
 
+    console.log('process.env.REACT_APP_GOOGLE_MAPS_ID:', process.env.REACT_APP_GOOGLE_MAPS_ID);
+    console.log('process.env.REACT_APP_GOOGLE_MAPS_STYLE_ID:', process.env.REACT_APP_GOOGLE_MAPS_STYLE_ID);
     const { isLoaded, loadError } = useLoadScript({
         googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY as string,
         libraries: libraries as any,
-        mapIds: [process.env.REACT_APP_GOOGLE_MAPS_ID as string],
+        mapIds: [process.env.REACT_APP_GOOGLE_MAPS_ID as string, process.env.REACT_APP_GOOGLE_MAPS_STYLE_ID as string],
     });
 
     //

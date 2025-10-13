@@ -343,7 +343,7 @@ export function TodayCheckIn() {
                         {isLoaded && checkAvail && areaConfig && (
                             <GoogleMap
                                 options={{
-                                    mapId: 'ab108a809fd161a2fadf6a75',
+                                    mapId: process.env.REACT_APP_GOOGLE_MAPS_ID,
                                     disableDefaultUI: true,
                                 }}
                                 mapContainerStyle={{

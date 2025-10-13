@@ -82,7 +82,7 @@ function CalendarCheckin() {
                 />
             </LocalizationProvider>
             {/* status */}
-            <Box display={'flex'} gap={'12px'} padding={'12px'} justifyContent={{ xs: 'flex-start', lg: 'center' }}>
+            <Box display={'flex'} gap={'12px'} padding={'12px'} justifyContent={{ xs: 'flex-start', lg: 'center' }} flexWrap={'wrap'}>
                 <StatusBox color={(theme) => theme.palette.text.primary} shape='triangle' status='WORK_DAY' />
                 <StatusBox color={(theme) => theme.palette.text.primary} shape='triangle' status='HOLIDAY' />
                 <StatusBox color={(theme) => theme.palette.text.primary} shape='triangle' status='WFH_DAY' />

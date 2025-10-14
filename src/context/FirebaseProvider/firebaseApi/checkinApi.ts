@@ -408,3 +408,25 @@ export const getSystemWorkTimesConfig = () => {
         }
     });
 };
+
+export const updetSystemAreaConfig = (payload: SystemAreaConfig) => {
+    return new Promise<string>(async (resolve, reject) => {
+        await updateDoc(doc(db, 'systemConfig', 'area'), payload);
+
+        resolve('success');
+    });
+};
+export const updetSystemWeeklyWorkingDaysConfig = (payload: WeeklyWorkingDays) => {
+    return new Promise<string>(async (resolve, reject) => {
+        await updateDoc(doc(db, 'systemConfig', 'weeklyWorkingDays'), payload);
+
+        resolve('success');
+    });
+};
+export const updetSystemWorkTimesConfig = (payload: WorkTimes) => {
+    return new Promise<string>(async (resolve, reject) => {
+        await updateDoc(doc(db, 'systemConfig', 'workTimes'), payload);
+
+        resolve('success');
+    });
+};

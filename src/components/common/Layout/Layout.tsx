@@ -51,29 +51,29 @@ function Layout() {
             to: '/manage',
         },
         {
-            condition: !!profile?.googleId && profile.status === 'APPROVE',
+            condition:
+                !!profile?.googleId && profile.status === 'APPROVE' && (profile.role === 'ADMIN' || profile?.role === 'ORGANIZATION'),
             label: 'Calendar',
             to: '/manage/create-calendar',
         },
         {
-            condition: !!profile?.googleId && profile.status === 'APPROVE',
+            condition:
+                !!profile?.googleId && profile.status === 'APPROVE' && (profile.role === 'ADMIN' || profile?.role === 'ORGANIZATION'),
             label: 'Schedule',
             to: '/manage/weekly-schedule',
         },
+
         {
-            condition: !!profile?.googleId && profile.status === 'APPROVE',
-            label: 'เขียนใบลา',
-            to: '/manage/absent',
-        },
-        {
-            condition: !!profile?.googleId && profile.status === 'APPROVE',
+            condition:
+                !!profile?.googleId && profile.status === 'APPROVE' && (profile.role === 'ADMIN' || profile?.role === 'ORGANIZATION'),
             label: 'Member',
             to: '/manage/member',
         },
         {
-            condition: !!profile?.googleId && profile.status === 'APPROVE',
-            label: 'Register',
-            to: '/manage/register',
+            condition:
+                !!profile?.googleId && profile.status === 'APPROVE' && (profile.role === 'ADMIN' || profile?.role === 'ORGANIZATION'),
+            label: 'ตั้งค่าระบบ',
+            to: '/manage/system-config',
         },
     ];
 

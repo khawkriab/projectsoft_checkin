@@ -9,6 +9,7 @@ import { PrivacyPolicy } from 'pages/PrivacyPolicy';
 import { WeeklySchedule } from 'pages/WeeklySchedule';
 import HomeLanding from 'pages/HomeLanding';
 import Demo from 'pages/Demo';
+import SystemConfig from 'pages/SystemConfig';
 
 function RoutesManagement() {
     return (
@@ -24,6 +25,7 @@ function RoutesManagement() {
                 <Route path={`/manage/create-calendar`} element={<CreateMonthCalendar />} />
                 <Route path={`/manage/absent`} element={<LeaveRequest />} />
                 <Route path={`/manage/weekly-schedule`} element={<WeeklySchedule />} />
+                <Route path={`/manage/system-config`} element={<SystemConfig />} />
             </Route>
             <Route path={`/demo`} element={<Demo />} />
             <Route path={`/privacy`} element={<PrivacyPolicy />} />

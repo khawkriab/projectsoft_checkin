@@ -59,7 +59,7 @@ export function CheckinHistory() {
                 calendarDateList
                     .filter((fl) => !!fl.checkinData)
                     .sort((a, b) => b.date.localeCompare(a.date))
-                    .map((m) => <HistoryCard data={m} />)}
+                    .map((m) => <HistoryCard key={m.date} data={m} />)}
         </Stack>
     );
 }

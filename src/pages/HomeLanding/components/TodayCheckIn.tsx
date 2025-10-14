@@ -352,7 +352,7 @@ export function TodayCheckIn() {
                                     height: '400px',
                                 }}
                                 zoom={17}
-                                center={{ lat: areaConfig.lat, lng: areaConfig.lng }}
+                                center={currentLocation || { lat: areaConfig.lat, lng: areaConfig.lng }}
                                 onLoad={(map) => {
                                     new google.maps.Circle({
                                         map,
@@ -371,7 +371,7 @@ export function TodayCheckIn() {
                                     <AdvancedMarker
                                         position={currentLocation}
                                         label='You'
-                                        imgUrl='images/personPinCircleIcon.svg'
+                                        imgUrl='/projectsoft_checkin/images/personPinCircleIcon.svg'
                                         color='#00ff48'
                                     />
                                 )}

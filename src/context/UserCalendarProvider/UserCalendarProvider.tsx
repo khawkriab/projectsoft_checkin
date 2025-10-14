@@ -71,7 +71,7 @@ function UserCalendarProvider({ children }: { children: React.ReactNode }) {
                 if (td.absentId) statusCode = 'LEAVE';
 
                 checkinData = { ...td, statusCode: statusCode };
-            } else if (isBeforeDay && !startWork) {
+            } else if (isBeforeDay && !startWork && !data.isHoliDay) {
                 checkinData = {
                     googleId: '',
                     email: '',

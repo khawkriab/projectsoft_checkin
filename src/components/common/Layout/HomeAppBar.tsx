@@ -1,5 +1,6 @@
 import { AppBar, Box, Button, CardMedia, Toolbar, Typography } from '@mui/material';
 import { useFirebase } from 'context/FirebaseProvider';
+import SwitchThemeModeButton from './SwitchThemeModeButton';
 
 function HomeAppBar() {
     const { authLoading, isSignedIn, profile, signInWithGoogle, signOutUser } = useFirebase();
@@ -45,16 +46,14 @@ function HomeAppBar() {
                             <Typography variant='h5'>Projectsoft Check-In</Typography>
                         </Box>
                     </Box>
-
-                    <Box alignItems={'center'} sx={{ display: 'flex', gap: 1 }}>
+                    <SwitchThemeModeButton />
+                    {/* <Box alignItems={'center'} sx={{ display: 'flex', gap: 1 }}>
                         {authLoading ? (
                             'Loading...'
                         ) : (
                             <>
                                 {isSignedIn ? (
                                     <>
-                                        {/* <Avatar />
-                                        <Typography>{profile?.fullName}</Typography> */}
                                         <Button variant='contained' color='error' onClick={signOutUser}>
                                             Logout
                                         </Button>
@@ -68,7 +67,7 @@ function HomeAppBar() {
                                 )}
                             </>
                         )}
-                    </Box>
+                    </Box> */}
                 </Box>
             </Toolbar>
         </AppBar>

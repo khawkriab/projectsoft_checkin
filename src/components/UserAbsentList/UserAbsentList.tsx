@@ -49,6 +49,8 @@ function UserAbsentList({ calendar = [], afterUndate }: { calendar: CalendarDate
 
         const all = datesInRange.map((date) => {
             const checkInCurrentDate = checkInList?.find((tt) => tt.date === date);
+            const lpl = getLeavePeriodLabel(absentData?.leavePeriod);
+            const ltl = getLeaveType(absentData.leaveType);
 
             return updateWorkTime(
                 {
@@ -61,7 +63,7 @@ function UserAbsentList({ calendar = [], afterUndate }: { calendar: CalendarDate
                     leaveType: absentData.leaveType,
                     reason: absentData.reason ?? checkInCurrentDate?.reason ?? '',
                     time: checkInCurrentDate?.time ?? '',
-                    remark: checkInCurrentDate?.remark || '',
+                    remark: checkInCurrentDate?.remark || `${ltl}-${lpl}`,
                     isWorkOutside: checkInCurrentDate?.isWorkOutside ?? false,
                     approveBy: profile?.name ?? '',
                     approveByGoogleId: profile?.googleId ?? '',

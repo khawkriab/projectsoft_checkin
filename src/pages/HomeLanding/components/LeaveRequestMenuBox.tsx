@@ -21,6 +21,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { useFirebase } from 'context/FirebaseProvider';
 import { createLeave, getUserLeave } from 'context/FirebaseProvider/firebaseApi/leaveApi';
 import { leavePeriods, leaveTypes } from 'helper/leaveType';
+import { useNotification } from 'components/common/NotificationCenter';
 
 dayjs.locale('th');
 
@@ -66,6 +67,7 @@ function CustomMobileDatePicker(props: MobileDatePickerProps) {
 
 export function LeaveRequestMenuBox() {
     const { profile } = useFirebase();
+    const { openNotify } = useNotification();
     //
     const [open, setOpen] = useState(false);
     const [isSending, setIsSending] = useState(false);
@@ -118,21 +120,11 @@ export function LeaveRequestMenuBox() {
 
             // await getLeave(profile.googleId);
 
-            // setAlertOptions((prev) => ({
-            //     ...prev,
-            //     message: 'success send',
-            //     color: 'success',
-            //     open: true,
-            // }));
+            openNotify('success', 'success send');
         } catch (error) {
             console.error('error:', error);
 
-            // setAlertOptions((prev) => ({
-            //     ...prev,
-            //     message: 'error',
-            //     color: 'error',
-            //     open: true,
-            // }));
+            openNotify('error', 'error');
         }
         setIsSending(false);
         setOpen(false);
@@ -154,7 +146,6 @@ export function LeaveRequestMenuBox() {
                 sx={(theme) => ({
                     minHeight: `${50 * 2}px`,
                     flex: 'auto',
-                    // width: { xs: '100%', lg: '50%' },
                     bgcolor: theme.palette.mode === 'light' ? '#FF5252' : 'transparent',
                     color: theme.palette.primary.contrastText,
                     justifyContent: 'center',
@@ -165,6 +156,7 @@ export function LeaveRequestMenuBox() {
                 <Typography>เขียนใบลา</Typography>
                 <MailOutline sx={{ fontSize: { xs: '2.5rem', lg: '1.5rem' } }} />
             </MenuBox>
+            {/* ---------------------------------  --------------------------------- */}
             <Drawer
                 anchor='right'
                 slotProps={{

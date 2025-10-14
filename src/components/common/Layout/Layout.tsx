@@ -1,28 +1,10 @@
-import {
-    AppBar,
-    Avatar,
-    Box,
-    Button,
-    CardMedia,
-    Divider,
-    Drawer,
-    FormControlLabel,
-    Grid,
-    IconButton,
-    Stack,
-    Switch,
-    Toolbar,
-    Typography,
-    useTheme,
-} from '@mui/material';
-import { useColorMode } from 'context/ThemeProvider';
+import { AppBar, Avatar, Box, Button, CardMedia, Divider, Drawer, Grid, IconButton, Stack, Toolbar, Typography } from '@mui/material';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import LightModeIcon from '@mui/icons-material/LightMode';
-import DarkModeIcon from '@mui/icons-material/DarkMode';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import { useFirebase } from 'context/FirebaseProvider';
+import SwitchThemeModeButton from './SwitchThemeModeButton';
 
 function MenuItem({ children, to, onClick = () => {} }: { to: string; children: React.ReactNode; onClick?: () => void }) {
     const location = useLocation();
@@ -55,8 +37,7 @@ function MenuItem({ children, to, onClick = () => {} }: { to: string; children: 
 
 function Layout() {
     const { authLoading, isSignedIn, profile, signInWithGoogle, signOutUser } = useFirebase();
-    const { toggleColorMode } = useColorMode();
-    const theme = useTheme();
+
     const [open, setOpen] = useState(false);
 
     const toggleDrawer = (newOpen: boolean) => {
@@ -141,47 +122,7 @@ function Layout() {
                         </Grid>
                     </Box>
                     <Box display={'flex'} sx={{ gap: 1 }} alignItems={'center'}>
-                        <Box display={'flex'} sx={{ gap: 1 }} alignItems={'center'}>
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        sx={(theme) => ({
-                                            width: 80,
-                                            height: 34,
-                                            padding: '10px 12px',
-                                            '& .MuiSwitch-switchBase': {
-                                                padding: 0,
-                                                bottom: 0,
-                                                backgroundColor: '#ffffff',
-                                                '&.Mui-checked': {
-                                                    transform: 'translateX(40px)',
-                                                    backgroundColor: '#ffffff',
-                                                    '&:hover': {
-                                                        backgroundColor: '#ffffff',
-                                                    },
-                                                },
-                                                '&:hover': {
-                                                    backgroundColor: '#ffffff',
-                                                },
-                                            },
-                                        })}
-                                        icon={
-                                            <IconButton size='small' color='primary'>
-                                                <LightModeIcon />
-                                            </IconButton>
-                                        }
-                                        checkedIcon={
-                                            <IconButton size='small' color='primary'>
-                                                <DarkModeIcon />
-                                            </IconButton>
-                                        }
-                                        checked={theme.palette.mode === 'dark'}
-                                        onChange={toggleColorMode}
-                                    />
-                                }
-                                label={''}
-                            />
-                        </Box>
+                        <SwitchThemeModeButton />
                         {/* nav profile desktop */}
                         <Box alignItems={'center'} sx={{ display: { xs: 'none', sm: 'none', md: 'flex' }, gap: 1 }}>
                             {authLoading ? (

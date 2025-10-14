@@ -1,5 +1,4 @@
 import { Box, Grid } from '@mui/material';
-import HomeAppBar from '../../components/common/Layout/HomeAppBar';
 import { TodayCheckIn } from './components/TodayCheckIn';
 import CalendarCheckin from './components/CalendarCheckin';
 import { CheckinHistory } from './components/CheckinHistory';

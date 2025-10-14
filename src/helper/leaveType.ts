@@ -30,3 +30,9 @@ export const getLeavePeriodType = (value: LeavePeriodsLabel): LeavePeriodsType |
 
     return findData?.value || null;
 };
+export const getLeaveLabel = (type: LeaveTypes, period: LeavePeriodsType) => {
+    const a = getLeaveType(type);
+    const b = getLeavePeriodLabel(period);
+
+    return `${a}-${b}`;
+};

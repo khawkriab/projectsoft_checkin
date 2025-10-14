@@ -1,7 +1,13 @@
-import { Box, Drawer, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Drawer, IconButton, Stack, Table, TableBody, TableContainer, TableRow, Typography } from '@mui/material';
 import { MenuBox } from './MenuBox';
 import { Close } from '@mui/icons-material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { getUserLeave } from 'context/FirebaseProvider/firebaseApi/leaveApi';
+import { LeaveData } from 'type.global';
+import { useFirebase } from 'context/FirebaseProvider';
+import { TableBodyCell } from 'components/common/MuiTable';
+import dayjs from 'dayjs';
+import { getLeavePeriodLabel, getLeaveType } from 'helper/leaveType';
 
 function AmountBox({ remaining, total, label }: { remaining: number; total: number; label: string }) {
     return (
@@ -16,7 +22,24 @@ function AmountBox({ remaining, total, label }: { remaining: number; total: numb
 }
 
 export function LeaveRemainingMenuBox() {
+    const { profile } = useFirebase();
+    //
     const [open, setOpen] = useState(false);
+    const [leaveList, setLeaveList] = useState<LeaveData[]>([]);
+    //
+    const getLeave = async (googleId: string) => {
+        try {
+            const res = await getUserLeave(googleId);
+            setLeaveList([...res]);
+        } catch (error) {
+            console.log('error:', error);
+        }
+    };
+
+    useEffect(() => {
+        if (profile?.googleId && open) getLeave(profile.googleId);
+    }, [profile?.googleId, open]);
+    //
     return (
         <>
             <MenuBox flex={'auto'} minHeight={`${50 * 2}px`} onClick={() => setOpen(true)}>
@@ -50,8 +73,25 @@ export function LeaveRemainingMenuBox() {
                 </Box>
                 <hr style={{ width: '100%', margin: '12px 0 24px' }} />
 
-                <Box display={'flex'} flexDirection={'column'} justifyContent={'space-between'} height={'100%'}>
-                    {/*  */}
+                <Box>
+                    <TableContainer>
+                        <Table>
+                            <TableBody>
+                                {leaveList.map((m) => (
+                                    <TableRow key={m.id}>
+                                        <TableBodyCell>{`${dayjs(m.startDate).format('DD/MM/YYYY')} - ${dayjs(m.endDate).format(
+                                            'DD/MM/YYYY'
+                                        )}`}</TableBodyCell>
+                                        <TableBodyCell>{`${getLeaveType(m.leaveType)} - ${getLeavePeriodLabel(
+                                            m.leavePeriod
+                                        )}`}</TableBodyCell>
+                                        <TableBodyCell>{m.reason}</TableBodyCell>
+                                        <TableBodyCell>{m.status}</TableBodyCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
                 </Box>
             </Drawer>
         </>

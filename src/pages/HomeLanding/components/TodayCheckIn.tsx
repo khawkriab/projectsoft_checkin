@@ -1,16 +1,18 @@
-import { Box, Button, Grid, Modal, Stack, TextField, Typography } from '@mui/material';
-import { GoogleMap, useLoadScript } from '@react-google-maps/api';
+import { Box, Grid } from '@mui/material';
+import { useLoadScript } from '@react-google-maps/api';
 import DateTime from 'components/common/DateTime/DateTime';
-import { AdvancedMarker } from 'components/common/GoogleMaps';
 import { useFirebase } from 'context/FirebaseProvider';
-import { getSystemAreaConfig, getUserWorkTime, updateWorkTime } from 'context/FirebaseProvider/firebaseApi/checkinApi';
+import { getUserWorkTime, updateWorkTime } from 'context/FirebaseProvider/firebaseApi/checkinApi';
 import dayjs from 'dayjs';
-import isWithinRadius from 'helper/checkDistance';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useState } from 'react';
 import { deviceDetect } from 'react-device-detect';
-import { CheckinDate, LatLng, SystemAreaConfig } from 'type.global';
-import { FlipIcon } from './FlipIcon';
+import { CheckinDate, LatLng } from 'type.global';
 import { useUserCalendarContext } from 'context/UserCalendarProvider';
+import { CheckinButton } from './CheckinButton';
+import { ModalMapsCheckin } from './ModalMapsCheckin';
+import { ModalCheckinWorkOutside } from './ModalCheckinWorkOutside';
+
+export type OnCheckinType = (isWorkOutside?: boolean, remark?: string, latlng?: LatLng, reason?: string) => Promise<void>;
 
 const libraries = ['places', 'marker'];
 
@@ -29,50 +31,22 @@ function logError(error: GeolocationPositionError) {
 
 export function TodayCheckIn() {
     const parseData = dayjs().format('YYYY-MM-DD');
-
     //
     const { profile } = useFirebase();
-    const { calendarConfig, calendarDateList, getUserCheckin } = useUserCalendarContext();
-    //
-    const watchId = useRef<number>(0);
-    const submitButtonRemark = useRef('');
-    //
-    const [checkAvail, setCheckAvail] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
-    const [currentLocation, setCurrentLocation] = useState<LatLng | null>(null);
-    // const [userCheckinToday, setUserCheckinToday] = useState<CheckinDate | null | undefined>(undefined);
-    const [areaConfig, setAreaConfig] = useState<SystemAreaConfig | null>(null);
-    const [openModalOutsideArea, setOpenModalOutsideArea] = useState(false);
-    const [reason, setReason] = useState('');
-    const [isSending, setIsSending] = useState(false);
-    //
-
+    const { getUserCheckin } = useUserCalendarContext();
     const { isLoaded, loadError } = useLoadScript({
         googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY as string,
         libraries: libraries as any,
         mapIds: [process.env.REACT_APP_GOOGLE_MAPS_ID as string],
     });
-
+    //
+    const [checkAvail, setCheckAvail] = useState(false);
+    const [checkinAreaSuccess, setCheckinAreaSuccess] = useState(false);
+    const [isSending, setIsSending] = useState(false);
+    const [openModalOutsideArea, setOpenModalOutsideArea] = useState(false);
     //
 
-    const todayConfig = useMemo(() => {
-        const d = calendarConfig.find((f) => f.date === dayjs().format('YYYY-MM-DD'));
-
-        return {
-            isWorkDay: !!d && !d?.isHoliDay,
-            isWFH: d?.isWFH,
-        };
-    }, [calendarConfig.length]);
-
-    const userCheckinToday = useMemo(() => {
-        if (calendarDateList.length <= 0) return null;
-
-        const d = calendarDateList.find((f) => f.date === dayjs().format('YYYY-MM-DD'));
-
-        return d?.checkinData;
-    }, [JSON.stringify(calendarDateList)]);
-
-    const onCheckin = async (isWorkOutside = false, remark?: string, latlng?: LatLng) => {
+    const onCheckin: OnCheckinType = async (isWorkOutside = false, remark, latlng, reason) => {
         setIsSending(true);
         if (profile) {
             const res = await getUserWorkTime({ startDate: parseData, email: profile.email });
@@ -98,8 +72,6 @@ export function TodayCheckIn() {
             try {
                 await updateWorkTime(payload, res?.id);
                 await getUserCheckin();
-
-                // openNotify('success', 'updated successfully');
             } catch (error) {
                 console.error('error:', error);
             }
@@ -109,99 +81,13 @@ export function TodayCheckIn() {
             setIsSending(false);
             setOpenModalOutsideArea(false);
         } else {
-            setIsLoading(false);
+            setCheckinAreaSuccess(true);
 
             setTimeout(() => {
                 setCheckAvail(false);
             }, 3000);
         }
     };
-
-    const onSubmit = (e: React.ChangeEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        onCheckin(true, submitButtonRemark.current);
-    };
-
-    // const getUserCheckinToday = async () => {
-    //     if (!profile?.email) return;
-    //     console.log('getUserCheckinToday');
-
-    //     try {
-    //         const res = await getUserWorkTime({ startDate: parseData, email: profile?.email || '' });
-
-    //         if (res) {
-    //             setUserCheckinToday({ ...res });
-    //         } else {
-    //             setUserCheckinToday(null);
-    //         }
-    //     } catch (error) {
-    //         console.error('error:', error);
-    //         setUserCheckinToday(null);
-    //     }
-    // };
-
-    const handleOpen = () => {
-        setCheckAvail(true);
-    };
-    const handleClose = () => {
-        setCheckAvail(false);
-        navigator.geolocation.clearWatch(watchId.current);
-    };
-
-    useEffect(() => {
-        if (checkAvail) {
-            if (!areaConfig) {
-                setCheckAvail(false);
-
-                console.error('Not area config.');
-
-                return;
-            }
-
-            console.log('start watch position');
-            watchId.current = navigator.geolocation.watchPosition(
-                (position) => {
-                    console.log('watchPosition');
-                    const { latitude, longitude } = position.coords;
-                    const current = { lat: latitude, lng: longitude };
-                    const within = isWithinRadius(current, { lat: areaConfig.lat, lng: areaConfig.lng }, areaConfig.radius); // in meters
-                    setCurrentLocation(current);
-                    // setIsWithin(within);
-                    // onMatchTarget(within, current);
-                    console.log('within:', within);
-                    if (within) {
-                        navigator.geolocation.clearWatch(watchId.current);
-                        onCheckin();
-                    }
-                },
-                (error) => {
-                    console.error('Error getting location:', error);
-                    // onErrorLocation(logError(error));
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000, // max time to wait for *each* update
-                    maximumAge: 0, // don’t reuse cached position
-                }
-            );
-        }
-
-        return () => navigator.geolocation.clearWatch(watchId.current);
-    }, [checkAvail, JSON.stringify(areaConfig)]);
-
-    useEffect(() => {
-        const getAreaConfig = async () => {
-            try {
-                const res = await getSystemAreaConfig();
-
-                setAreaConfig({ ...res });
-            } catch (error) {
-                console.error('error:', error);
-            }
-        };
-
-        getAreaConfig();
-    }, []);
 
     return (
         <>
@@ -239,217 +125,33 @@ export function TodayCheckIn() {
                         </Box>
                     </Grid>
                     <Grid size={{ xs: 'auto', lg: 3 }} display={'flex'} flexDirection={'column'} gap={'6px'}>
-                        {todayConfig.isWorkDay ? (
-                            <>
-                                {userCheckinToday === null && (
-                                    <>
-                                        {todayConfig.isWFH ? (
-                                            <Button
-                                                loading={isSending}
-                                                variant='contained'
-                                                color='warning'
-                                                sx={{ height: 'calc(50% - 4px)' }}
-                                                onClick={() => onCheckin(true, 'WFH')}
-                                            >
-                                                check-in WFH
-                                            </Button>
-                                        ) : (
-                                            <Button
-                                                variant='contained'
-                                                color='warning'
-                                                sx={{ height: 'calc(50% - 4px)' }}
-                                                onClick={handleOpen}
-                                            >
-                                                check-in
-                                            </Button>
-                                        )}
-                                        <Button
-                                            variant='contained'
-                                            color='secondary'
-                                            sx={{ height: 'calc(50% - 4px)' }}
-                                            onClick={() => setOpenModalOutsideArea(true)}
-                                        >
-                                            ทำงานนอกสถานที่
-                                        </Button>
-                                    </>
-                                )}
-                                {userCheckinToday && (
-                                    <>
-                                        {/* <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, marginBottom: 2, marginTop: 2 }}> */}
-
-                                        <Box
-                                            sx={(theme) => ({
-                                                display: 'flex',
-                                                flexWrap: 'wrap',
-                                                justifyContent: 'center',
-                                                alignItems: 'center',
-                                                flexDirection: 'column',
-                                                width: '100%',
-                                                height: '100%',
-                                                padding: '2px',
-                                                borderRadius: 1,
-                                                color: theme.palette.success.contrastText,
-                                                backgroundColor:
-                                                    Number(userCheckinToday.status) === 99 ? '#ff6f00' : theme.palette.success.main,
-                                            })}
-                                        >
-                                            <Typography>สถานะ: {Number(userCheckinToday.status) === 99 ? 'รอ' : 'อนุมัติแล้ว'}</Typography>
-                                            <Typography>เวลาเข้างาน:</Typography>
-                                            <Typography>
-                                                {dayjs(`${userCheckinToday.date} ${userCheckinToday.time}`).format('DD-MM-YYYY HH:mm')}
-                                            </Typography>
-                                        </Box>
-                                        {/* </Box> */}
-                                    </>
-                                )}
-                            </>
-                        ) : (
-                            <Box
-                                sx={(theme) => ({
-                                    display: 'flex',
-                                    flexWrap: 'wrap',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    flexDirection: 'column',
-                                    width: '100%',
-                                    height: '100%',
-                                    padding: '2px 12px',
-                                    borderRadius: 1,
-                                    color: theme.palette.success.contrastText,
-                                    backgroundColor: '#909090',
-                                })}
-                            >
-                                หยุด
-                            </Box>
-                        )}
+                        <CheckinButton
+                            isMapsLoaded={isLoaded}
+                            isSending={isSending}
+                            onCheckin={onCheckin}
+                            onOpenModalMapsCheckin={() => setCheckAvail(true)}
+                            onOpenModalOutsideArea={() => setOpenModalOutsideArea(true)}
+                        />
                     </Grid>
                 </Grid>
             </Box>
             {/* ------------------------------- popup ----------------------------- */}
-            <Modal open={checkAvail} onClose={handleClose} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <Box>
-                    <Box
-                        sx={{
-                            bgcolor: '#fff',
-                            borderRadius: '100%',
-                            width: '300px',
-                            height: '300px',
-                            overflow: 'hidden',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            border: '4px solid #878787',
-                        }}
-                    >
-                        {isLoaded && checkAvail && areaConfig && (
-                            <GoogleMap
-                                options={{
-                                    mapId: process.env.REACT_APP_GOOGLE_MAPS_STYLE_ID,
-                                    disableDefaultUI: true,
-                                }}
-                                mapContainerStyle={{
-                                    width: '100%',
-                                    height: '400px',
-                                }}
-                                zoom={17}
-                                center={currentLocation || { lat: areaConfig.lat, lng: areaConfig.lng }}
-                                onLoad={(map) => {
-                                    new google.maps.Circle({
-                                        map,
-                                        center: { lat: areaConfig.lat, lng: areaConfig.lng },
-                                        radius: areaConfig.radius, // in meters
-                                        fillColor: '#FF0000',
-                                        fillOpacity: 0.2,
-                                        strokeColor: '#FF0000',
-                                        strokeOpacity: 0.7,
-                                        strokeWeight: 2,
-                                    });
-                                }}
-                            >
-                                {/* <AdvancedMarker position={target} label='Target' imgUrl='images/apartmentIcon.svg' /> */}
-                                {currentLocation && (
-                                    <AdvancedMarker
-                                        position={currentLocation}
-                                        label='You'
-                                        imgUrl='/projectsoft_checkin/images/personPinCircleIcon.svg'
-                                        color='#00ff48'
-                                    />
-                                )}
-                            </GoogleMap>
-                        )}
-                        {!isLoading && <FlipIcon />}
-                    </Box>
-                    <Typography
-                        sx={(theme) => ({
-                            mt: 1,
-                            textAlign: 'center',
-                            // color: theme.palette.secondary.contrastText,
-                            // fontSize: theme.typography.h5,
-                        })}
-                        variant='h5'
-                    >
-                        กำลังค้นหาตำแหน่ง....
-                    </Typography>
-                </Box>
-            </Modal>
-            <Modal
-                open={openModalOutsideArea}
+            <ModalMapsCheckin
+                isMapsLoaded={isLoaded}
+                checkinAreaSuccess={checkinAreaSuccess}
+                open={checkAvail}
+                onCheckin={onCheckin}
                 onClose={() => {
-                    submitButtonRemark.current = '';
-                    setOpenModalOutsideArea(false);
+                    setCheckinAreaSuccess(false);
+                    setCheckAvail(false);
                 }}
-                sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-            >
-                <Box
-                    sx={{
-                        bgcolor: '#fff',
-                        borderRadius: '12px',
-                        p: '24px 12px 12px',
-                        // width: '300px',
-                        // height: '300px',
-                        // overflow: 'hidden',
-                        // display: 'flex',
-                        // justifyContent: 'center',
-                        // alignItems: 'center',
-                        border: '4px solid #878787',
-                        width: '100%',
-                        maxWidth: { xs: '90vw', lg: '700px' },
-                    }}
-                >
-                    <Box component={'form'} onSubmit={onSubmit}>
-                        <TextField
-                            fullWidth
-                            required
-                            label='ระบุเหตุผล หรือ พื้นที่ที่ลงไปทำงาน'
-                            placeholder='ระบุเหตุผล หรือ พื้นที่ที่ลงไปทำงาน'
-                            value={reason}
-                            onChange={(e) => setReason(e.target.value)}
-                        />
-                        <Box display={'flex'} ml={'auto'} mt={2} justifyContent={'flex-end'} gap={1}>
-                            <Button
-                                type='submit'
-                                variant='contained'
-                                color='secondary'
-                                sx={{ width: '100%', height: { xs: 'auto' } }}
-                                onClick={() => (submitButtonRemark.current = 'WFH')}
-                                loading={isSending}
-                            >
-                                ลงชื่อ WFH
-                            </Button>
-                            <Button
-                                type='submit'
-                                variant='contained'
-                                color='error'
-                                sx={{ width: '100%', height: { xs: 'auto' } }}
-                                onClick={() => (submitButtonRemark.current = 'ทำงานนอกสถานที่')}
-                                loading={isSending}
-                            >
-                                ลงชื่อทำงานนอกสถานที่
-                            </Button>
-                        </Box>
-                    </Box>
-                </Box>
-            </Modal>
+            />
+            <ModalCheckinWorkOutside
+                isSending={isSending}
+                open={openModalOutsideArea}
+                onClose={() => setOpenModalOutsideArea(false)}
+                onCheckin={onCheckin}
+            />
         </>
     );
 }

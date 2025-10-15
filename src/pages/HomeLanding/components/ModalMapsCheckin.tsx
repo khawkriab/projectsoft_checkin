@@ -107,6 +107,7 @@ export function ModalMapsCheckin({
                             options={{
                                 mapId: process.env.REACT_APP_GOOGLE_MAPS_STYLE_ID,
                                 disableDefaultUI: true,
+                                mapTypeId: 'hybrid',
                             }}
                             mapContainerStyle={{
                                 width: '100%',
@@ -148,6 +149,15 @@ export function ModalMapsCheckin({
                     variant='h5'
                 >
                     กำลังค้นหาตำแหน่ง....
+                </Typography>
+                <Typography
+                    sx={(theme) => ({
+                        mt: 1,
+                        textAlign: 'center',
+                        color: theme.palette.primary.contrastText,
+                    })}
+                >
+                    {currentLocation && `${currentLocation?.lat},${currentLocation?.lng}`}
                 </Typography>
             </Box>
         </Modal>

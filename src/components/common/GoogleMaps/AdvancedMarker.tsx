@@ -16,6 +16,12 @@ export function AdvancedMarker({
     const maps = useGoogleMap();
 
     useEffect(() => {
+        if (markerRef.current && position?.lat && position?.lng) {
+            markerRef.current.position = position;
+        }
+    }, [position?.lat, position?.lng]);
+
+    useEffect(() => {
         if (!window.google || !window.google.maps || !maps) return;
 
         // Create the AdvancedMarkerElement

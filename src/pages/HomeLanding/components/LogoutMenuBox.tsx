@@ -1,24 +1,30 @@
 import { Typography } from '@mui/material';
 import { MenuBox } from './MenuBox';
-import { SettingsOutlined } from '@mui/icons-material';
+import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
+import { useFirebase } from 'context/FirebaseProvider';
 
-export function SettingsMenuBox() {
+function LogoutMenuBox() {
+    const { signOutUser } = useFirebase();
+
     return (
         <MenuBox
             sx={(theme) => ({
                 minHeight: `${50 * 2}px`,
                 flex: 'auto',
                 // width: { xs: '100%', lg: '50%' },
-                bgcolor: theme.palette.mode === 'light' ? theme.palette.primary.light : 'transparent',
+                bgcolor: theme.palette.mode === 'light' ? theme.palette.error.light : 'transparent',
                 color: theme.palette.primary.contrastText,
                 justifyContent: 'center',
                 gap: '6px',
                 flexDirection: { xs: 'column-reverse', lg: 'row' },
                 cursor: 'pointer',
             })}
+            onClick={signOutUser}
         >
-            <Typography>ตั้งค่า</Typography>
-            <SettingsOutlined sx={{ fontSize: { xs: '2.5rem', lg: '1.5rem' } }} />
+            <Typography>ออกจากระบบ</Typography>
+            <PowerSettingsNewIcon sx={{ fontSize: { xs: '2.5rem', lg: '1.5rem' } }} />
         </MenuBox>
     );
 }
+
+export default LogoutMenuBox;

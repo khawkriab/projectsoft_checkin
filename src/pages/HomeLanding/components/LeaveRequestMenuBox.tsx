@@ -151,6 +151,7 @@ export function LeaveRequestMenuBox() {
                     justifyContent: 'center',
                     gap: '6px',
                     flexDirection: { xs: 'column-reverse', lg: 'row' },
+                    cursor: 'pointer',
                 })}
             >
                 <Typography>เขียนใบลา</Typography>
@@ -270,6 +271,12 @@ export function LeaveRequestMenuBox() {
                                     onChange={(e) => setLeaveForm((prev) => ({ ...prev, reason: e.target.value }))}
                                     fullWidth
                                 />
+                            </Grid>
+                            <Grid size={{ xs: 12 }}>
+                                <Typography color='error'>***หมายเหตุ***</Typography>
+                                <Typography color='error'>
+                                    ถ้าลากิจหรือลาป่วย ให้แจ้งพี่โอ๊ตก่อนเขียนใบลา หากไม่แจ้งและถูกปฏิเสธจะถือว่าขาด
+                                </Typography>
                             </Grid>
                         </Grid>
                         <Box display={'flex'} justifyContent={'flex-end'}>

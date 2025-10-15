@@ -1,4 +1,4 @@
-import { Box, Button, Modal, TextField } from '@mui/material';
+import { Box, Button, Modal, TextField, Typography } from '@mui/material';
 import { OnCheckinType } from './TodayCheckIn';
 import { useRef, useState } from 'react';
 
@@ -49,6 +49,12 @@ export function ModalCheckinWorkOutside({
                         value={reason}
                         onChange={(e) => setReason(e.target.value)}
                     />
+                    <Box>
+                        <Typography color='error'>***หมายเหตุ***</Typography>
+                        <Typography color='error'>
+                            ถ้าลงชื่อ WFH ในวันเข้างานปกติให้แจ้งพี่โอ๊ต หากไม่แจ้งและถูกปฏิเสธจะถือว่าขาด
+                        </Typography>
+                    </Box>
                     <Box display={'flex'} ml={'auto'} mt={2} justifyContent={'flex-end'} gap={1}>
                         <Button
                             type='submit'

@@ -5,6 +5,7 @@ import { LeaveRequestMenuBox } from './LeaveRequestMenuBox';
 import { SettingsMenuBox } from './SettingsMenuBox';
 import ManageUserCheckinMenuBox from './ManageUserCheckinMenuBox';
 import { useFirebase } from 'context/FirebaseProvider';
+import LogoutMenuBox from './LogoutMenuBox';
 
 export function MenuList() {
     const { profile } = useFirebase();
@@ -27,6 +28,9 @@ export function MenuList() {
                     )}
                     <Grid size={{ xs: 4, lg: 3 }} display={'flex'}>
                         <SettingsMenuBox />
+                    </Grid>
+                    <Grid size={{ xs: 4, lg: 3 }} display={'flex'}>
+                        <LogoutMenuBox />
                     </Grid>
                 </Grid>
             </Stack>

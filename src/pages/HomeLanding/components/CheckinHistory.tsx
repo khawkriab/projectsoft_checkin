@@ -7,7 +7,7 @@ import { getLeaveLabel } from 'helper/leaveType';
 
 function HistoryCard({ data }: { data: UserCalendarCheckin }) {
     return (
-        <MenuBox minHeight={`${50 * 2}px`}>
+        <MenuBox minHeight={`${50 * 2}px`} marginTop={'12px'}>
             <Box>
                 <Typography variant='h6' sx={(theme) => ({ color: theme.palette.primary.light, fontWeight: 500 })}>
                     {dayjs(data.date).format('LL')}

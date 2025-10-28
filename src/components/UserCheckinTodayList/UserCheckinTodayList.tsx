@@ -10,13 +10,21 @@ import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/Mu
 import dayjs from 'dayjs';
 import usePageVisibility from 'hooks/usePageVisibility';
 import { useEffect, useRef, useState } from 'react';
-import { CheckinDate } from 'type.global';
+import { CalendarDateConfig, CheckinDate } from 'type.global';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { CalendarDateExtendText } from 'pages/Home/HomeFirebase';
 
 dayjs.extend(customParseFormat);
 
-function UserCheckinTodayList({ dateList, afterUndate }: { dateList: CalendarDateExtendText[]; afterUndate: () => Promise<void> | void }) {
+function UserCheckinTodayList({
+    dateList,
+    todayConfig,
+    afterUndate,
+}: {
+    dateList: CalendarDateExtendText[];
+    todayConfig?: CalendarDateConfig;
+    afterUndate: () => Promise<void> | void;
+}) {
     const isVisible = usePageVisibility();
     const { profile } = useFirebase();
     //
@@ -98,6 +106,7 @@ function UserCheckinTodayList({ dateList, afterUndate }: { dateList: CalendarDat
         const res = await getWorkTimeListWithStatus({ startDateString: date, endDateString: date, status: 99 });
 
         // setCheckinList([...res.filter((f) => f.status === 99 && dayjs(Number(f.time)).isSame(dayjs(), 'day'))]);
+
         setCheckinList([...res]);
     };
 
@@ -116,7 +125,6 @@ function UserCheckinTodayList({ dateList, afterUndate }: { dateList: CalendarDat
         if (isTimeBetween(dayjs().format('HH:mm'))) {
             timer.current = setInterval(() => {
                 getCheckinData();
-                console.log('getCheckinData');
             }, 30000);
         }
 
@@ -153,15 +161,29 @@ function UserCheckinTodayList({ dateList, afterUndate }: { dateList: CalendarDat
                                             {`[${c?.latlng?.lat},${c?.latlng?.lng}]`}
                                         </TableBodyCell>
                                         <TableBodyCell>
-                                            <Button
-                                                size='small'
-                                                loading={updating}
-                                                variant='contained'
-                                                color='warning'
-                                                onClick={() => onApprove(c)}
-                                            >
-                                                อนุมัติ
-                                            </Button>
+                                            {(profile?.role === 'ORGANIZATION' || profile?.role === 'ADMIN') && (
+                                                <Button
+                                                    size='small'
+                                                    loading={updating}
+                                                    variant='contained'
+                                                    color='warning'
+                                                    onClick={() => onApprove(c)}
+                                                >
+                                                    อนุมัติ
+                                                </Button>
+                                            )}
+
+                                            {profile?.role === 'STAFF' && !todayConfig?.isWFH && !c.isWorkOutside && (
+                                                <Button
+                                                    size='small'
+                                                    loading={updating}
+                                                    variant='contained'
+                                                    color='warning'
+                                                    onClick={() => onApprove(c)}
+                                                >
+                                                    อนุมัติ
+                                                </Button>
+                                            )}
                                         </TableBodyCell>
                                     </TableRow>
                                 ))}

@@ -138,11 +138,12 @@ function Home() {
             startDateString: parseDate.format('YYYY-MM-DD'),
             endDateString: parseDate.endOf('month').format('YYYY-MM-DD'),
         });
-        const n = groupByDate(
+        const allGroup = groupByDate(
             workTimeList.filter((f) => f.status !== 99),
             calendarDateConfig
         );
-        setCheckinDataList([...n]);
+
+        setCheckinDataList([...allGroup]);
     };
 
     useEffect(() => {
@@ -191,7 +192,7 @@ function Home() {
                                 defaultWfh={!!calendarConfig.find((f) => f.date === dayjs().format('YYYY-MM-DD'))?.isWFH}
                             />
                         )} */}
-                        {(profile?.role === 'ADMIN' || profile?.role === 'STAFF') && (
+                        {(profile?.role === 'ORGANIZATION' || profile?.role === 'ADMIN' || profile?.role === 'STAFF') && (
                             <>
                                 <UserCheckinTodayForm
                                     dateList={calendarCheckinAllList}
@@ -200,10 +201,13 @@ function Home() {
                                 />
                                 <UserCheckinTodayList
                                     dateList={calendarCheckinAllList}
+                                    todayConfig={calendarConfig.find((f) => dayjs(Number(f.date)).isSame(dayjs(), 'day'))}
                                     afterUndate={() => getCheckin(years, month, calendarConfig)}
                                 />
-                                <UserAbsentList calendar={calendarConfig} afterUndate={() => getCheckin(years, month, calendarConfig)} />
                             </>
+                        )}
+                        {(profile?.role === 'ORGANIZATION' || profile?.role === 'ADMIN') && (
+                            <UserAbsentList calendar={calendarConfig} afterUndate={() => getCheckin(years, month, calendarConfig)} />
                         )}
                     </Box>
                 )

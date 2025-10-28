@@ -52,7 +52,7 @@ export function ModalMapsCheckin({
                     console.log('within:', within);
                     if (within) {
                         navigator.geolocation.clearWatch(watchId.current);
-                        onCheckin();
+                        onCheckin(false, '', current);
                     }
                 },
                 (error) => {

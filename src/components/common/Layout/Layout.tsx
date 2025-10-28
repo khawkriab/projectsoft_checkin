@@ -72,6 +72,12 @@ function Layout() {
         {
             condition:
                 !!profile?.googleId && profile.status === 'APPROVE' && (profile.role === 'ADMIN' || profile?.role === 'ORGANIZATION'),
+            label: 'จดหมายลา',
+            to: '/manage/leave-request',
+        },
+        {
+            condition:
+                !!profile?.googleId && profile.status === 'APPROVE' && (profile.role === 'ADMIN' || profile?.role === 'ORGANIZATION'),
             label: 'ตั้งค่าระบบ',
             to: '/manage/system-config',
         },

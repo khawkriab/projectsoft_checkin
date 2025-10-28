@@ -28,10 +28,14 @@ export const createLeave = (payload: LeaveData) => {
     });
 };
 
-export const getLeaveList = (status: LeaveStatus = 'WAITING') => {
+export const getLeaveList = (status?: LeaveStatus) => {
     return new Promise<(FirebaseQuery & LeaveData)[]>(async (resolve, reject) => {
         const usersRef = collection(db, 'absentList');
-        const q = query(usersRef, where('status', '==', status));
+        let q = query(usersRef);
+
+        if (status) {
+            q = query(usersRef, where('status', '==', status));
+        }
 
         const querySnapshot = await getDocs(q);
 

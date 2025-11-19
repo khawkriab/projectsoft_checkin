@@ -8,7 +8,7 @@ dayjs.extend(customParseFormat);
 
 export const createLeave = (payload: LeaveData) => {
     return new Promise<string>(async (resolve, reject) => {
-        await addDoc(collection(db, 'absentList'), {
+        await addDoc(collection(db, 'leaveList'), {
             name: payload.name,
             email: payload.email,
             suid: payload.suid,
@@ -30,7 +30,7 @@ export const createLeave = (payload: LeaveData) => {
 
 export const getLeaveList = (status?: LeaveStatus) => {
     return new Promise<(FirebaseQuery & LeaveData)[]>(async (resolve, reject) => {
-        const usersRef = collection(db, 'absentList');
+        const usersRef = collection(db, 'leaveList');
         let q = query(usersRef);
 
         if (status) {
@@ -49,7 +49,7 @@ export const getLeaveList = (status?: LeaveStatus) => {
 };
 export const getUserLeave = (suid: string) => {
     return new Promise<(FirebaseQuery & LeaveData)[]>(async (resolve, reject) => {
-        const usersRef = collection(db, 'absentList');
+        const usersRef = collection(db, 'leaveList');
         const q = query(usersRef, where('suid', '==', suid));
 
         const querySnapshot = await getDocs(q);
@@ -69,7 +69,7 @@ export const getUserLeave = (suid: string) => {
 // startDate format 'YYYY-MM-DD'
 export const getUserLeaveBySuidAndDate = (suid: string, startDate: string) => {
     return new Promise<FirebaseQuery & LeaveData>(async (resolve, reject) => {
-        const usersRef = collection(db, 'absentList');
+        const usersRef = collection(db, 'leaveList');
         const q = query(usersRef, where('suid', '==', suid), where('startDate', '==', startDate));
 
         const querySnapshot = await getDocs(q);
@@ -90,7 +90,7 @@ export const getUserLeaveBySuidAndDate = (suid: string, startDate: string) => {
 export const updateLeave = (abId: string, payload: { status: LeaveStatus; approveBy: string; approveBySuid: string }) => {
     return new Promise<string>(async (resolve, reject) => {
         await setDoc(
-            doc(db, 'absentList', abId),
+            doc(db, 'leaveList', abId),
             {
                 status: payload.status,
                 approveBy: payload.approveBy,

@@ -1,35 +1,11 @@
-import {
-    Alert,
-    AlertColor,
-    Box,
-    Button,
-    Drawer,
-    FormControl,
-    FormLabel,
-    Grid,
-    IconButton,
-    Slide,
-    Snackbar,
-    Stack,
-    Table,
-    TableBody,
-    TableContainer,
-    TableRow,
-    TextField,
-    ToggleButton,
-    ToggleButtonGroup,
-    Typography,
-} from '@mui/material';
+import { Box, Stack, Table, TableBody, TableContainer, TableRow, Typography } from '@mui/material';
 import { TableBodyCell } from 'components/common/MuiTable';
-import CloseIcon from '@mui/icons-material/Close';
 import { useEffect, useMemo, useState } from 'react';
-import { LocalizationProvider, MobileDatePicker, MobileDatePickerProps } from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { MobileDatePicker, MobileDatePickerProps } from '@mui/x-date-pickers';
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/th';
 import { LeaveData, FirebaseQuery, LeavePeriodsType, LeaveTypes, Profile } from 'type.global';
-import { createLeave, getLeaveList, getUserLeave } from 'context/FirebaseProvider/firebaseApi/leaveApi';
-import { useFirebase } from 'context/FirebaseProvider';
+import { getLeaveList } from 'context/FirebaseProvider/firebaseApi/leaveApi';
 import { getLeavePeriodLabel, getLeaveType, leavePeriods, leaveTypes } from 'helper/leaveType';
 import { FilterCheckinUser } from 'components/common/FilterCheckinUser';
 import { getUsersList } from 'context/FirebaseProvider/firebaseApi/userApi';
@@ -85,6 +61,7 @@ function LeaveRequest() {
         const eml = userFilterList.map((m) => m.suid);
         return leaveList.filter((f) => eml.includes(f.suid));
     }, [JSON.stringify(leaveList), JSON.stringify(userFilterList)]);
+
     useEffect(() => {
         const getLeave = async () => {
             try {

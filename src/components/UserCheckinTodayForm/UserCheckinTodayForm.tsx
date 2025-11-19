@@ -107,7 +107,7 @@ function UserCheckinTodayForm({
                     <FormControl
                         required
                         error={!updateDataForm.dateId}
-                        disabled={profile?.role !== 'ADMIN'}
+                        disabled={profile?.role !== 'ADMIN' && profile?.role !== 'ORGANIZATION'}
                         // disabled
                         fullWidth
                     >

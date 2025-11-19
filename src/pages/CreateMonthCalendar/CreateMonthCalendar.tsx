@@ -298,7 +298,7 @@ function CreateMonthCalendar() {
                     }}
                 />
             </LocalizationProvider>
-            {profile?.role === 'ADMIN' && (
+            {(profile?.role === 'ADMIN' || profile?.role === 'ORGANIZATION') && (
                 <Box display={'flex'} justifyContent={'flex-end'} width={'100%'} margin={'auto'} pr={'12px'}>
                     {/* {calendarDateConfig[3]?.isHoliDay && (
                         <TextField

@@ -177,7 +177,7 @@ function WeeklySchedule() {
                 });
             }
 
-            if (profile?.role === 'ADMIN') {
+            if (profile?.role === 'ADMIN' || profile?.role === 'ORGANIZATION') {
                 getUserList();
             }
         };
@@ -261,7 +261,7 @@ function WeeklySchedule() {
                         <Box marginTop={'auto'} marginLeft={'auto'} pt={4} pb={2}>
                             <Box display={'flex'} alignItems={'center'}>
                                 ชื่อ:{' '}
-                                {profile?.role === 'ADMIN' ? (
+                                {profile?.role === 'ADMIN' || profile?.role === 'ORGANIZATION' ? (
                                     <FormControl fullWidth>
                                         <Select
                                             name='suid'

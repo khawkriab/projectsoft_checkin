@@ -130,18 +130,12 @@ function Layout() {
                                 'Loading...'
                             ) : (
                                 <>
-                                    {isSignedIn ? (
+                                    {isSignedIn && (
                                         <>
                                             <Avatar />
                                             <Typography>{profile?.fullName}</Typography>
                                             <Button variant='contained' color='error' onClick={signOutUser}>
                                                 Logout
-                                            </Button>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Button variant='contained' color='secondary' onClick={signInWithGoogle}>
-                                                Signin with google
                                             </Button>
                                         </>
                                     )}
@@ -180,18 +174,12 @@ function Layout() {
                             'Loading...'
                         ) : (
                             <>
-                                {isSignedIn ? (
+                                {isSignedIn && (
                                     <>
                                         <Avatar />
                                         <Typography>{profile?.fullName}</Typography>
                                         <Button variant='contained' color='error' onClick={signOutUser}>
                                             Logout
-                                        </Button>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Button variant='contained' color='secondary' onClick={signInWithGoogle}>
-                                            Signin with google
                                         </Button>
                                     </>
                                 )}
@@ -225,6 +213,11 @@ function Layout() {
                         <Button variant='contained' color='primary' onClick={signInWithGoogle}>
                             Signin with google
                         </Button>
+                    </Box>
+                )}
+                {authLoading && (
+                    <Box display={'flex'} justifyContent={'center'} alignItems={'center'} height={'80vh'}>
+                        Loading...
                     </Box>
                 )}
             </Box>

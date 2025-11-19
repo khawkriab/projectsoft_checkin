@@ -192,7 +192,7 @@ function Home() {
                     <Box display={'flex'} flexWrap={'wrap'} alignItems={'center'} justifyContent={'space-between'} marginBottom={2} gap={2}>
                         <Box display={'flex'} flexWrap={'wrap'} alignItems={'center'} gap={2}>
                             <Typography variant='h5'>ตารางเช็คชื่อเข้างานประจำเดือน </Typography>
-                            {profile?.role === 'ADMIN' ? (
+                            {profile?.role === 'ADMIN' || profile?.role === 'ORGANIZATION' ? (
                                 <Box display={'flex'} flex={'auto'} gap={2}>
                                     <Select
                                         name='month'

@@ -10,7 +10,7 @@ interface FirebaseContextType {
     profile: Profile | null;
     isSignedIn: boolean;
     authLoading: boolean;
-    updateUserInfo: (email: string) => Promise<void>;
+    updateUserInfo: (email: string) => Promise<Profile | undefined>;
     signInWithGoogle: () => Promise<void>;
     signOutUser: () => Promise<void>;
 }
@@ -56,6 +56,8 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
     const signInWithGoogle = async () => {
         try {
             const user = await signInWithPopup(auth, provider);
+            const r = await getUserInfo(user.user.email || '');
+            console.log('r:', r);
             window.location.assign('/projectsoft_checkin');
             console.log('Logged in user:', user);
         } catch (error) {
@@ -102,12 +104,13 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
             const uid = auth.currentUser?.uid;
             const res = await getUsersWithEmail(email, uid || '');
 
+            setIsSignedIn(true);
             if (res) {
                 setProfile({ ...res });
+                return res;
             } else {
                 openNotify('error', 'Not found user');
             }
-            setIsSignedIn(true);
         } catch (error) {
             console.error('error:', error);
             // setProfile({ ...profile });

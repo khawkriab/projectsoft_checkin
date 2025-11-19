@@ -125,11 +125,11 @@
 
 //     const getCheckin = async (year: number, month: number, calendarDateConfig: CalendarDateConfig[]) => {
 //         const parseDate = dayjs(`${year}-${month + 1}-1`, 'YYYY-M-D');
-//         const workTimeList = await getWorkTimeList({
+//         const workTimesList = await getWorkTimeList({
 //             startDateString: parseDate.format('YYYY-MM-DD'),
 //             endDateString: parseDate.endOf('month').format('YYYY-MM-DD'),
 //         });
-//         const n = groupByDate(workTimeList, calendarDateConfig || []);
+//         const n = groupByDate(workTimesList, calendarDateConfig || []);
 
 //         setCheckinDataList([...n]);
 //     };
@@ -419,7 +419,7 @@
 
 //     // return dateConfig.map((cfg) => ({
 //     //     ...cfg,
-//     //     workTimeList: grouped[cfg.date] ?? [],
+//     //     workTimesList: grouped[cfg.date] ?? [],
 //     // }));
 
 //     // convert for old data structure

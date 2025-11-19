@@ -36,7 +36,14 @@ function UserLayout() {
             <HomeAppBar />
             <Box className='body-content' padding={{ xs: '12px', sm: '24px' }}>
                 {!authLoading && profile && <Outlet />}
-                {!authLoading && !profile && (
+                {!authLoading && !profile && isSignedIn && (
+                    <Box display={'flex'} justifyContent={'center'} alignItems={'center'} height={'80vh'}>
+                        <Button variant='contained' color='primary' onClick={signInWithGoogle}>
+                            Register with google
+                        </Button>
+                    </Box>
+                )}
+                {!authLoading && !profile && !isSignedIn && (
                     <Box display={'flex'} justifyContent={'center'} alignItems={'center'} height={'80vh'}>
                         <Button variant='contained' color='primary' onClick={signInWithGoogle}>
                             Signin with google

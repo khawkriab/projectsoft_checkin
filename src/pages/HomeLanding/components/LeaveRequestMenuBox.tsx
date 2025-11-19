@@ -80,14 +80,6 @@ export function LeaveRequestMenuBox() {
     });
     //
 
-    // const getLeave = async (googleId: string) => {
-    //     try {
-    //         const res = await getUserLeave(googleId);
-    //         setLeaveList([...res]);
-    //     } catch (error) {
-    //         console.log('error:', error);
-    //     }
-    // };
     const onSubmit = async (e: React.ChangeEvent<HTMLFormElement>) => {
         e.preventDefault();
 
@@ -98,7 +90,7 @@ export function LeaveRequestMenuBox() {
             !leaveForm.startDate ||
             !leaveForm.endDate ||
             !profile?.email ||
-            !profile?.googleId
+            !profile?.suid
         )
             return;
 
@@ -107,7 +99,7 @@ export function LeaveRequestMenuBox() {
             await createLeave({
                 name: profile.name,
                 email: profile.email,
-                googleId: profile.googleId,
+                suid: profile.suid,
                 leaveType: leaveForm.leaveType,
                 leavePeriod: leaveForm.leavePeriod,
                 startDate: leaveForm.startDate.format('YYYY-MM-DD'),
@@ -115,10 +107,10 @@ export function LeaveRequestMenuBox() {
                 reason: leaveForm.reason,
                 status: 'WAITING',
                 approveBy: '',
-                approveByGoogleId: '',
+                approveBySuid: '',
             });
 
-            // await getLeave(profile.googleId);
+            // await getLeave(profile.suid);
 
             openNotify('success', 'success send');
         } catch (error) {

@@ -22,3 +22,6 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+src/pages/Demo/backupData20251119.ts
+src/pages/Demo/remapData.ts
+src/pages/Demo/renew.ts

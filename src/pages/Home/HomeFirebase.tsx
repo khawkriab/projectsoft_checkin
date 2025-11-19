@@ -2,27 +2,16 @@ import React, { useEffect, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 import { Box, Button, MenuItem, Paper, Select, Table, TableBody, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
 import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/MuiTable';
-import {
-    CalendarDateConfig,
-    CalendarDateList,
-    CheckinCalendar,
-    CheckinDate,
-    LeavePeriodsType,
-    Profile,
-    UserCheckInDate,
-    UserCheckinList,
-} from 'type.global';
+import { CalendarDateConfig, CalendarDateList, CheckinDate, Profile, UserCheckInDate } from 'type.global';
 import utc from 'dayjs/plugin/utc';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { useFirebase } from 'context/FirebaseProvider';
-import { getCalendarConfig, getCalendarMonthOfYears, getWorkTimeList } from 'context/FirebaseProvider/firebaseApi/checkinApi';
-import { getUsersList, getUsersListWithMonth } from 'context/FirebaseProvider/firebaseApi/userApi';
+import { getCalendarConfig, getWorkTimeList } from 'context/FirebaseProvider/firebaseApi/checkinApi';
+import { getUsersListWithMonth } from 'context/FirebaseProvider/firebaseApi/userApi';
 import { UserCheckinTodayForm } from 'components/UserCheckinTodayForm';
 import { UserCheckinTodayList } from 'components/UserCheckinTodayList';
 import { UserAbsentList } from 'components/UserAbsentList';
-import { UserSelfCheckIn } from 'components/UserSelfCheckIn';
 import { FilterCheckinUser } from 'components/common/FilterCheckinUser';
-import { getLeaveList } from 'context/FirebaseProvider/firebaseApi/leaveApi';
 import { getLeavePeriodLabel, getLeaveType } from 'helper/leaveType';
 
 dayjs.extend(customParseFormat);
@@ -55,7 +44,7 @@ function Home() {
             const isBeforeDay = dayjs(calendarDate.date).isBefore(dayjs().add(-1, 'day'));
 
             uList.forEach((ul) => {
-                const userCheckin = calendarDate.userCheckinList.find((f) => f?.email === ul.email);
+                const userCheckin = calendarDate.userCheckinList.find((f) => f?.suid === ul.suid);
                 const startWork = dayjs(ul.employmentStartDate).isAfter(calendarDate.date);
 
                 if (userCheckin) {
@@ -93,11 +82,11 @@ function Home() {
                     checkinData.push({
                         name: ul.name,
                         email: ul.email,
-                        googleId: ul.googleId,
+                        suid: ul.suid,
                         statusText: 'หาย',
                         status: 0,
                         approveBy: '',
-                        approveByGoogleId: '',
+                        approveBySuid: '',
                         date: calendarDate.date,
                         lateFlag: 0,
                         timeText: '',
@@ -134,12 +123,13 @@ function Home() {
 
     const getCheckin = async (year: number, month: number, calendarDateConfig: CalendarDateConfig[]) => {
         const parseDate = dayjs(`${year}-${month + 1}-1`, 'YYYY-M-D');
-        const workTimeList = await getWorkTimeList({
+        const workTimesList = await getWorkTimeList({
             startDateString: parseDate.format('YYYY-MM-DD'),
             endDateString: parseDate.endOf('month').format('YYYY-MM-DD'),
         });
+        // console.log('workTimesList:', workTimesList);
         const allGroup = groupByDate(
-            workTimeList.filter((f) => f.status !== 99),
+            workTimesList.filter((f) => f.status !== 99),
             calendarDateConfig
         );
 
@@ -176,22 +166,6 @@ function Home() {
             ) : (
                 isSignedIn && (
                     <Box sx={{ marginBottom: 4 }}>
-                        {/* <Box>
-                            <Button
-                                loading={loading}
-                                variant='contained'
-                                sx={{ marginRight: 2 }}
-                                onClick={() => onConvertToGoogleCalendar(years, month)}
-                            >
-                                convert to google calendar
-                            </Button>
-                        </Box> */}
-                        {/* {profile?.googleId && (
-                            <UserSelfCheckIn
-                                // defaultWfh
-                                defaultWfh={!!calendarConfig.find((f) => f.date === dayjs().format('YYYY-MM-DD'))?.isWFH}
-                            />
-                        )} */}
                         {(profile?.role === 'ORGANIZATION' || profile?.role === 'ADMIN' || profile?.role === 'STAFF') && (
                             <>
                                 <UserCheckinTodayForm
@@ -234,7 +208,7 @@ function Home() {
                                         ))}
                                     </Select>
                                     <Select
-                                        name='email'
+                                        name='years'
                                         value={years}
                                         onChange={(e) => {
                                             setYears(e.target.value);

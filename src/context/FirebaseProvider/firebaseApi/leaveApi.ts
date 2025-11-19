@@ -11,7 +11,7 @@ export const createLeave = (payload: LeaveData) => {
         await addDoc(collection(db, 'absentList'), {
             name: payload.name,
             email: payload.email,
-            googleId: payload.googleId,
+            suid: payload.suid,
             leaveType: payload.leaveType,
             leavePeriod: payload.leavePeriod,
             startDate: payload.startDate,
@@ -19,7 +19,7 @@ export const createLeave = (payload: LeaveData) => {
             reason: payload.reason,
             status: payload.status,
             approveBy: payload.approveBy,
-            approveByGoogleId: payload.approveByGoogleId,
+            approveBySuid: payload.approveBySuid,
             createdAt: dayjs().toISOString(),
             updateAt: dayjs().toISOString(),
         });
@@ -47,10 +47,10 @@ export const getLeaveList = (status?: LeaveStatus) => {
         resolve([...r]);
     });
 };
-export const getUserLeave = (googleId: string) => {
+export const getUserLeave = (suid: string) => {
     return new Promise<(FirebaseQuery & LeaveData)[]>(async (resolve, reject) => {
         const usersRef = collection(db, 'absentList');
-        const q = query(usersRef, where('googleId', '==', googleId));
+        const q = query(usersRef, where('suid', '==', suid));
 
         const querySnapshot = await getDocs(q);
 
@@ -67,10 +67,10 @@ export const getUserLeave = (googleId: string) => {
     });
 };
 // startDate format 'YYYY-MM-DD'
-export const getUserLeaveByGoogleIdAndDate = (googleId: string, startDate: string) => {
+export const getUserLeaveBySuidAndDate = (suid: string, startDate: string) => {
     return new Promise<FirebaseQuery & LeaveData>(async (resolve, reject) => {
         const usersRef = collection(db, 'absentList');
-        const q = query(usersRef, where('googleId', '==', googleId), where('startDate', '==', startDate));
+        const q = query(usersRef, where('suid', '==', suid), where('startDate', '==', startDate));
 
         const querySnapshot = await getDocs(q);
 
@@ -87,14 +87,14 @@ export const getUserLeaveByGoogleIdAndDate = (googleId: string, startDate: strin
     });
 };
 
-export const updateLeave = (abId: string, payload: { status: LeaveStatus; approveBy: string; approveByGoogleId: string }) => {
+export const updateLeave = (abId: string, payload: { status: LeaveStatus; approveBy: string; approveBySuid: string }) => {
     return new Promise<string>(async (resolve, reject) => {
         await setDoc(
             doc(db, 'absentList', abId),
             {
                 status: payload.status,
                 approveBy: payload.approveBy,
-                approveByGoogleId: payload.approveByGoogleId,
+                approveBySuid: payload.approveBySuid,
                 updateAt: dayjs().toISOString(),
             },
             { merge: true }

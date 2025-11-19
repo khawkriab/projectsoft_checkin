@@ -49,18 +49,18 @@ export function TodayCheckIn() {
     const onCheckin: OnCheckinType = async (isWorkOutside = false, remark, latlng, reason) => {
         setIsSending(true);
         if (profile) {
-            const res = await getUserWorkTime({ startDate: parseData, email: profile.email });
+            const res = await getUserWorkTime({ startDate: parseData, suid: profile.suid });
 
             const payload: CheckinDate = {
                 date: parseData,
                 email: profile.email,
-                googleId: profile.googleId,
+                suid: profile.suid,
                 name: profile.name,
                 time: dayjs().format('HH:mm'),
                 remark: remark ?? res?.remark ?? '',
                 reason: (reason || res?.reason) ?? '',
                 approveBy: profile?.name ?? '',
-                approveByGoogleId: profile?.googleId ?? '',
+                approveBySuid: profile?.suid ?? '',
                 leavePeriod: res?.leavePeriod || null,
                 absentId: res?.absentId || null,
                 isWorkOutside: isWorkOutside,

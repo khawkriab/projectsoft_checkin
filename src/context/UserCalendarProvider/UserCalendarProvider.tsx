@@ -41,7 +41,7 @@ function UserCalendarProvider({ children }: { children: React.ReactNode }) {
     };
 
     const getUserCheckin = async () => {
-        if (!profile?.email) return;
+        if (!profile?.suid) return;
 
         let c = [...calendarConfig];
         if (calendarConfig.length <= 0) {
@@ -52,7 +52,7 @@ function UserCalendarProvider({ children }: { children: React.ReactNode }) {
         const res = await getUserWorkTime({
             startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
             endDate: dayjs().format('YYYY-MM-DD'),
-            email: profile?.email,
+            suid: profile?.suid,
         });
 
         if (!res) return;
@@ -73,14 +73,14 @@ function UserCalendarProvider({ children }: { children: React.ReactNode }) {
                 checkinData = { ...td, statusCode: statusCode };
             } else if (isBeforeDay && !startWork && !data.isHoliDay) {
                 checkinData = {
-                    googleId: '',
+                    suid: '',
                     email: '',
                     name: '',
                     date: data.date,
                     statusCode: 'ABSENT',
                     status: 0,
                     approveBy: '',
-                    approveByGoogleId: '',
+                    approveBySuid: '',
                 };
             }
 
@@ -94,7 +94,7 @@ function UserCalendarProvider({ children }: { children: React.ReactNode }) {
     };
     useEffect(() => {
         getUserCheckin();
-    }, [profile?.email]);
+    }, [profile?.suid]);
 
     return (
         <UserCalendarContext value={{ calendarConfig, calendarDateList, dateSelect, onSelectDate, getUserCheckin }}>

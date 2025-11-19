@@ -21,10 +21,10 @@ type StandardResponse<T = any> = T & {
     id: string;
 };
 
-export const getCheckinToday = (googleId: string) => {
+export const getCheckinToday = (suid: string) => {
     return new Promise<StandardResponse<UserCheckInData>>(async (resolve, reject) => {
         const usersRef = collection(db, 'checkinToday');
-        const q = query(usersRef, where('googleId', '==', googleId));
+        const q = query(usersRef, where('suid', '==', suid));
 
         const querySnapshot = await getDocs(q);
 
@@ -83,34 +83,6 @@ export const getCheckinCalendar = () => {
         resolve(s);
     });
 };
-export const updateUserCheckinCalendar = (payload: {
-    year: number;
-    month: number;
-    date: number;
-    checkinTodayId?: string;
-    approveBy?: string;
-    approveByGoogleId?: string;
-    userCheckinList: UserCheckinList[];
-}) => {
-    return new Promise<{ date: string; userCheckinList: UserCheckinList[] }>(async (resolve, reject) => {
-        try {
-            await updateDoc(doc(db, 'calendar', String(payload.year), 'month', String(payload.month + 1), 'date', String(payload.date)), {
-                userCheckinList: payload.userCheckinList,
-            });
-            if (payload.checkinTodayId) {
-                await updateDoc(doc(db, 'checkinToday', payload.checkinTodayId), {
-                    status: 1,
-                    approveBy: payload.approveBy,
-                    approveByGoogleId: payload.approveByGoogleId,
-                });
-            }
-
-            resolve({ date: 'string', userCheckinList: [] });
-        } catch (error) {
-            reject(error);
-        }
-    });
-};
 export const updateUserCheckin = (cId: string, userId: string, payload: UserCheckinList[]) => {
     return new Promise<{ date: string; userCheckinList: UserCheckinList[] }>(async (resolve, reject) => {
         try {
@@ -142,106 +114,6 @@ export const createCheckinCalendar = (payload: { date: string; userCheckinList: 
         resolve('success');
     });
 };
-export const createCalendarMonthOfYears = (
-    payload: {
-        year: number; // YYYY
-        month: number; // 0 - 11
-        date: number; // 1 - 31
-        wfhFlag: number; // 0 | 1
-        userCheckinList: UserCheckinList[];
-    }[]
-) => {
-    return new Promise<string>(async (resolve, reject) => {
-        const all = payload.map((d) =>
-            setDoc(doc(db, 'calendar', String(d.year), 'month', String(d.month + 1), 'date', String(d.date)), {
-                date: `${d.year}-${d.month + 1}-${d.date}`,
-                wfhFlag: d.wfhFlag,
-                userCheckinList: d.userCheckinList,
-            })
-        );
-        await Promise.all(all);
-
-        resolve('success');
-    });
-};
-export const updateCalendarMonthOfYears = (payload: {
-    year: number; // YYYY
-    month: number; // 0 - 11
-    date: number; // 1 - 31
-    wfhFlag: number; // 0 | 1
-    userCheckinList: UserCheckinList[];
-}) => {
-    return new Promise<string>(async (resolve, reject) => {
-        await setDoc(doc(db, 'calendar', String(payload.year), 'month', String(payload.month + 1), 'date', String(payload.date)), {
-            date: `${payload.year}-${payload.month + 1}-${payload.date}`,
-            wfhFlag: payload.wfhFlag,
-            userCheckinList: payload.userCheckinList,
-        });
-
-        resolve('success');
-    });
-};
-export const deleteCalendarMonthOfYears = (
-    payload: {
-        year: number; // YYYY
-        month: number; // 0 - 11
-        date: number; // 1 - 31
-    }[]
-) => {
-    return new Promise<string>(async (resolve, reject) => {
-        const all = payload.map((d) =>
-            deleteDoc(doc(db, 'calendar', String(d.year), 'month', String(d.month + 1), 'date', String(d.date)))
-        );
-        await Promise.all(all);
-
-        resolve('success');
-    });
-};
-export const getCalendarMonthOfYears = (payload: {
-    year: number; // YYYY
-    month: number; // 0 - 11
-}) => {
-    return new Promise<CheckinCalendar[]>(async (resolve, reject) => {
-        const dateCollectionRef = collection(db, 'calendar', String(payload.year), 'month', String(payload.month + 1), 'date');
-
-        const querySnapshot = await getDocs(dateCollectionRef);
-
-        const dates: CheckinCalendar[] = querySnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...(doc.data() as CheckinCalendar),
-        }));
-
-        const s = dates.sort((a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf());
-        resolve(s);
-    });
-};
-export const getCalendarDateOfMonth = (payload: {
-    date: number; // D
-    year: number; // YYYY
-    month: number; // 0 - 11
-}) => {
-    return new Promise<CheckinCalendar>(async (resolve, reject) => {
-        const dateCollectionRef = doc(
-            db,
-            'calendar',
-            String(payload.year),
-            'month',
-            String(payload.month + 1),
-            'date',
-            String(payload.date)
-        );
-
-        const querySnapshot = await getDoc(dateCollectionRef);
-
-        if (querySnapshot.exists()) {
-            const data = querySnapshot.data() as CheckinCalendar;
-            resolve(data);
-        } else {
-            reject('not found data');
-        }
-    });
-};
-
 // --------------------------------------------------------new release-------------------------------------------------
 // id: 'YYYY-M'
 export const getCalendarConfig = ({ id }: { id: string }) => {
@@ -273,7 +145,7 @@ export const updateCalendarConfig = ({ id, data }: { id: string; data: CalendarD
 export const getWorkTimeList = ({ startDateString, endDateString }: { startDateString: string; endDateString: string }) => {
     return new Promise<CheckinDate[]>(async (resolve, reject) => {
         const q = query(
-            collection(db, 'workTimeList'),
+            collection(db, 'workTimesList'),
             where('date', '>=', startDateString), // Your date field in Firestore
             where('date', '<=', endDateString)
             // where('status', '!=', 99)
@@ -300,7 +172,7 @@ export const getWorkTimeListWithStatus = ({
 }) => {
     return new Promise<CheckinDate[]>(async (resolve, reject) => {
         const q = query(
-            collection(db, 'workTimeList'),
+            collection(db, 'workTimesList'),
             where('date', '>=', startDateString), // Your date field in Firestore
             where('date', '<=', endDateString),
             where('status', '==', status)
@@ -316,20 +188,20 @@ export const getWorkTimeListWithStatus = ({
 };
 
 // Overload 1: no endDate → single object or null
-export function getUserWorkTime(args: { startDate: string; email: string; endDate?: undefined }): Promise<CheckinDate | null>;
+export function getUserWorkTime(args: { startDate: string; suid: string; endDate?: undefined }): Promise<CheckinDate | null>;
 
 // Overload 2: with endDate → array or null
-export function getUserWorkTime(args: { startDate: string; endDate: string; email: string }): Promise<CheckinDate[] | null>;
+export function getUserWorkTime(args: { startDate: string; endDate: string; suid: string }): Promise<CheckinDate[] | null>;
 
 // Implementation
 // startDate,endDate: 'YYYY-MM-DD'
-export function getUserWorkTime({ startDate, endDate, email }: { startDate: string; endDate?: string; email: string }) {
+export function getUserWorkTime({ startDate, endDate, suid }: { startDate: string; endDate?: string; suid: string }) {
     return new Promise(async (resolve, reject) => {
         const q = query(
-            collection(db, 'workTimeList'),
+            collection(db, 'workTimesList'),
             where('date', '>=', startDate), // Your startDate field in Firestore
             where('date', '<=', endDate ?? startDate), // Your startDate field in Firestore
-            where('email', '==', email)
+            where('suid', '==', suid)
         );
         const querySnapshot = await getDocs(q);
 
@@ -354,9 +226,9 @@ export function getUserWorkTime({ startDate, endDate, email }: { startDate: stri
 export const updateWorkTime = (payload: CheckinDate, id?: string) => {
     return new Promise<string>(async (resolve, reject) => {
         if (id) {
-            await updateDoc(doc(db, 'workTimeList', id), payload);
+            await updateDoc(doc(db, 'workTimesList', id), payload);
         } else {
-            await addDoc(collection(db, 'workTimeList'), payload);
+            await addDoc(collection(db, 'workTimesList'), payload);
         }
 
         resolve('success');

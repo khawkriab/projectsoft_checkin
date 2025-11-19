@@ -82,8 +82,8 @@ function LeaveRequest() {
     const userListFilter = useMemo(() => {
         if (userFilterList.length <= 0) return [];
 
-        const eml = userFilterList.map((m) => m.email);
-        return leaveList.filter((f) => eml.includes(f.email));
+        const eml = userFilterList.map((m) => m.suid);
+        return leaveList.filter((f) => eml.includes(f.suid));
     }, [JSON.stringify(leaveList), JSON.stringify(userFilterList)]);
     useEffect(() => {
         const getLeave = async () => {

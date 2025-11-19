@@ -2,7 +2,7 @@ import { Box, Button, FormControl, Grid, InputLabel, MenuItem, Select, SelectCha
 import { DesktopTimePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { useFirebase } from 'context/FirebaseProvider';
-import { getUserWorkTime, updateUserCheckinCalendar, updateWorkTime } from 'context/FirebaseProvider/firebaseApi/checkinApi';
+import { getUserWorkTime, updateWorkTime } from 'context/FirebaseProvider/firebaseApi/checkinApi';
 import { useNotification } from 'components/common/NotificationCenter';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
@@ -14,7 +14,7 @@ dayjs.extend(customParseFormat);
 
 type UpdateFormData = {
     dateId: string;
-    email: string;
+    suid: string;
     time?: string;
     remark?: string;
 };
@@ -32,30 +32,30 @@ function UserCheckinTodayForm({
     const { openNotify } = useNotification();
     //
 
-    const [updateDataForm, setUpdateDataForm] = useState<UpdateFormData>({ dateId: '', email: '', remark: '' });
+    const [updateDataForm, setUpdateDataForm] = useState<UpdateFormData>({ dateId: '', suid: '', remark: '' });
     const [updating, setUpdating] = useState(false);
     //
 
     const onSubmit = async (e: React.ChangeEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        const u = userList.find((f) => f.email === updateDataForm.email);
+        const u = userList.find((f) => f.suid === updateDataForm.suid);
         const d = dateList.find((f) => f.id === updateDataForm.dateId);
 
         if (u && d) {
             const parseData = dayjs(d.date);
-            const res = await getUserWorkTime({ startDate: parseData.format('YYYY-MM-DD'), email: u.email });
+            const res = await getUserWorkTime({ startDate: parseData.format('YYYY-MM-DD'), suid: u.suid });
 
             const payload: CheckinDate = {
                 date: parseData.format('YYYY-MM-DD'),
                 email: u.email,
-                googleId: u.googleId,
+                suid: u.suid,
                 name: u.name,
                 time: updateDataForm.time ?? res?.time ?? '',
                 remark: updateDataForm.remark ?? res?.remark ?? '',
                 reason: res?.reason ?? '',
                 approveBy: profile?.name ?? '',
-                approveByGoogleId: profile?.googleId ?? '',
+                approveBySuid: profile?.suid ?? '',
                 leavePeriod: res?.leavePeriod || null,
                 leaveType: res?.leaveType || null,
                 absentId: res?.absentId || null,
@@ -67,7 +67,7 @@ function UserCheckinTodayForm({
                 await updateWorkTime(payload, res?.id);
                 await afterUndate();
 
-                setUpdateDataForm((prev) => ({ ...prev, email: '', remark: '' }));
+                setUpdateDataForm((prev) => ({ ...prev, suid: '', remark: '' }));
                 openNotify('success', 'updated successfully');
             } catch (error) {
                 console.error('error:', error);
@@ -127,16 +127,16 @@ function UserCheckinTodayForm({
                         <InputLabel id='employee-label'>พนักงาน</InputLabel>
                         <Select
                             labelId='employee-label'
-                            name='email'
-                            value={updateDataForm.email}
+                            name='suid'
+                            value={updateDataForm.suid}
                             required
-                            error={!updateDataForm.email}
+                            error={!updateDataForm.suid}
                             onChange={onChangeData}
                             label='พนักงาน'
                         >
                             <MenuItem value=''>select</MenuItem>
                             {userList.map((u, index) => (
-                                <MenuItem key={index} value={u.email}>
+                                <MenuItem key={index} value={u.suid}>
                                     {u.name}
                                 </MenuItem>
                             ))}

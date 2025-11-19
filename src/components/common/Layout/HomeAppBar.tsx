@@ -3,7 +3,6 @@ import { useFirebase } from 'context/FirebaseProvider';
 import SwitchThemeModeButton from './SwitchThemeModeButton';
 
 function HomeAppBar() {
-    const { authLoading, isSignedIn, profile, signInWithGoogle, signOutUser } = useFirebase();
     return (
         <AppBar
             position='relative'
@@ -47,27 +46,6 @@ function HomeAppBar() {
                         </Box>
                     </Box>
                     <SwitchThemeModeButton />
-                    {/* <Box alignItems={'center'} sx={{ display: 'flex', gap: 1 }}>
-                        {authLoading ? (
-                            'Loading...'
-                        ) : (
-                            <>
-                                {isSignedIn ? (
-                                    <>
-                                        <Button variant='contained' color='error' onClick={signOutUser}>
-                                            Logout
-                                        </Button>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Button variant='contained' color='secondary' onClick={signInWithGoogle}>
-                                            Signin with google
-                                        </Button>
-                                    </>
-                                )}
-                            </>
-                        )}
-                    </Box> */}
                 </Box>
             </Toolbar>
         </AppBar>

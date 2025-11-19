@@ -99,7 +99,7 @@ function LeaveRequest() {
             !leaveForm.startDate ||
             !leaveForm.endDate ||
             !profile?.email ||
-            !profile?.googleId
+            !profile?.suid
         )
             return;
 
@@ -108,7 +108,7 @@ function LeaveRequest() {
             await createLeave({
                 name: profile.name,
                 email: profile.email,
-                googleId: profile.googleId,
+                suid: profile.suid,
                 leaveType: leaveForm.leaveType,
                 leavePeriod: leaveForm.leavePeriod,
                 startDate: leaveForm.startDate.format('YYYY-MM-DD'),
@@ -116,10 +116,10 @@ function LeaveRequest() {
                 reason: leaveForm.reason,
                 status: 'WAITING',
                 approveBy: '',
-                approveByGoogleId: '',
+                approveBySuid: '',
             });
 
-            await getLeave(profile.googleId);
+            await getLeave(profile.suid);
 
             setAlertOptions((prev) => ({
                 ...prev,
@@ -150,9 +150,9 @@ function LeaveRequest() {
         return !isRangeValid;
     }, [leaveForm.startDate, leaveForm.endDate]);
 
-    const getLeave = async (googleId: string) => {
+    const getLeave = async (suid: string) => {
         try {
-            const res = await getUserLeave(googleId);
+            const res = await getUserLeave(suid);
             setLeaveList([...res]);
         } catch (error) {
             console.log('error:', error);
@@ -160,8 +160,8 @@ function LeaveRequest() {
     };
 
     useEffect(() => {
-        if (profile?.googleId) getLeave(profile.googleId);
-    }, [profile?.googleId]);
+        if (profile?.suid) getLeave(profile.suid);
+    }, [profile?.suid]);
 
     return (
         <Box>

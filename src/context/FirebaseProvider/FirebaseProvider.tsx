@@ -4,12 +4,13 @@ import { initializeFirestore } from 'firebase/firestore';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Profile } from 'type.global';
 import { getUsersWithEmail } from './firebaseApi/userApi';
+import { useNotification } from 'components/common/NotificationCenter';
 
 interface FirebaseContextType {
     profile: Profile | null;
     isSignedIn: boolean;
     authLoading: boolean;
-    updateUserInfo: (profile: Profile) => Promise<void>;
+    updateUserInfo: (email: string) => Promise<void>;
     signInWithGoogle: () => Promise<void>;
     signOutUser: () => Promise<void>;
 }
@@ -46,6 +47,7 @@ export const useFirebase = () => {
 };
 
 function FirebaseProvider({ children }: { children: React.ReactNode }) {
+    const { openNotify } = useNotification();
     const [isSignedIn, setIsSignedIn] = useState(false);
     const [authLoading, setAuthLoading] = useState(true);
     const [profile, setProfile] = useState<Profile | null>(null);
@@ -72,28 +74,44 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
     };
 
     const updateUserInfo = async (profile: Profile) => {
+        // try {
+        //     const uid = auth.currentUser?.uid;
+        //     const res = await getUsersWithEmail(profile.email);
+        //     let userData = {
+        //         ...profile,
+        //     };
+        //     if (res) {
+        //         userData = {
+        //             ...userData,
+        //             ...res,
+        //             // googleId: res.googleId || profile.googleId,
+        //             fullName: res.fullName || profile.fullName,
+        //             profileURL: res.profileURL || profile.profileURL,
+        //             email: res.email || profile.email,
+        //         };
+        //     }
+        //     setProfile({ ...userData });
+        // } catch (error) {
+        //     console.error('error:', error);
+        //     setProfile({ ...profile });
+        // }
+    };
+
+    const getUserInfo = async (email: string) => {
         try {
             const uid = auth.currentUser?.uid;
-            const res = await getUsersWithEmail(profile.email);
-            let userData = {
-                ...profile,
-            };
+            const res = await getUsersWithEmail(email, uid || '');
 
             if (res) {
-                userData = {
-                    ...userData,
-                    ...res,
-                    googleId: res.googleId || profile.googleId,
-                    fullName: res.fullName || profile.fullName,
-                    profileURL: res.profileURL || profile.profileURL,
-                    email: res.email || profile.email,
-                };
+                setProfile({ ...res });
+            } else {
+                openNotify('error', 'Not found user');
             }
-
-            setProfile({ ...userData });
+            setIsSignedIn(true);
         } catch (error) {
             console.error('error:', error);
-            setProfile({ ...profile });
+            // setProfile({ ...profile });
+            openNotify('error', 'Not found user');
         }
     };
 
@@ -105,23 +123,11 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
             async (currentUser) => {
                 if (currentUser) {
                     console.log('currentUser:', currentUser);
-                    let _profile: Profile = {
-                        googleId: currentUser.providerData[0]?.uid,
-                        fullName: currentUser.displayName ?? '',
-                        profileURL: currentUser.photoURL ?? '',
-                        email: currentUser.email ?? '',
-                        name: '',
-                        role: 'USER',
-                        status: 'NO_REGIST',
-                        phoneNumber: '',
-                        jobPosition: '',
-                        employmentType: '',
-                        employmentStartDate: '',
-                    };
-
-                    await updateUserInfo(_profile);
-
-                    setIsSignedIn(true);
+                    if (!currentUser.email) {
+                        setIsSignedIn(false);
+                        return;
+                    }
+                    await getUserInfo(currentUser.email);
                 } else {
                     console.warn('User token expired or signed out');
                     setIsSignedIn(false);
@@ -130,6 +136,7 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
             },
             (err) => {
                 console.error('err:', err);
+                setAuthLoading(false);
             }
         );
 
@@ -145,7 +152,7 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
                 authLoading: authLoading,
                 signInWithGoogle,
                 signOutUser,
-                updateUserInfo,
+                updateUserInfo: getUserInfo,
             }}
         >
             {children}

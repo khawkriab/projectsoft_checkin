@@ -51,33 +51,28 @@ function Layout() {
             to: '/manage',
         },
         {
-            condition:
-                !!profile?.googleId && profile.status === 'APPROVE' && (profile.role === 'ADMIN' || profile?.role === 'ORGANIZATION'),
+            condition: !!profile?.suid && profile.status === 'APPROVE' && (profile.role === 'ADMIN' || profile?.role === 'ORGANIZATION'),
             label: 'Calendar',
             to: '/manage/create-calendar',
         },
         {
-            condition:
-                !!profile?.googleId && profile.status === 'APPROVE' && (profile.role === 'ADMIN' || profile?.role === 'ORGANIZATION'),
+            condition: !!profile?.suid && profile.status === 'APPROVE' && (profile.role === 'ADMIN' || profile?.role === 'ORGANIZATION'),
             label: 'Schedule',
             to: '/manage/weekly-schedule',
         },
 
         {
-            condition:
-                !!profile?.googleId && profile.status === 'APPROVE' && (profile.role === 'ADMIN' || profile?.role === 'ORGANIZATION'),
+            condition: !!profile?.suid && profile.status === 'APPROVE' && (profile.role === 'ADMIN' || profile?.role === 'ORGANIZATION'),
             label: 'Member',
             to: '/manage/member',
         },
         {
-            condition:
-                !!profile?.googleId && profile.status === 'APPROVE' && (profile.role === 'ADMIN' || profile?.role === 'ORGANIZATION'),
+            condition: !!profile?.suid && profile.status === 'APPROVE' && (profile.role === 'ADMIN' || profile?.role === 'ORGANIZATION'),
             label: 'จดหมายลา',
             to: '/manage/leave-request',
         },
         {
-            condition:
-                !!profile?.googleId && profile.status === 'APPROVE' && (profile.role === 'ADMIN' || profile?.role === 'ORGANIZATION'),
+            condition: !!profile?.suid && profile.status === 'APPROVE' && (profile.role === 'ADMIN' || profile?.role === 'ORGANIZATION'),
             label: 'ตั้งค่าระบบ',
             to: '/manage/system-config',
         },

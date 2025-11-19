@@ -10,11 +10,11 @@ function App() {
         <HashRouter>
             {/* <HashRouter basename='/projectsoft_checkin'> */}
             <ThemeProvider>
-                <FirebaseProvider>
-                    <NotificationCenterProvider>
+                <NotificationCenterProvider>
+                    <FirebaseProvider>
                         <RoutesManagement />
-                    </NotificationCenterProvider>
-                </FirebaseProvider>
+                    </FirebaseProvider>
+                </NotificationCenterProvider>
             </ThemeProvider>
         </HashRouter>
     );

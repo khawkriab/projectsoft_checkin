@@ -41,7 +41,7 @@ function UserCheckinTodayList({
         if (cc) {
             setUpdating(true);
             const parseData = dayjs(cc.date);
-            const res = await getUserWorkTime({ startDate: parseData.format('YYYY-MM-DD'), email: data.email });
+            const res = await getUserWorkTime({ startDate: parseData.format('YYYY-MM-DD'), suid: data.suid });
             console.log('res:', res);
 
             const payload: CheckinDate = {
@@ -49,18 +49,8 @@ function UserCheckinTodayList({
                 device: null,
                 latlng: null,
                 status: 1,
-                // date: parseData.format('YYYY-MM-DD'),
-                // email: data.email,
-                // googleId: data.googleId,
-                // name: data.name,
-                // time: dayjs(Number(data.time)).format('HH:mm'),
-                // reason: data.reason,
-                // remark: data.remark,
                 approveBy: profile?.name ?? '',
-                approveByGoogleId: profile?.googleId ?? '',
-                // leavePeriod: res?.leavePeriod ||undefined,
-                // absentId: res?.absentId ||undefined,
-                // isWorkOutside: data?.remark?.toLowerCase().includes('wfh') ?? false,
+                approveBySuid: profile?.suid ?? '',
             };
 
             try {
@@ -69,27 +59,6 @@ function UserCheckinTodayList({
                 console.error('error:', error);
             }
 
-            // const c = await getCalendarDateOfMonth({ year: parseData.year(), month: parseData.month(), date: parseData.date() });
-            // await updateUserCheckinCalendar({
-            //     year: today.get('year'),
-            //     month: today.get('month'),
-            //     date: today.get('date'),
-            //     checkinTodayId: data.id,
-            //     approveBy: profile?.name ?? '',
-            //     approveByGoogleId: profile?.googleId ?? '',
-            //     userCheckinList: [
-            //         ...c.userCheckinList.filter((f) => !!f),
-            //         {
-            //             email: data.email,
-            //             googleId: data.googleId,
-            //             reason: data.reason,
-            //             remark: data.remark,
-            //             time: dayjs(Number(data.time)).format('HH:mm'),
-            //             approveBy: profile?.name ?? '',
-            //             approveByGoogleId: profile?.googleId ?? '',
-            //         },
-            //     ],
-            // });
             await afterUndate();
             await getCheckinData();
             setUpdating(false);
@@ -102,6 +71,7 @@ function UserCheckinTodayList({
     const getCheckinData = async () => {
         // get all
         // const res = await getCheckinTodayList();
+        // const date = dayjs('2025-11-13').format('YYYY-MM-DD');
         const date = dayjs().format('YYYY-MM-DD');
         const res = await getWorkTimeListWithStatus({ startDateString: date, endDateString: date, status: 99 });
 
@@ -150,7 +120,7 @@ function UserCheckinTodayList({
                             </TableHead>
                             <TableBody>
                                 {checkinList.map((c) => (
-                                    <TableRow key={c.googleId}>
+                                    <TableRow key={c.suid}>
                                         <TableBodyCell>{c.name}</TableBodyCell>
                                         <TableBodyCell>{dayjs(`${c.date} ${c.time}`).format('DD-MM-YYYY HH:mm')}</TableBodyCell>
                                         <TableBodyCell>{c.remark}</TableBodyCell>

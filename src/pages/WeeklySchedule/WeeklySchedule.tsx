@@ -89,7 +89,7 @@ function WeeklySchedule() {
     const [value, setValue] = useState<Dayjs | null>(dayjs());
     const [loading, setLoading] = useState(false);
     const [weeklyScheduleList, setWeeklyScheduleList] = useState<(FirebaseQuery & WeeklyScheduleData)[]>([]);
-    const [profileData, setProfileData] = useState<Pick<Profile, 'email' | 'googleId' | 'name'> | null>(null);
+    const [profileData, setProfileData] = useState<Pick<Profile, 'email' | 'suid' | 'name'> | null>(null);
     const [userList, setUserList] = useState<Profile[]>([]);
     //
 
@@ -109,7 +109,7 @@ function WeeklySchedule() {
                     {
                         name: profileData?.name,
                         email: profileData?.email,
-                        googleId: profileData?.googleId,
+                        suid: profileData?.suid,
                     },
                 ],
             });
@@ -173,7 +173,7 @@ function WeeklySchedule() {
                 setProfileData({
                     name: profile?.name,
                     email: profile?.email,
-                    googleId: profile?.googleId,
+                    suid: profile?.suid,
                 });
             }
 
@@ -237,13 +237,13 @@ function WeeklySchedule() {
                                 <Table>
                                     <TableBody>
                                         {weeklyInfo.userList.map((u) => (
-                                            <TableRow key={`${weeklyInfo.id}-${weeklyInfo.startDate}-${u.googleId}`}>
+                                            <TableRow key={`${weeklyInfo.id}-${weeklyInfo.startDate}-${u.suid}`}>
                                                 <TableBodyCell>{u.name}</TableBodyCell>
                                                 <TableBodyCell>{`${dayjs(weeklyInfo.startDate).format('DD/MM/YYYY')} - ${dayjs(
                                                     weeklyInfo.endDate
                                                 ).format('DD/MM/YYYY')}`}</TableBodyCell>
                                                 <TableBodyCell align='right'>
-                                                    {profile?.googleId === u.googleId &&
+                                                    {profile?.suid === u.suid &&
                                                         dayjs().isBefore(dayjs(weeklyInfo.startDate).format('DD/MM/YYYY'), 'date') && (
                                                             <Button variant='contained' color='error'>
                                                                 ยกเลิก
@@ -257,30 +257,30 @@ function WeeklySchedule() {
                             </TableContainer>
                         )}
                     </Box>
-                    {(!weeklyInfo?.userList || weeklyInfo?.userList?.filter((f) => f.email === profile?.email).length <= 0) && (
+                    {(!weeklyInfo?.userList || weeklyInfo?.userList?.filter((f) => f.suid === profile?.suid).length <= 0) && (
                         <Box marginTop={'auto'} marginLeft={'auto'} pt={4} pb={2}>
                             <Box display={'flex'} alignItems={'center'}>
                                 ชื่อ:{' '}
                                 {profile?.role === 'ADMIN' ? (
                                     <FormControl fullWidth>
                                         <Select
-                                            name='email'
-                                            value={profileData?.email ?? ''}
+                                            name='suid'
+                                            value={profileData?.suid ?? ''}
                                             onChange={(e) => {
-                                                const findData = userList.find((f) => f.email === e.target.value);
+                                                const findData = userList.find((f) => f.suid === e.target.value);
 
                                                 if (findData) {
                                                     setProfileData((prev) => ({
                                                         ...prev,
                                                         email: findData.email,
-                                                        googleId: findData.googleId,
+                                                        suid: findData.suid,
                                                         name: findData.name,
                                                     }));
                                                 }
                                             }}
                                         >
                                             {userList.map((u) => (
-                                                <MenuItem key={u.id} value={u.email}>
+                                                <MenuItem key={u.id} value={u.suid}>
                                                     {u.name}
                                                 </MenuItem>
                                             ))}

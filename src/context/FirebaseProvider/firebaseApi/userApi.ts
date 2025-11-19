@@ -10,13 +10,13 @@ export const addUsersRegister = (payload: Profile) => {
                 email: payload.email,
                 employmentType: payload.employmentType,
                 fullName: payload.fullName,
-                googleId: payload.googleId,
+                googleUid: payload.googleUid,
+                suid: payload.suid,
                 jobPosition: payload.jobPosition,
                 name: payload.name,
                 phoneNumber: payload.phoneNumber,
                 profileURL: payload.profileURL,
                 role: payload.role,
-                allowFindLocation: payload?.allowFindLocation || 0,
                 status: 'WAITING',
                 createdAt: payload?.createdAt || dayjs().toISOString(),
                 updateAt: dayjs().toISOString(),
@@ -36,10 +36,10 @@ export const usersUpdateAllowLocation = (uId: string, allowFindLocation: number)
         resolve('success');
     });
 };
-export const getUsersRegister = (email: string) => {
+export const getUsersRegister = (suid: string) => {
     return new Promise<Profile>(async (resolve, reject) => {
         const usersRef = collection(db, 'usersList');
-        const q = query(usersRef, where('email', '==', email));
+        const q = query(usersRef, where('suid', '==', suid));
 
         const querySnapshot = await getDocs(q);
 
@@ -66,10 +66,10 @@ export const getUsersRegisterList = () => {
         resolve(usersData);
     });
 };
-export const getUsers = (googleId: string) => {
+export const getUsers = (suid: string) => {
     return new Promise<Profile>(async (resolve, reject) => {
         const usersRef = collection(db, 'usersList');
-        const q = query(usersRef, where('googleId', '==', googleId));
+        const q = query(usersRef, where('suid', '==', suid));
 
         const querySnapshot = await getDocs(q);
 
@@ -85,10 +85,10 @@ export const getUsers = (googleId: string) => {
         reject('user not found');
     });
 };
-export const getUsersWithEmail = (email: string) => {
+export const getUsersWithEmail = (email: string, googleUid: string) => {
     return new Promise<Profile | null>(async (resolve, reject) => {
         const usersRef = collection(db, 'usersList');
-        const q = query(usersRef, where('email', '==', email));
+        const q = query(usersRef, where('email', '==', email), where('googleUid', '==', googleUid));
 
         const querySnapshot = await getDocs(q);
 
@@ -131,27 +131,6 @@ export const getUsersListWithMonth = ({ today }: { today: string }) => {
         const snapshot = await getDocs(q);
         const results = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
-        //  const usersRef = collection(db, 'usersList');
-        // const q1 = query(collection(db, 'usersList'), where('status', '==', 'APPROVE'), where('employmentStartDate', '<=', today));
-        // const q1 = query(
-        //     collection(db, 'usersList'),
-        //     where('employmentEndDate', '>=', '2025-06-01'),
-        //     where('employmentStartDate', '<=', today)
-        // );
-
-        // Query for INACTIVE
-        // const q2 = query(
-        //     collection(db, 'usersList'),
-        //     where('status', '==', 'INACTIVE'),
-        //     where('employmentStartDate', '<=', today),
-        //     where('employmentEndDate', '>=', today)
-        // );
-
-        // const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
-        // const [snap1] = await Promise.all([getDocs(q1)]);
-        // const results = [...snap1.docs, ...snap2.docs].map((doc) => ({ id: doc.id, ...doc.data() }));
-        // const results = [...snap1.docs].map((doc) => ({ id: doc.id, ...doc.data() }));
-
         resolve(results as Profile[]);
     });
 };
@@ -160,11 +139,9 @@ export const updateUser = (uId: string, payload: Profile) => {
         if (!uId) reject('no id');
 
         try {
-            await setDoc(doc(db, 'usersList', uId), {
+            await updateDoc(doc(db, 'usersList', uId), {
                 ...payload,
-                allowFindLocation: payload?.allowFindLocation || 0,
-                profileURL: payload.profileURL ?? '',
-                updateAt: dayjs().toISOString(),
+                updatedAt: dayjs().toISOString(),
             });
             // await deleteDoc(doc(db, 'usersRegister', payload.id ?? ''));
 
@@ -174,6 +151,7 @@ export const updateUser = (uId: string, payload: Profile) => {
         }
     });
 };
+
 export const deleteUser = (uId: string) => {
     return new Promise<string>(async (resolve, reject) => {
         if (!uId) reject('no id');

@@ -15,10 +15,9 @@ export type BaseData = {
 };
 
 export type BaseProfile = {
-    suid?: string;
+    suid: string;
     name: string;
-    allowFindLocation?: number;
-    googleId: string;
+    googleUid?: string;
     fullName: string;
     profileURL?: string;
     email: string;
@@ -40,7 +39,7 @@ export type FirebaseQuery = BaseData & {
 
 export type Profile = BaseProfile & EmployeeInfo & FirebaseQuery & BaseData;
 
-export type UserCheckInData = Pick<BaseProfile, 'googleId' | 'email' | 'name'> &
+export type UserCheckInData = Pick<BaseProfile, 'suid' | 'email' | 'name'> &
     FirebaseQuery & {
         time: string;
         remark: string;
@@ -49,10 +48,10 @@ export type UserCheckInData = Pick<BaseProfile, 'googleId' | 'email' | 'name'> &
         latlng: LatLng;
         status: string | number;
         approveBy: string;
-        approveByGoogleId: string;
+        approveBySuid: string;
     };
 
-export type UserCheckInDate = Pick<BaseProfile, 'googleId' | 'email' | 'name'> &
+export type UserCheckInDate = Pick<BaseProfile, 'suid' | 'email' | 'name'> &
     FirebaseQuery &
     LocationInfo & {
         date: string; // YYYY-MM-DD
@@ -60,21 +59,18 @@ export type UserCheckInDate = Pick<BaseProfile, 'googleId' | 'email' | 'name'> &
         remark: string;
         reason: string;
         approveBy: string;
-        approveByGoogleId: string;
+        approveBySuid: string;
         leavePeriod: LeavePeriodsType | null;
         leaveType?: LeaveTypes | null;
         absentId: string | null;
         isWorkOutside?: boolean;
     };
 
-export type UserCheckinList = Pick<
-    UserCheckInData,
-    'email' | 'googleId' | 'reason' | 'remark' | 'time' | 'approveBy' | 'approveByGoogleId'
->;
+export type UserCheckinList = Pick<UserCheckInData, 'email' | 'suid' | 'reason' | 'remark' | 'time' | 'approveBy' | 'approveBySuid'>;
 export type CheckinCalendar = FirebaseQuery & { date: string; wfhFlag?: number; userCheckinList: UserCheckInDate[] };
 
 export type LeaveData = FirebaseQuery &
-    Pick<BaseProfile, 'googleId' | 'email' | 'name'> & {
+    Pick<BaseProfile, 'suid' | 'email' | 'name'> & {
         leaveType: LeaveTypes;
         leavePeriod: LeavePeriodsType;
         startDate: string; // date format: YYYY-MM-DD
@@ -83,7 +79,7 @@ export type LeaveData = FirebaseQuery &
         status: LeaveStatus;
         rejectReason?: string;
         approveBy: string;
-        approveByGoogleId: string;
+        approveBySuid: string;
         createdAt?: string; // Date
         updatedAt?: string; // Date
     };
@@ -91,7 +87,7 @@ export type LeaveData = FirebaseQuery &
 export type WeeklyScheduleData = {
     startDate: string; // YYYY-MM-DD
     endDate: string; // YYYY-MM-DD
-    userList: Pick<BaseProfile, 'name' | 'email' | 'googleId'>[];
+    userList: Pick<BaseProfile, 'name' | 'email' | 'suid'>[];
     createdAt?: Date; // Date
     updatedAt?: Date; // Date
 };
@@ -129,10 +125,10 @@ export type LocationInfo = {
 export type CheckinStatusInfo = {
     status: 0 | 1 | 99; // 0:unkown, 1: Approve, 99: Waiting
     approveBy: string;
-    approveByGoogleId: string;
+    approveBySuid: string;
 };
 
-export type CheckinDate = Pick<BaseProfile, 'googleId' | 'email' | 'name'> &
+export type CheckinDate = Pick<BaseProfile, 'suid' | 'email' | 'name'> &
     FirebaseQuery &
     CheckinStatusInfo &
     LocationInfo & {

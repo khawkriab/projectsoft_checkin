@@ -34,12 +34,11 @@ function UserRegister() {
         email: '',
         name: '',
         fullName: '',
-        googleId: '',
+        suid: '',
         jobPosition: '',
         profileURL: '',
         employmentType: '',
         phoneNumber: '',
-        allowFindLocation: 0,
         role: 'USER',
     });
 
@@ -59,7 +58,7 @@ function UserRegister() {
     const getDataCurrentUser = async () => {
         if (profile) {
             try {
-                const res = await getUsersRegister(profile.email);
+                const res = await getUsersRegister(profile.suid);
 
                 setFormRegister((prev) => ({
                     ...prev,
@@ -74,11 +73,10 @@ function UserRegister() {
                 // prev data from google account
                 setFormRegister((prev) => ({
                     ...prev,
-                    id: '',
                     email: profile.email,
                     employmentType: profile.employmentType,
                     fullName: profile.fullName,
-                    googleId: profile.googleId,
+                    suid: profile.suid,
                     jobPosition: profile.jobPosition,
                     name: profile.name,
                     phoneNumber: profile.phoneNumber,

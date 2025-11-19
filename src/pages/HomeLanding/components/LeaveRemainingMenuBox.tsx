@@ -27,9 +27,9 @@ export function LeaveRemainingMenuBox() {
     const [open, setOpen] = useState(false);
     const [leaveList, setLeaveList] = useState<LeaveData[]>([]);
     //
-    const getLeave = async (googleId: string) => {
+    const getLeave = async (suid: string) => {
         try {
-            const res = await getUserLeave(googleId);
+            const res = await getUserLeave(suid);
             setLeaveList([...res]);
         } catch (error) {
             console.log('error:', error);
@@ -37,8 +37,8 @@ export function LeaveRemainingMenuBox() {
     };
 
     useEffect(() => {
-        if (profile?.googleId && open) getLeave(profile.googleId);
-    }, [profile?.googleId, open]);
+        if (profile?.suid && open) getLeave(profile.suid);
+    }, [profile?.suid, open]);
     //
     return (
         <>

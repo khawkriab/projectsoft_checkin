@@ -35,13 +35,13 @@ export default function FilterCheckinUser({ userList, onChangeFilter }: FilterCh
     };
 
     const handleSelectUser = (user: Profile) => {
-        if (!selectedUsers.find((u) => u.email === user.email)) {
+        if (!selectedUsers.find((u) => u.suid === user.suid)) {
             setSelectedUsers((prev) => [...prev, user]);
         }
     };
 
-    const handleRemoveUser = (userMail: string) => {
-        setSelectedUsers((prev) => prev.filter((u) => u.email !== userMail));
+    const handleRemoveUser = (userSuid: string) => {
+        setSelectedUsers((prev) => prev.filter((u) => u.suid !== userSuid));
     };
 
     useEffect(() => {
@@ -63,27 +63,27 @@ export default function FilterCheckinUser({ userList, onChangeFilter }: FilterCh
             <Stack direction='row' spacing={1}>
                 {selectedUsers.length > 0 &&
                     selectedUsers
-                        .filter((f) => f.email !== profile?.email)
+                        .filter((f) => f.suid !== profile?.suid)
                         .map((user) => (
                             <Chip
                                 key={user.id}
                                 avatar={<Avatar src={user.profileURL} />}
                                 label={user.name}
-                                onDelete={() => handleRemoveUser(user.email)}
+                                onDelete={() => handleRemoveUser(user.suid)}
                                 deleteIcon={<CloseIcon />}
                                 variant='outlined'
                                 color='info'
                             />
                         ))}
-                {profile?.email && (
+                {profile?.suid && (
                     <Chip
                         avatar={<Avatar src={profile.profileURL} />}
                         label={'Me'}
                         variant='outlined'
-                        {...(selectedUsers.some((u) => u.email === profile.email)
+                        {...(selectedUsers.some((u) => u.suid === profile.suid)
                             ? {
                                   color: 'info',
-                                  onDelete: () => handleRemoveUser(profile.email),
+                                  onDelete: () => handleRemoveUser(profile.suid),
                                   deleteIcon: <CloseIcon />,
                               }
                             : {
@@ -151,7 +151,7 @@ export default function FilterCheckinUser({ userList, onChangeFilter }: FilterCh
                                             size='small'
                                             onClick={(e) => {
                                                 e.stopPropagation(); // prevent triggering MenuItem onClick
-                                                handleRemoveUser(user.email);
+                                                handleRemoveUser(user.suid);
                                             }}
                                         >
                                             <CloseIcon fontSize='small' />

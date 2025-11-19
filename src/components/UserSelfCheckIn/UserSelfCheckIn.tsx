@@ -32,18 +32,18 @@ function UserSelfCheckIn({ defaultWfh }: { defaultWfh: boolean }) {
         if (profile) {
             setUpdating(true);
 
-            const res = await getUserWorkTime({ startDate: parseData, email: profile.email });
+            const res = await getUserWorkTime({ startDate: parseData, suid: profile.suid });
 
             const payload: CheckinDate = {
                 date: parseData,
                 email: profile.email,
-                googleId: profile.googleId,
+                suid: profile.suid,
                 name: profile.name,
                 time: dayjs().format('HH:mm'),
                 remark: remark ?? res?.remark ?? '',
                 reason: reason ?? res?.reason ?? '',
                 approveBy: profile?.name ?? '',
-                approveByGoogleId: profile?.googleId ?? '',
+                approveBySuid: profile?.suid ?? '',
                 leavePeriod: res?.leavePeriod || null,
                 absentId: res?.absentId || null,
                 isWorkOutside: isWorkOutside,
@@ -75,7 +75,7 @@ function UserSelfCheckIn({ defaultWfh }: { defaultWfh: boolean }) {
         if (profile) {
             setUpdating(true);
             await usersUpdateAllowLocation(profile?.id ?? '', isAllow ? 1 : 0);
-            await updateUserInfo(profile);
+            await updateUserInfo(profile.email);
 
             openNotify('success', 'success');
             setUpdating(false);
@@ -89,7 +89,7 @@ function UserSelfCheckIn({ defaultWfh }: { defaultWfh: boolean }) {
 
     const getUserCheckinToday = async () => {
         try {
-            const res = await getUserWorkTime({ startDate: parseData, email: profile?.email || '' });
+            const res = await getUserWorkTime({ startDate: parseData, suid: profile?.suid || '' });
 
             if (res) {
                 setUserCheckinToday({ ...res });
@@ -101,13 +101,6 @@ function UserSelfCheckIn({ defaultWfh }: { defaultWfh: boolean }) {
             setUserCheckinToday(null);
         }
     };
-
-    useEffect(() => {
-        if (allowThisSize && userCheckinToday === null) {
-            setAllowFindLocation(!!profile?.allowFindLocation);
-            setFindingLocation(!!profile?.allowFindLocation);
-        }
-    }, [profile?.allowFindLocation, allowThisSize, userCheckinToday]);
 
     useEffect(() => {
         getUserCheckinToday();

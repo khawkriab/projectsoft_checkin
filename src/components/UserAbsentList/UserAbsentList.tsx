@@ -1,11 +1,6 @@
 import { Box, Button, Paper, Table, TableBody, TableContainer, TableHead, TableRow } from '@mui/material';
 import { getLeaveList, updateLeave } from 'context/FirebaseProvider/firebaseApi/leaveApi';
-import {
-    getUserWorkTime,
-    updateUserCheckin,
-    updateUserCheckinCalendar,
-    updateWorkTime,
-} from 'context/FirebaseProvider/firebaseApi/checkinApi';
+import { getUserWorkTime, updateUserCheckin, updateWorkTime } from 'context/FirebaseProvider/firebaseApi/checkinApi';
 import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/MuiTable';
 import dayjs from 'dayjs';
 import { getLeavePeriodLabel, getLeaveType } from 'helper/leaveType';
@@ -44,7 +39,7 @@ function UserAbsentList({ calendar = [], afterUndate }: { calendar: CalendarDate
         const checkInList = await getUserWorkTime({
             startDate: startLeave.format('YYYY-MM-DD'),
             endDate: endLeave.format('YYYY-MM-DD'),
-            email: absentData.email,
+            suid: absentData.suid,
         });
 
         const all = datesInRange.map((date) => {
@@ -56,7 +51,7 @@ function UserAbsentList({ calendar = [], afterUndate }: { calendar: CalendarDate
                 {
                     date: date,
                     email: absentData.email,
-                    googleId: absentData.googleId,
+                    suid: absentData.suid,
                     absentId: absentData.id,
                     name: absentData.name,
                     leavePeriod: absentData.leavePeriod,
@@ -66,7 +61,7 @@ function UserAbsentList({ calendar = [], afterUndate }: { calendar: CalendarDate
                     remark: checkInCurrentDate?.remark || `${ltl}-${lpl}`,
                     isWorkOutside: checkInCurrentDate?.isWorkOutside ?? false,
                     approveBy: profile?.name ?? '',
-                    approveByGoogleId: profile?.googleId ?? '',
+                    approveBySuid: profile?.suid ?? '',
                     status: 1,
                 },
                 checkInCurrentDate?.id
@@ -79,7 +74,7 @@ function UserAbsentList({ calendar = [], afterUndate }: { calendar: CalendarDate
                 await updateLeave(absentData.id, {
                     status: 'APPROVE',
                     approveBy: profile?.name ?? '',
-                    approveByGoogleId: profile?.googleId ?? '',
+                    approveBySuid: profile?.suid ?? '',
                 });
             }
 

@@ -5,10 +5,7 @@ import { CheckinDate } from 'type.global';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import { workTimeList, weeklySchedule, systemConfig, calendarConfig, leaveList } from './backupData20251119';
-import { remapData } from './remapData';
 import { Button } from '@mui/material';
-import { leaveListX, usersListX } from './renew';
 
 dayjs.extend(customParseFormat);
 dayjs.extend(utc);
@@ -139,7 +136,7 @@ const userList = [
 
 function Demo() {
     const addAllItems = async () => {
-        const items: any[] = remapData;
+        const items: any[] = [];
         const CHUNK_SIZE = 500; // Firestore batch limit
         const chunks = [];
 
@@ -251,41 +248,15 @@ function Demo() {
             // const n = backupData.map((m) => {
             //     const cu = userList.find((f) => f.email === m.email);
             //     const ab = userList.find((f) => f.googleId === m.approveByGoogleId);
-
             //     return {
             //         ...m,
             //         suid: cu?.suid || 'nodata',
             //         approveBySuid: ab?.suid || 'nodata',
             //     };
             // });
-
             // console.log('n:', n);
             // console.log('backupData:', backupData.length);
-
             // const r = remapData.filter((f) => !!f.approveBySuid);
-
-            const r = leaveList.map((m) => {
-                const cu = userList.find((f) => f.email === m.email);
-                const ab = userList.find((f) => f.googleId === m.approveByGoogleId);
-
-                return {
-                    reason: m.reason,
-                    createdAt: m.createdAt,
-                    email: m.email,
-                    name: m.name,
-                    leavePeriod: m.leavePeriod,
-                    status: m.status,
-                    approveBy: m.approveBy,
-                    startDate: m.startDate,
-                    leaveType: m.leaveType,
-                    updateAt: m.updateAt,
-                    endDate: m.endDate,
-                    approveBySuid: ab?.suid,
-                    suid: cu?.suid,
-                };
-            });
-
-            console.log('r:', r);
         };
 
         // remap();

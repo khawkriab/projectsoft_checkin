@@ -33,16 +33,17 @@ function UserCheckinTodayList({
     const [updating, setUpdating] = useState(false);
     const [open, setOpen] = useState(false);
     const [checkinList, setCheckinList] = useState<CheckinDate[]>([]);
+    const today = dayjs().format('YYYY-MM-DD');
 
     const onApprove = async (data: CheckinDate) => {
-        const today = dayjs();
-        const cc = dateList.find((f) => f.date === today.format('YYYY-MM-DD'));
+        const dateOnData = dayjs(data.date);
+        const dateOnList = dateList.find((f) => f.date === dateOnData.format('YYYY-MM-DD'));
 
-        if (cc) {
+        if (dateOnList) {
             setUpdating(true);
-            const parseData = dayjs(cc.date);
+            const parseData = dayjs(dateOnList.date);
             const res = await getUserWorkTime({ startDate: parseData.format('YYYY-MM-DD'), suid: data.suid });
-            console.log('res:', res);
+            // console.log('res:', res);
 
             const payload: CheckinDate = {
                 ...data,
@@ -71,8 +72,8 @@ function UserCheckinTodayList({
     const getCheckinData = async () => {
         // get all
         // const res = await getCheckinTodayList();
-        // const date = dayjs('2025-11-13').format('YYYY-MM-DD');
         const date = dayjs().format('YYYY-MM-DD');
+        // const date = dayjs('2025-11-21').format('YYYY-MM-DD');
         const res = await getWorkTimeListWithStatus({ startDateString: date, endDateString: date, status: 99 });
 
         // setCheckinList([...res.filter((f) => f.status === 99 && dayjs(Number(f.time)).isSame(dayjs(), 'day'))]);
@@ -143,17 +144,19 @@ function UserCheckinTodayList({
                                                 </Button>
                                             )}
 
-                                            {profile?.role === 'STAFF' && !todayConfig?.isWFH && !c.isWorkOutside && (
-                                                <Button
-                                                    size='small'
-                                                    loading={updating}
-                                                    variant='contained'
-                                                    color='warning'
-                                                    onClick={() => onApprove(c)}
-                                                >
-                                                    อนุมัติ
-                                                </Button>
-                                            )}
+                                            {profile?.role === 'STAFF' &&
+                                                c.date === today &&
+                                                ((todayConfig?.isWFH && c.isWorkOutside) || !c.isWorkOutside) && (
+                                                    <Button
+                                                        size='small'
+                                                        loading={updating}
+                                                        variant='contained'
+                                                        color='warning'
+                                                        onClick={() => onApprove(c)}
+                                                    >
+                                                        อนุมัติ
+                                                    </Button>
+                                                )}
                                         </TableBodyCell>
                                     </TableRow>
                                 ))}

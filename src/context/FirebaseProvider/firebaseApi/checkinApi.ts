@@ -173,8 +173,8 @@ export const getWorkTimeListWithStatus = ({
     return new Promise<CheckinDate[]>(async (resolve, reject) => {
         const q = query(
             collection(db, 'workTimesList'),
-            where('date', '>=', startDateString), // Your date field in Firestore
-            where('date', '<=', endDateString),
+            // where('date', '>=', startDateString), // Your date field in Firestore
+            // where('date', '<=', endDateString),
             where('status', '==', status)
         );
         const querySnapshot = await getDocs(q);

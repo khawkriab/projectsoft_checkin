@@ -20,8 +20,161 @@ dayjs.extend(utc);
 type ExtendText = UserCheckInDate & { statusText: string; lateFlag: number; timeText: string };
 
 export type CalendarDateExtendText = Omit<CalendarDateList, 'userCheckinList'> & {
-    userCheckinList: ((CheckinDate & { statusText: string; lateFlag: number; timeText: string }) | null)[];
+    userCheckinList: (
+        | (CheckinDate & {
+              statusText: string;
+              lateFlag: number; // 0:not late, 1:late, 2:unknown
+              timeText: string;
+          })
+        | null
+    )[];
 };
+
+function CalendarTable({ userFilterList, calendarCheckin }: { userFilterList: Profile[]; calendarCheckin: CalendarDateExtendText[] }) {
+    const statusStyle = (data: CalendarDateExtendText['userCheckinList'][0]) => {
+        // backgroundColor: u?.lateFlag ? '#FBBC04' : u?.absentId ? '#FF9800' : '',
+        //                                         color: u?.lateFlag || u?.absentId ? '#ffffff' : '',
+        //                                         textAlign: u?.lateFlag || u?.absentId ? 'center' : '',
+
+        if (data?.lateFlag) {
+            if (data.lateFlag === 1) {
+                return {
+                    color: '#ffffff',
+                    textAlign: 'center',
+                    backgroundColor: '#FBBC04',
+                };
+            }
+
+            // data.lateFlag === 2 ***หาย
+            return {
+                color: '#ffffff',
+                textAlign: 'center',
+                backgroundColor: '#D32F2F',
+            };
+        }
+
+        if (data?.absentId) {
+            return {
+                color: '#ffffff',
+                textAlign: 'center',
+                backgroundColor: '#FF9800',
+            };
+        }
+        return {};
+    };
+
+    return (
+        <TableContainer component={Paper}>
+            <Table>
+                <TableHead>
+                    <TableHeadRow>
+                        <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'ชื่อพนักงาน'}</TableHeadCell>
+                        {userFilterList.map((user, index) => {
+                            return (
+                                <TableHeadCell key={index} colSpan={2} align='center' sx={{ borderLeft: '1px solid #fff' }}>
+                                    {user.name}
+                                </TableHeadCell>
+                            );
+                        })}
+                    </TableHeadRow>
+                    <TableHeadRow>
+                        <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'วันที่'}</TableHeadCell>
+                        {userFilterList.map((_, index) => {
+                            return (
+                                <React.Fragment key={index}>
+                                    <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'เวลาเข้าทำงาน'}</TableHeadCell>
+                                    <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'สถานะ'}</TableHeadCell>
+                                </React.Fragment>
+                            );
+                        })}
+                    </TableHeadRow>
+                </TableHead>
+                <TableBody>
+                    {calendarCheckin.map((row, rowIdx) => {
+                        if (row.isHoliDay) return;
+
+                        return (
+                            <TableRow key={rowIdx}>
+                                <TableBodyCell
+                                    sx={(theme) => ({
+                                        border: '1px solid',
+                                        borderLeftColor: theme.palette.secondary.contrastText,
+                                    })}
+                                >
+                                    {row.date}
+                                </TableBodyCell>
+                                {row.userCheckinList.map((u, uIndex) => (
+                                    <React.Fragment key={`${uIndex}-${u?.name}`}>
+                                        {/* เวลาเข้าทำงาน */}
+                                        <TableBodyCell
+                                            sx={(theme) => ({
+                                                border: '1px solid',
+                                                borderLeftColor: theme.palette.secondary.contrastText,
+                                            })}
+                                        >
+                                            {u?.timeText}
+                                            <Box display={'inline-block'} color={'#ff6f00'} fontWeight={700}>
+                                                {u?.remark && u?.timeText && ' - '}
+                                                {u?.remark}
+                                            </Box>
+                                        </TableBodyCell>
+                                        {/* สถานะ */}
+                                        <TableBodyCell
+                                            sx={(theme) => ({
+                                                border: '1px solid',
+                                                borderLeftColor: theme.palette.secondary.contrastText,
+                                            })}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    padding: '2px 4px',
+                                                    borderRadius: 1,
+                                                    // backgroundColor: u?.lateFlag ? '#FBBC04' : u?.absentId ? '#FF9800' : '',
+                                                    // color: u?.lateFlag || u?.absentId ? '#ffffff' : '',
+                                                    // textAlign: u?.lateFlag || u?.absentId ? 'center' : '',
+                                                    ...statusStyle(u),
+                                                }}
+                                            >
+                                                {u?.statusText}
+                                            </Box>
+                                            <Box>{u?.reason}</Box>
+                                        </TableBodyCell>
+                                    </React.Fragment>
+                                ))}
+                            </TableRow>
+                        );
+                    })}
+                </TableBody>
+            </Table>
+        </TableContainer>
+    );
+}
+
+// Utility function to group array by date
+function groupByDate(userCheckInDate: CheckinDate[], dateConfig: CalendarDateConfig[]) {
+    const grouped: Record<string, CheckinDate[]> = {};
+
+    userCheckInDate.forEach((data) => {
+        if (!grouped[data.date]) grouped[data.date] = [];
+        grouped[data.date].push(data);
+    });
+
+    const arr: CalendarDateList[] = dateConfig.map((cfg) => ({
+        ...cfg,
+        userCheckinList: grouped[cfg.date] ?? [],
+    }));
+
+    // convert for old data structure
+    // const arr = dateConfig.map((cfg) => ({
+    //     ...cfg,
+    //     id: cfg.date,
+    //     wfhFlag: cfg.isWorkOutside ? 1 : 0,
+
+    //     userCheckinList: grouped[cfg.date] ?? [],
+    // }));
+
+    return arr;
+}
 
 function Home() {
     const { profile, authLoading, isSignedIn } = useFirebase();
@@ -75,7 +228,7 @@ function Home() {
                         lateFlag = 1;
                     } else if (!remark && !timeText && isBeforeDay) {
                         statusText = 'หาย';
-                        lateFlag = 1;
+                        lateFlag = 2;
                     }
                     checkinData.push({ ...userCheckin, statusText, lateFlag, timeText, reason });
                 } else if (isBeforeDay && !startWork) {
@@ -88,7 +241,7 @@ function Home() {
                         approveBy: '',
                         approveBySuid: '',
                         date: calendarDate.date,
-                        lateFlag: 0,
+                        lateFlag: 2,
                         timeText: '',
                     });
                 } else {
@@ -232,115 +385,6 @@ function Home() {
             )}
         </div>
     );
-}
-
-function CalendarTable({ userFilterList, calendarCheckin }: { userFilterList: Profile[]; calendarCheckin: CalendarDateExtendText[] }) {
-    return (
-        <TableContainer component={Paper}>
-            <Table>
-                <TableHead>
-                    <TableHeadRow>
-                        <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'ชื่อพนักงาน'}</TableHeadCell>
-                        {userFilterList.map((user, index) => {
-                            return (
-                                <TableHeadCell key={index} colSpan={2} align='center' sx={{ borderLeft: '1px solid #fff' }}>
-                                    {user.name}
-                                </TableHeadCell>
-                            );
-                        })}
-                    </TableHeadRow>
-                    <TableHeadRow>
-                        <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'วันที่'}</TableHeadCell>
-                        {userFilterList.map((_, index) => {
-                            return (
-                                <React.Fragment key={index}>
-                                    <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'เวลาเข้าทำงาน'}</TableHeadCell>
-                                    <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'สถานะ'}</TableHeadCell>
-                                </React.Fragment>
-                            );
-                        })}
-                    </TableHeadRow>
-                </TableHead>
-                <TableBody>
-                    {calendarCheckin.map((row, rowIdx) => (
-                        <TableRow key={rowIdx}>
-                            <TableBodyCell
-                                sx={(theme) => ({
-                                    border: '1px solid',
-                                    borderLeftColor: theme.palette.secondary.contrastText,
-                                })}
-                            >
-                                {row.date}
-                            </TableBodyCell>
-                            {row.userCheckinList.map((u, uIndex) => (
-                                <React.Fragment key={`${uIndex}-${u?.name}`}>
-                                    {/* เวลาเข้าทำงาน */}
-                                    <TableBodyCell
-                                        sx={(theme) => ({
-                                            border: '1px solid',
-                                            borderLeftColor: theme.palette.secondary.contrastText,
-                                        })}
-                                    >
-                                        {u?.timeText}
-                                        <Box display={'inline-block'} color={'#ff6f00'} fontWeight={700}>
-                                            {u?.remark && u?.timeText && ' - '}
-                                            {u?.remark}
-                                        </Box>
-                                    </TableBodyCell>
-                                    {/* สถานะ */}
-                                    <TableBodyCell
-                                        sx={(theme) => ({
-                                            border: '1px solid',
-                                            borderLeftColor: theme.palette.secondary.contrastText,
-                                        })}
-                                    >
-                                        <Box
-                                            sx={{
-                                                padding: '2px 4px',
-                                                borderRadius: 1,
-                                                backgroundColor: u?.lateFlag ? '#f00' : u?.absentId ? '#ff6f00' : '',
-                                                color: u?.lateFlag || u?.absentId ? '#ffffff' : '',
-                                                textAlign: u?.lateFlag || u?.absentId ? 'center' : '',
-                                            }}
-                                        >
-                                            {u?.statusText}
-                                        </Box>
-                                        <Box>{u?.reason}</Box>
-                                    </TableBodyCell>
-                                </React.Fragment>
-                            ))}
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </TableContainer>
-    );
-}
-
-// Utility function to group array by date
-function groupByDate(userCheckInDate: CheckinDate[], dateConfig: CalendarDateConfig[]) {
-    const grouped: Record<string, CheckinDate[]> = {};
-
-    userCheckInDate.forEach((data) => {
-        if (!grouped[data.date]) grouped[data.date] = [];
-        grouped[data.date].push(data);
-    });
-
-    const arr: CalendarDateList[] = dateConfig.map((cfg) => ({
-        ...cfg,
-        userCheckinList: grouped[cfg.date] ?? [],
-    }));
-
-    // convert for old data structure
-    // const arr = dateConfig.map((cfg) => ({
-    //     ...cfg,
-    //     id: cfg.date,
-    //     wfhFlag: cfg.isWorkOutside ? 1 : 0,
-
-    //     userCheckinList: grouped[cfg.date] ?? [],
-    // }));
-
-    return arr;
 }
 
 export default Home;

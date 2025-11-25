@@ -1,5 +1,5 @@
 import { addDoc, and, collection, deleteDoc, doc, getDocs, or, query, setDoc, updateDoc, where } from 'firebase/firestore';
-import { Profile } from 'type.global';
+import { AnnualLeaveEntitlement, Profile } from 'type.global';
 import { db } from '../FirebaseProvider';
 import dayjs from 'dayjs';
 
@@ -163,5 +163,28 @@ export const deleteUser = (uId: string) => {
         } catch (error) {
             reject(error);
         }
+    });
+};
+
+export const updateAnnualLeaveEntitlement = (suid: string, year: number, payload: AnnualLeaveEntitlement) => {
+    return new Promise<string>(async (resolve, reject) => {
+        await setDoc(doc(db, 'usersList', suid, 'annualLeaveEntitlement', String(year)), payload);
+
+        resolve('success');
+    });
+};
+
+export const getAnnualLeaveEntitlement = (suid: string) => {
+    return new Promise<{ suid: string; annualLeaveEntitlement: AnnualLeaveEntitlement[] }>(async (resolve, reject) => {
+        const snapshot = await getDocs(collection(db, 'usersList', suid, 'annualLeaveEntitlement'));
+
+        const results = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...(doc.data() as AnnualLeaveEntitlement),
+        }));
+        resolve({
+            suid: suid,
+            annualLeaveEntitlement: results,
+        });
     });
 };

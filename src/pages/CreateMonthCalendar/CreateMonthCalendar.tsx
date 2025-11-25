@@ -121,7 +121,7 @@ function CreateMonthCalendar() {
     // ** month: 0-11
     const getCalendar = async (year: number, month: number) => {
         // new way
-        const res = await getCalendarConfig({ id: `${year}-${month + 1}` });
+        const res = await getCalendarConfig(`${year}-${month + 1}`);
         setCalendarDateConfig([...res]);
     };
     useEffect(() => {

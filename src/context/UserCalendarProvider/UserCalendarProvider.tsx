@@ -45,7 +45,7 @@ function UserCalendarProvider({ children }: { children: React.ReactNode }) {
 
         let c = [...calendarConfig];
         if (calendarConfig.length <= 0) {
-            c = await getCalendarConfig({ id: dayjs().format('YYYY-M') });
+            c = await getCalendarConfig(dayjs().format('YYYY-M'));
             setCalendarConfig([...c]);
         }
 

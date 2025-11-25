@@ -151,3 +151,9 @@ export type CalendarDateList = FirebaseQuery &
     };
 
 export type SystemAreaConfig = FirebaseQuery & LatLng & { radius: number };
+
+export type AnnualLeaveEntitlement = FirebaseQuery & {
+    personal: number;
+    sick: number;
+    vacation: number;
+};

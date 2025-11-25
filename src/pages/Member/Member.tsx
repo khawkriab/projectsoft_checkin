@@ -81,7 +81,7 @@ function CardUser({
                 {data.jobPosition}
             </Box>
             <Box width={'60px'} height={'60px'} borderRadius={'100%'} overflow={'hidden'} bgcolor={'#cccccc'}>
-                <Box component={'img'} src={data.profileURL || ''} />
+                <Box component={'img'} src={data.profileURL || ''} sx={{ objectFit: 'contain', width: '100%', height: '100%' }} />
             </Box>
             <Box marginTop={3}>
                 <Box>{data.name}</Box>

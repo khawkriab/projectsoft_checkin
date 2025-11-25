@@ -32,10 +32,6 @@ export type CalendarDateExtendText = Omit<CalendarDateList, 'userCheckinList'> &
 
 function CalendarTable({ userFilterList, calendarCheckin }: { userFilterList: Profile[]; calendarCheckin: CalendarDateExtendText[] }) {
     const statusStyle = (data: CalendarDateExtendText['userCheckinList'][0]) => {
-        // backgroundColor: u?.lateFlag ? '#FBBC04' : u?.absentId ? '#FF9800' : '',
-        //                                         color: u?.lateFlag || u?.absentId ? '#ffffff' : '',
-        //                                         textAlign: u?.lateFlag || u?.absentId ? 'center' : '',
-
         if (data?.lateFlag) {
             if (data.lateFlag === 1) {
                 return {
@@ -68,7 +64,18 @@ function CalendarTable({ userFilterList, calendarCheckin }: { userFilterList: Pr
             <Table>
                 <TableHead>
                     <TableHeadRow>
-                        <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'ชื่อพนักงาน'}</TableHeadCell>
+                        <TableHeadCell
+                            sx={{
+                                borderLeft: '1px solid #fff',
+                                borderRight: '1px solid #fff',
+                                position: 'sticky',
+                                left: 0,
+                                zIndex: 2,
+                                backgroundColor: 'primary.main',
+                            }}
+                        >
+                            {'ชื่อพนักงาน'}
+                        </TableHeadCell>
                         {userFilterList.map((user, index) => {
                             return (
                                 <TableHeadCell key={index} colSpan={2} align='center' sx={{ borderLeft: '1px solid #fff' }}>
@@ -78,7 +85,18 @@ function CalendarTable({ userFilterList, calendarCheckin }: { userFilterList: Pr
                         })}
                     </TableHeadRow>
                     <TableHeadRow>
-                        <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'วันที่'}</TableHeadCell>
+                        <TableHeadCell
+                            sx={{
+                                borderLeft: '1px solid #fff',
+                                borderRight: '1px solid #fff',
+                                position: 'sticky',
+                                left: 0,
+                                zIndex: 2,
+                                backgroundColor: 'primary.main',
+                            }}
+                        >
+                            {'วันที่'}
+                        </TableHeadCell>
                         {userFilterList.map((_, index) => {
                             return (
                                 <React.Fragment key={index}>
@@ -99,6 +117,11 @@ function CalendarTable({ userFilterList, calendarCheckin }: { userFilterList: Pr
                                     sx={(theme) => ({
                                         border: '1px solid',
                                         borderLeftColor: theme.palette.secondary.contrastText,
+                                        borderRightColor: theme.palette.secondary.contrastText,
+                                        position: 'sticky',
+                                        left: 0,
+                                        zIndex: 2,
+                                        backgroundColor: 'background.paper',
                                     })}
                                 >
                                     {row.date}
@@ -296,7 +319,7 @@ function Home() {
             const u = res.filter((f) => f.jobPosition !== 'CEO');
             setUserList([...u]);
 
-            const c = await getCalendarConfig({ id: `${years}-${month + 1}` });
+            const c = await getCalendarConfig(`${years}-${month + 1}`);
             setCalendarConfig(c);
 
             await getCheckin(years, month, c);

@@ -1,6 +1,6 @@
 import { Box, Button, Paper, Table, TableBody, TableContainer, TableHead, TableRow } from '@mui/material';
 import { getLeaveList, updateLeave } from 'context/FirebaseProvider/firebaseApi/leaveApi';
-import { getUserWorkTime, updateUserCheckin, updateWorkTime } from 'context/FirebaseProvider/firebaseApi/checkinApi';
+import { getCalendarConfig, getUserWorkTime, updateUserCheckin, updateWorkTime } from 'context/FirebaseProvider/firebaseApi/checkinApi';
 import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/MuiTable';
 import dayjs from 'dayjs';
 import { getLeavePeriodLabel, getLeaveType } from 'helper/leaveType';
@@ -29,7 +29,9 @@ function UserAbsentList({ calendar = [], afterUndate }: { calendar: CalendarDate
         );
 
         // แปลง calendar เป็น Map เพื่อหาเร็วขึ้น
-        const calendarMap = new Map(calendar.map((entry) => [entry.date, entry]));
+        const calendarConfig = await getCalendarConfig(`${startLeave.year()}-${startLeave.month() + 1}`);
+
+        const calendarMap = new Map(calendarConfig.map((entry) => [entry.date, entry]));
 
         // ตรวจว่าทุกวันมีอยู่ใน calendar
         if (!datesInRange.every((d) => calendarMap.has(d))) {

@@ -153,7 +153,7 @@
 //             const u = res.filter((f) => f.jobPosition !== 'CEO');
 //             setUserList([...u]);
 
-//             const c = await getCalendarConfig({ id: `${years}-${month + 1}` });
+//             const c = await getCalendarConfig( `${years}-${month + 1}` );
 //             setCalendarConfig(c.data);
 
 //             await getCheckin(years, month, c.data);

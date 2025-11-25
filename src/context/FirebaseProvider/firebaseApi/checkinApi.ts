@@ -116,7 +116,7 @@ export const createCheckinCalendar = (payload: { date: string; userCheckinList: 
 };
 // --------------------------------------------------------new release-------------------------------------------------
 // id: 'YYYY-M'
-export const getCalendarConfig = ({ id }: { id: string }) => {
+export const getCalendarConfig = (id: string) => {
     return new Promise<CalendarDateConfig[]>(async (resolve, reject) => {
         const docRef = doc(db, 'calendarConfig', id);
         const docSnap = await getDoc(docRef);

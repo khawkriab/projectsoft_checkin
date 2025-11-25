@@ -9,7 +9,7 @@ import { TableBodyCell } from 'components/common/MuiTable';
 import dayjs from 'dayjs';
 import { getLeavePeriodLabel, getLeaveType } from 'helper/leaveType';
 
-function AmountBox({ remaining, total, label }: { remaining: number; total: number; label: string }) {
+export function AmountBox({ remaining, total, label }: { remaining: number; total: number; label: string }) {
     return (
         <Stack justifyContent={'center'}>
             <Box display={'flex'} alignItems={'baseline'} justifyContent={'center'} gap={0.5}>

@@ -1,9 +1,9 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
 import { initializeFirestore } from 'firebase/firestore';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { Profile } from 'type.global';
-import { getUsersWithEmail } from './firebaseApi/userApi';
+import { createUsersRegister, getUsersRegisterWithEmail, getUsersWithEmail } from './firebaseApi/userApi';
 import { useNotification } from 'components/common/NotificationCenter';
 
 interface FirebaseContextType {
@@ -13,6 +13,7 @@ interface FirebaseContextType {
     updateUserInfo: (email: string) => Promise<Profile | undefined>;
     signInWithGoogle: () => Promise<void>;
     signOutUser: () => Promise<void>;
+    onRegister: () => Promise<void>;
 }
 
 // Firebase config
@@ -48,21 +49,61 @@ export const useFirebase = () => {
 
 function FirebaseProvider({ children }: { children: React.ReactNode }) {
     const { openNotify } = useNotification();
+    const cancelGetInfo = useRef(false);
+    //
     const [isSignedIn, setIsSignedIn] = useState(false);
     const [authLoading, setAuthLoading] = useState(true);
     const [profile, setProfile] = useState<Profile | null>(null);
 
     //
+
+    const onRegister = async () => {
+        try {
+            const c = auth.currentUser;
+            const payload: Profile = {
+                role: 'USER',
+                name: c?.displayName || '',
+                jobPosition: '',
+                email: c?.email || '',
+                status: 'WAITING',
+                employmentEndDate: '',
+                fullName: '',
+                employmentStartDate: '',
+                phoneNumber: '',
+                suid: '',
+                employmentType: '',
+                profileURL: c?.photoURL || '',
+                googleUid: c?.uid,
+            };
+
+            if (!c?.uid) return openNotify('error', 'No Id');
+
+            await createUsersRegister(c.uid, payload);
+
+            openNotify('success', 'Waiting for approve');
+        } catch (error) {
+            console.error('error:', error);
+        }
+    };
+
     const signInWithGoogle = async () => {
+        cancelGetInfo.current = true;
         try {
             const user = await signInWithPopup(auth, provider);
-            const r = await getUserInfo(user.user.email || '');
-            console.log('r:', r);
-            window.location.assign('/projectsoft_checkin');
-            console.log('Logged in user:', user);
+
+            const profile = await getUserInfo(user.user.email || '', true);
+
+            if (profile) {
+                if (profile.role === 'ORGANIZATION') {
+                    window.location.assign('/projectsoft_checkin/#/manage');
+                } else {
+                    window.location.assign('/projectsoft_checkin');
+                }
+            }
         } catch (error) {
             console.error('Google login failed:', error);
         }
+        cancelGetInfo.current = false;
     };
 
     const signOutUser = async () => {
@@ -99,17 +140,23 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
         // }
     };
 
-    const getUserInfo = async (email: string) => {
+    const getUserInfo = async (email: string, onlyGet?: boolean) => {
         try {
             const uid = auth.currentUser?.uid;
             const res = await getUsersWithEmail(email, uid || '');
 
-            setIsSignedIn(true);
+            if (!onlyGet) setIsSignedIn(true);
             if (res) {
-                setProfile({ ...res });
+                if (!onlyGet) setProfile({ ...res });
                 return res;
             } else {
-                openNotify('error', 'Not found user');
+                const u = await getUsersRegisterWithEmail(email, uid || '');
+
+                if (u) {
+                    openNotify('warning', 'Waiting for approve');
+                } else {
+                    openNotify('error', 'Not found user');
+                }
             }
         } catch (error) {
             console.error('error:', error);
@@ -130,6 +177,9 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
                         setIsSignedIn(false);
                         return;
                     }
+
+                    if (cancelGetInfo.current) return;
+
                     await getUserInfo(currentUser.email);
                 } else {
                     console.warn('User token expired or signed out');
@@ -145,7 +195,7 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
 
         // Cleanup listener
         return () => unsubscribe();
-    }, []);
+    }, [cancelGetInfo.current]);
 
     return (
         <FirebaseContext.Provider
@@ -156,6 +206,7 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
                 signInWithGoogle,
                 signOutUser,
                 updateUserInfo: getUserInfo,
+                onRegister: onRegister,
             }}
         >
             {children}

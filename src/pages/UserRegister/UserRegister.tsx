@@ -46,7 +46,7 @@ function UserRegister() {
     const onSubmit = async (e: React.ChangeEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsLoading(true);
-        await addUsersRegister(formRegister);
+        // await addUsersRegister(formRegister);
         await getDataCurrentUser();
         setIsLoading(false);
         setOpen(true);

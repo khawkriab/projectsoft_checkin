@@ -3,23 +3,27 @@ import { AnnualLeaveEntitlement, Profile } from 'type.global';
 import { db } from '../FirebaseProvider';
 import dayjs from 'dayjs';
 
-export const addUsersRegister = (payload: Profile) => {
+export const addUsersRegister = (suid: string, payload: Profile) => {
     return new Promise<string>(async (resolve) => {
-        if (payload?.id) {
-            await setDoc(doc(db, 'usersList', payload.id), {
-                email: payload.email,
-                employmentType: payload.employmentType,
-                fullName: payload.fullName,
-                googleUid: payload.googleUid,
-                suid: payload.suid,
-                jobPosition: payload.jobPosition,
-                name: payload.name,
-                phoneNumber: payload.phoneNumber,
-                profileURL: payload.profileURL,
-                role: payload.role,
-                status: 'WAITING',
-                createdAt: payload?.createdAt || dayjs().toISOString(),
-                updateAt: dayjs().toISOString(),
+        if (suid) {
+            // await setDoc(doc(db, 'usersList', payload.id), {
+            //     email: payload.email,
+            //     employmentType: payload.employmentType,
+            //     fullName: payload.fullName,
+            //     googleUid: payload.googleUid,
+            //     suid: payload.suid,
+            //     jobPosition: payload.jobPosition,
+            //     name: payload.name,
+            //     phoneNumber: payload.phoneNumber,
+            //     profileURL: payload.profileURL,
+            //     role: payload.role,
+            //     status: 'WAITING',
+            //     createdAt: payload?.createdAt || dayjs().toISOString(),
+            //     updatedAt: dayjs().toISOString(),
+            // });
+            await setDoc(doc(db, 'usersList', suid), {
+                ...payload,
+                updatedAt: dayjs().toISOString(),
             });
         }
         // }
@@ -55,9 +59,38 @@ export const getUsersRegister = (suid: string) => {
         }
     });
 };
+export const createUsersRegister = (googleUid: string, payload: Profile) => {
+    return new Promise<string>(async (resolve, reject) => {
+        await setDoc(doc(db, 'usersRegisterList', googleUid), {
+            ...payload,
+            updatedAt: dayjs().toISOString(),
+        });
+
+        resolve('success');
+    });
+};
+export const getUsersRegisterWithEmail = (email: string, googleUid: string) => {
+    return new Promise<Profile | null>(async (resolve, reject) => {
+        const usersRef = collection(db, 'usersRegisterList');
+        const q = query(usersRef, where('email', '==', email), where('googleUid', '==', googleUid));
+
+        const querySnapshot = await getDocs(q);
+
+        const matchedUsers = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...(doc.data() as Profile),
+        }));
+
+        if (matchedUsers.length > 0) {
+            resolve(matchedUsers[0]);
+        }
+
+        resolve(null);
+    });
+};
 export const getUsersRegisterList = () => {
     return new Promise<Profile[]>(async (resolve, reject) => {
-        const querySnapshot = await getDocs(collection(db, 'usersRegister'));
+        const querySnapshot = await getDocs(collection(db, 'usersRegisterList'));
         const usersData: Profile[] = querySnapshot.docs.map((doc) => ({
             ...(doc.data() as Profile),
             id: doc.id,
@@ -134,16 +167,19 @@ export const getUsersListWithMonth = ({ today }: { today: string }) => {
         resolve(results as Profile[]);
     });
 };
-export const updateUser = (uId: string, payload: Profile) => {
+export const updateUser = (suid: string, payload: Partial<Profile>) => {
     return new Promise<string>(async (resolve, reject) => {
-        if (!uId) reject('no id');
+        if (!suid) reject('no id');
 
         try {
-            await updateDoc(doc(db, 'usersList', uId), {
+            await updateDoc(doc(db, 'usersList', suid), {
                 ...payload,
                 updatedAt: dayjs().toISOString(),
             });
-            // await deleteDoc(doc(db, 'usersRegister', payload.id ?? ''));
+
+            if (payload.googleUid) {
+                await deleteDoc(doc(db, 'usersRegisterList', payload.googleUid ?? ''));
+            }
 
             resolve('success');
         } catch (error) {
@@ -152,12 +188,12 @@ export const updateUser = (uId: string, payload: Profile) => {
     });
 };
 
-export const deleteUser = (uId: string) => {
+export const deleteUser = (suid: string) => {
     return new Promise<string>(async (resolve, reject) => {
-        if (!uId) reject('no id');
+        if (!suid) reject('no id');
 
         try {
-            await deleteDoc(doc(db, 'usersList', uId));
+            await deleteDoc(doc(db, 'usersList', suid));
 
             resolve('success');
         } catch (error) {

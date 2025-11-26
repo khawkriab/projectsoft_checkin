@@ -1,139 +1,34 @@
 import { db } from 'context/FirebaseProvider/FirebaseProvider';
 import { collection, doc, getDocs, query, updateDoc, where, writeBatch } from 'firebase/firestore';
 import { useEffect } from 'react';
-import { CheckinDate } from 'type.global';
+import { CheckinDate, Profile } from 'type.global';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { Button } from '@mui/material';
 import { Bar, BarChart, Tooltip, XAxis, YAxis } from 'recharts';
+import ModalEditUser from 'pages/Member/component/ModalEditUser';
 
 dayjs.extend(customParseFormat);
 dayjs.extend(utc);
 
-const userList = [
-    {
-        googleId: '',
-        email: 'assasin4442@gmail.com',
-        name: 'oos',
-        suid: '1763004020537',
-    },
-    {
-        googleId: '',
-        email: 'jakkapan199610@gmail.com',
-        name: 'oos',
-        suid: '1763004020537',
-    },
-    {
-        googleId: '',
-        email: 'pre.register1@checkin.com',
-        name: 'ออส',
-        suid: '1763004020537',
-    },
-    {
-        googleId: '113844255012024153757',
-        email: 'khawkriab.game@gmail.com',
-        name: 'test',
-        suid: '1763003931374',
-    },
-    {
-        googleId: '114194861929575502045',
-        email: 'khawkriab.dev@gmail.com',
-        name: 'กล้า',
-        suid: '1763003938364',
-    },
-    {
-        googleId: '115717476819625119380',
-        email: 'supacharn.kaowanan@gmail.com',
-        name: 'เจเจ',
-        suid: '1763003942954',
-    },
-    {
-        googleId: '109763643574192808243',
-        email: 'chophaka.chi@gmail.com',
-        name: 'ช่อ',
-        suid: '1763003947484',
-    },
-    {
-        googleId: '106041925538909132422',
-        email: 'akaratsiriwat@gmail.com',
-        name: 'เด็ดเดี่ยว',
-        suid: '1763003953762',
-    },
-    {
-        googleId: '114023034568874459683',
-        email: 'pechmanee.bt@kkumail.com',
-        name: 'โดนัท',
-        suid: '1763003963970',
-    },
-    {
-        googleId: '104592545300787905554',
-        email: 'nutchanat.nsr@gmail.com',
-        name: 'น้ำ',
-        suid: '1763003970127',
-    },
-    {
-        googleId: '',
-        email: 'nuttapat350@gmail.com',
-        name: 'น้ำอุ่น',
-        suid: '1763003976467',
-    },
-    {
-        googleId: '',
-        email: 'big.siravit@gmail.com',
-        name: 'บิ๊ก',
-        suid: '1763003982726',
-    },
-    {
-        googleId: '',
-        email: 'pre.register4@checkin.com',
-        name: 'ป้อง',
-        suid: '1763003989928',
-    },
-    {
-        googleId: '',
-        email: 'contact@projectsoft.co.th',
-        name: 'ผู้ดูแล',
-        suid: '1763003996445',
-    },
-    {
-        googleId: '100557811553068873527',
-        email: 'pearpitchaporn@gmail.com',
-        name: 'แพร',
-        suid: '1763004001411',
-    },
-    {
-        googleId: '110251362748801852206',
-        email: 'rakgorak@gmail.com',
-        name: 'รักษ์',
-        suid: '1763004006908',
-    },
-    {
-        googleId: '111547067079422404518',
-        email: 'patiphan.wa@gmail.com',
-        name: 'เวฟ',
-        suid: '1763004011326',
-    },
-    {
-        googleId: '114162045479402567217',
-        email: 'chettaphon.contact@gmail.com',
-        name: 'หนึ่ง',
-        suid: '1763004015946',
-    },
-
-    {
-        googleId: '105443597185074019229',
-        email: 'm.teerapolph@gmail.com',
-        name: 'เอ็ม',
-        suid: '1763004024894',
-    },
-    {
-        googleId: '117596898184769890110',
-        email: 'w.chawanut@kkumail.com',
-        name: 'เอิร์ธ',
-        suid: '1763004028733',
-    },
-];
+const userProfile: Profile = {
+    role: 'USER',
+    name: 'oos',
+    jobPosition: 'Back-End',
+    email: 'jakkapan199610@gmail.com',
+    status: 'APPROVE',
+    employmentEndDate: '',
+    fullName: 'jakkapan',
+    employmentStartDate: '2025-01-01',
+    phoneNumber: '',
+    suid: '1763004020537',
+    employmentType: 'Company Employee',
+    updatedAt: '2025-11-13T03:18:44.174Z',
+    profileURL: '',
+    googleUid: 'qg4vQmYIl3YVRHLt2Aesk1luM392',
+    id: '1763004020537',
+};
 
 // #region Sample data
 const data = [
@@ -310,13 +205,15 @@ function Demo() {
     }, []);
     return (
         <div>
-            <BarChart width={400} height={300} data={data} layout='vertical'>
+            {/* <BarChart width={400} height={300} data={data} layout='vertical'>
                 <XAxis type='number' />
                 <YAxis type='category' dataKey='name' />
                 <Tooltip />
                 <Bar dataKey='uv' fill='#8884d8' />
                 <Bar dataKey='pv' fill='#ff0000' />
-            </BarChart>
+            </BarChart> */}
+
+            <ModalEditUser data={userProfile} />
         </div>
     );
 }

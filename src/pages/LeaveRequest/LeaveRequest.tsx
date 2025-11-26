@@ -246,22 +246,6 @@ function LeaveRequestBox({ userList }: { userList: Profile[] }) {
     );
 }
 
-function AddAnnualLeaveEntitlement({ user }: { user: Profile }) {
-    const [loading, setLoading] = useState(false);
-
-    const onUpdate = async () => {
-        // await updateAnnualLeaveEntitlement(user.suid, 2025);
-        alert('seccess');
-    };
-    return (
-        <Box>
-            <Button variant='contained' onClick={onUpdate}>
-                add
-            </Button>
-        </Box>
-    );
-}
-
 export function AmountBox({ remaining, total, label }: { remaining: number; total: number; label: string }) {
     return (
         <Stack justifyContent={'center'}>

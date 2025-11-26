@@ -21,7 +21,7 @@ export const createLeave = (payload: LeaveData) => {
             approveBy: payload.approveBy,
             approveBySuid: payload.approveBySuid,
             createdAt: dayjs().toISOString(),
-            updateAt: dayjs().toISOString(),
+            updatedAt: dayjs().toISOString(),
         });
 
         resolve('success');
@@ -95,7 +95,7 @@ export const updateLeave = (abId: string, payload: { status: LeaveStatus; approv
                 status: payload.status,
                 approveBy: payload.approveBy,
                 approveBySuid: payload.approveBySuid,
-                updateAt: dayjs().toISOString(),
+                updatedAt: dayjs().toISOString(),
             },
             { merge: true }
         );

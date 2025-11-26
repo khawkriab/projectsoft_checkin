@@ -1,32 +1,13 @@
-import {
-    Alert,
-    Box,
-    Button,
-    Card,
-    CardContent,
-    Paper,
-    Slide,
-    Snackbar,
-    Stack,
-    Table,
-    TableBody,
-    TableContainer,
-    TableHead,
-    TableRow,
-    TextField,
-    ToggleButton,
-    ToggleButtonGroup,
-    Typography,
-} from '@mui/material';
+import { Box, Button, Chip, Paper, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import { useFirebase } from 'context/FirebaseProvider';
-import { updateUser, getUsersList } from 'context/FirebaseProvider/firebaseApi/userApi';
-import { TableBodyCell, TableHeadCell } from 'components/common/MuiTable';
+import { updateUser, getUsersList, updateAnnualLeaveEntitlement } from 'context/FirebaseProvider/firebaseApi/userApi';
 import { useEffect, useMemo, useState } from 'react';
 import { Profile, ProfileRole, ProfileStatus } from 'type.global';
 import dayjs from 'dayjs';
 import CopyBox from 'components/common/CopyBox';
-
-type MemberType = Profile;
+import { useNotification } from 'components/common/NotificationCenter';
+import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
+import ModalEditUser from './component/ModalEditUser';
 
 function BoxBetween({ label, children }: { label: string; children: React.ReactNode }) {
     return (
@@ -44,11 +25,13 @@ function CardUser({
     data,
     onChangeRole,
     onChangeStatus,
+    onEditUser,
 }: {
-    data: MemberType;
+    data: Profile;
     role?: ProfileRole;
-    onChangeRole: (role: MemberType['role'], user: MemberType) => Promise<void>;
-    onChangeStatus: (user: MemberType, status: ProfileStatus) => Promise<void>;
+    onChangeRole: (role: Profile['role'], user: Profile) => Promise<void>;
+    onChangeStatus: (user: Profile, status: ProfileStatus) => Promise<void>;
+    onEditUser: (user: Profile) => void;
 }) {
     const bgc = useMemo(() => {
         if (data.jobPosition === 'CEO') return 'linear-gradient(to right, #ef3535 0%, #ebc547 100%)';
@@ -64,6 +47,8 @@ function CardUser({
                 backgroundColor: '#ffffff',
                 width: '100%',
                 maxWidth: '450px',
+                display: 'flex',
+                flexDirection: 'column',
             }}
         >
             <Box
@@ -96,7 +81,13 @@ function CardUser({
                 <BoxBetween label='Email:'>{data.email}</BoxBetween>
                 <BoxBetween label='Phone Number:'>{data.phoneNumber}</BoxBetween>
                 <BoxBetween label='Employee Type:'>{data.employmentType}</BoxBetween>
-                <BoxBetween label='สถานะบัญชี:'>{data.status}</BoxBetween>
+                <BoxBetween label='สถานะบัญชี:'>
+                    <Chip
+                        size='small'
+                        label={data.status === 'APPROVE' ? 'ใช้งาน' : data.status === 'WAITING' ? 'รอ' : 'ปิดบัญชี'}
+                        color={data.status === 'APPROVE' ? 'success' : data.status === 'WAITING' ? 'warning' : 'error'}
+                    />
+                </BoxBetween>
                 <BoxBetween label='วันเริ่มทำงาน:'>{data.employmentStartDate}</BoxBetween>
                 <BoxBetween label='วันสิ้นสุดการทำงาน:'>{data.employmentEndDate}</BoxBetween>
                 <BoxBetween label='Role:'>
@@ -106,68 +97,96 @@ function CardUser({
                             size='small'
                             color='error'
                             exclusive
-                            value={data.status === 'INACTIVE' ? 'INACTIVE' : data.role}
+                            value={data.role}
                             onChange={(_, value) => {
                                 if (value === 'INACTIVE') {
                                     onChangeStatus(data, 'INACTIVE');
                                 } else {
-                                    onChangeRole(value as MemberType['role'], data);
+                                    onChangeRole(value as Profile['role'], data);
                                 }
                             }}
                         >
                             <ToggleButton value='ADMIN'>Admin</ToggleButton>
                             <ToggleButton value='STAFF'>Staff</ToggleButton>
                             <ToggleButton value='USER'>User</ToggleButton>
-                            <ToggleButton value='INACTIVE'>Inactive User</ToggleButton>
+                            {/* <ToggleButton value='INACTIVE'>Inactive User</ToggleButton> */}
                         </ToggleButtonGroup>
                     ) : (
                         data.role
                     )}
                 </BoxBetween>
             </Box>
+            <Box display={'flex'} justifyContent={'flex-end'} marginTop={'auto'} paddingTop={3}>
+                <Button variant='contained' size='small' onClick={() => onEditUser(data)}>
+                    <DriveFileRenameOutlineIcon /> Edit
+                </Button>
+            </Box>
         </Paper>
+    );
+}
+
+function AddAnnualLeaveEntitlement({ user }: { user: Profile }) {
+    const [loading, setLoading] = useState(false);
+
+    const onUpdate = async () => {
+        await updateAnnualLeaveEntitlement(user.suid, 2025, {
+            personal: 999,
+            sick: 999,
+            vacation: 7,
+            years: 2025,
+        });
+        alert('seccess');
+    };
+    return (
+        <Box>
+            <Button variant='contained' onClick={onUpdate}>
+                add
+            </Button>
+        </Box>
     );
 }
 
 function Member() {
     const { profile } = useFirebase();
-    const [memberList, setMemberList] = useState<MemberType[]>([]);
+    const { openNotify } = useNotification();
     //
+    const [memberList, setMemberList] = useState<Profile[]>([]);
     const [updating, setUpdating] = useState(false);
-    const [open, setOpen] = useState(false);
+    const [openEdit, setOpenEdit] = useState<{ open: boolean; data: Profile | null }>({ open: false, data: null });
+
     //
 
-    // const onApprove = async (user: MemberType) => {
+    // const onApprove = async (user: Profile) => {
     //     if (!user.id) return;
     //     setUpdating(true);
     //     await updateUser(user.id, { ...user, status: 'APPROVE' });
     //     setOpen(true);
     //     getUserList();
     // };
-    const onChangeStatus = async (user: MemberType, status: ProfileStatus) => {
+    const onChangeStatus = async (user: Profile, status: ProfileStatus) => {
         if (!user.id) return;
         setUpdating(true);
         await updateUser(user.id, { ...user, status: status });
-        setOpen(true);
+        openNotify('success', 'Update success');
         getUserList();
     };
-    const onUpdateSuid = async (user: MemberType) => {
+    const onUpdateSuid = async (user: Profile) => {
         if (!user.id) return;
 
         setUpdating(true);
         await updateUser(user.id, { ...user, suid: String(dayjs().valueOf()) });
-        setOpen(true);
+        openNotify('success', 'Update success');
         getUserList();
     };
 
-    const onChangeRole = async (role: MemberType['role'], user: MemberType) => {
+    const onChangeRole = async (role: Profile['role'], user: Profile) => {
         if (!user.id) return;
 
         try {
             const status = user.status === 'INACTIVE' ? 'APPROVE' : user.status;
             setUpdating(true);
             await updateUser(user.id, { ...user, role: role, status: status });
-            setOpen(true);
+            openNotify('success', 'Update success');
             getUserList();
         } catch (error) {
             console.error('error:', error);
@@ -193,109 +212,20 @@ function Member() {
         <Box>
             <Box display={'flex'} flexWrap={'wrap'} gap={2}>
                 {dataList.map((m) => (
-                    <CardUser key={m.id} data={m} role={profile?.role} onChangeRole={onChangeRole} onChangeStatus={onChangeStatus} />
+                    <CardUser
+                        key={m.id}
+                        data={m}
+                        role={profile?.role}
+                        onChangeRole={onChangeRole}
+                        onChangeStatus={onChangeStatus}
+                        onEditUser={(data) => setOpenEdit((prev) => ({ ...prev, open: true, data: data }))}
+                    />
                 ))}
             </Box>
 
-            <Snackbar
-                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-                slots={{ transition: Slide }}
-                open={open}
-                autoHideDuration={6000}
-                onClose={() => setOpen(false)}
-            >
-                <Alert onClose={() => setOpen(false)} severity='success' variant='filled' sx={{ width: '100%' }}>
-                    updated successfully
-                </Alert>
-            </Snackbar>
-
-            {/* <TableContainer component={Paper}>
-                <Table>
-                    <TableHead>
-                        <TableRow
-                            sx={(theme) => ({
-                                backgroundColor: theme.palette.primary.dark,
-                            })}
-                        >
-                            <TableHeadCell>Full Name</TableHeadCell>
-                            <TableHeadCell>Name</TableHeadCell>
-                            <TableHeadCell>Email</TableHeadCell>
-                            <TableHeadCell>Phone Number</TableHeadCell>
-                            <TableHeadCell>Job Position</TableHeadCell>
-                            <TableHeadCell>Employee Type</TableHeadCell>
-                            <TableHeadCell>Role</TableHeadCell>
-                            {profile?.role === 'ADMIN' && (
-                                <>
-                                    <TableHeadCell>allowFindLocation</TableHeadCell>
-                                    <TableHeadCell>Register Status</TableHeadCell>
-                                </>
-                            )}
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {dataList.map((u) => (
-                            <TableRow key={u.email}>
-                                <TableBodyCell>{u.fullName}</TableBodyCell>
-                                <TableBodyCell>{u.name}</TableBodyCell>
-                                <TableBodyCell>{u.email}</TableBodyCell>
-                                <TableBodyCell>{u.phoneNumber}</TableBodyCell>
-                                <TableBodyCell>{u.jobPosition}</TableBodyCell>
-                                <TableBodyCell>{u.employmentType}</TableBodyCell>
-                                <TableBodyCell>
-                                    {profile?.role === 'ADMIN' ? (
-                                        <ToggleButtonGroup
-                                            disabled={updating}
-                                            color='error'
-                                            exclusive
-                                            value={u.status === 'INACTIVE' ? 'INACTIVE' : u.role}
-                                            onChange={(_, value) => {
-                                                if (value === 'INACTIVE') {
-                                                    onChangeStatus(u, 'INACTIVE');
-                                                } else {
-                                                    onChangeRole(value as MemberType['role'], u);
-                                                }
-                                            }}
-                                        >
-                                            <ToggleButton value='ADMIN'>Admin</ToggleButton>
-                                            <ToggleButton value='STAFF'>Staff</ToggleButton>
-                                            <ToggleButton value='USER'>User</ToggleButton>
-                                            <ToggleButton value='INACTIVE'>Inactive User</ToggleButton>
-                                        </ToggleButtonGroup>
-                                    ) : (
-                                        u.role
-                                    )}
-                                </TableBodyCell>
-                                {profile?.role === 'ADMIN' && (
-                                    <>
-                                        <TableBodyCell>{u.allowFindLocation}</TableBodyCell>
-                                        <TableBodyCell>
-                                            {u.status === 'APPROVE' ? (
-                                                <Button size='small' variant='contained' color='success'>
-                                                    Registered
-                                                </Button>
-                                            ) : u.status === 'WAITING' ? (
-                                                <Button
-                                                    loading={updating}
-                                                    size='small'
-                                                    variant='contained'
-                                                    color='warning'
-                                                    onClick={() => onChangeStatus(u, 'APPROVE')}
-                                                >
-                                                    Approve
-                                                </Button>
-                                            ) : (
-                                                <Button size='small' variant='contained' color='error'>
-                                                    No Regiester
-                                                </Button>
-                                            )}
-                                        </TableBodyCell>
-                                    </>
-                                )}
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer> */}
+            {openEdit.open && openEdit.data && (
+                <ModalEditUser data={openEdit.data} onClose={() => setOpenEdit((prev) => ({ ...prev, open: false, data: null }))} />
+            )}
         </Box>
     );
 }

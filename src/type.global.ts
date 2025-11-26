@@ -11,7 +11,7 @@ export type StandardResponse<T = any> = T & FirebaseQuery;
 
 export type BaseData = {
     createdAt?: Date | string;
-    updateAt?: Date | string;
+    updatedAt?: Date | string;
 };
 
 export type BaseProfile = {
@@ -156,4 +156,5 @@ export type AnnualLeaveEntitlement = FirebaseQuery & {
     personal: number;
     sick: number;
     vacation: number;
+    years: number;
 };

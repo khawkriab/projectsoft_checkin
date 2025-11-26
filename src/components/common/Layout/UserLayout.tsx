@@ -4,7 +4,7 @@ import { useFirebase } from 'context/FirebaseProvider';
 import { Outlet } from 'react-router-dom';
 
 function UserLayout() {
-    const { authLoading, isSignedIn, profile, signInWithGoogle, signOutUser } = useFirebase();
+    const { authLoading, isSignedIn, profile, signInWithGoogle, signOutUser, onRegister } = useFirebase();
     return (
         <Box
             sx={(theme) => ({
@@ -37,9 +37,12 @@ function UserLayout() {
             <Box className='body-content' padding={{ xs: '12px', sm: '24px' }}>
                 {!authLoading && profile && <Outlet />}
                 {!authLoading && !profile && isSignedIn && (
-                    <Box display={'flex'} justifyContent={'center'} alignItems={'center'} height={'80vh'}>
-                        <Button variant='contained' color='primary' onClick={signInWithGoogle}>
+                    <Box display={'flex'} flexDirection={'column'} justifyContent={'center'} alignItems={'center'} height={'80vh'} gap={3}>
+                        <Button variant='contained' color='primary' onClick={onRegister}>
                             Register with google
+                        </Button>
+                        <Button variant='contained' color='error' onClick={signOutUser}>
+                            Logout
                         </Button>
                     </Box>
                 )}

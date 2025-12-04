@@ -49,7 +49,11 @@ function ModalEditUser({ data, onClose }: { data: Profile; onClose?: () => void 
     const onChangeStatus = async (suid: string, status: ProfileStatus) => {
         if (!suid) return;
         setIsLoading(true);
-        await updateUser(suid, { employmentEndDate: dayjs().format('YYYY-MM-DD'), status: status });
+        await updateUser(suid, {
+            employmentStartDate: formRegister.employmentStartDate,
+            employmentEndDate: formRegister.employmentEndDate || dayjs().format('YYYY-MM-DD'),
+            status: status,
+        });
         openNotify('success', 'Update success');
         setIsLoading(false);
     };
@@ -64,9 +68,9 @@ function ModalEditUser({ data, onClose }: { data: Profile; onClose?: () => void 
             jobPosition: formRegister.jobPosition,
             email: formRegister.email,
             status: 'APPROVE',
-            employmentEndDate: formRegister.employmentEndDate,
             fullName: formRegister.fullName,
             employmentStartDate: formRegister.employmentStartDate,
+            employmentEndDate: formRegister.employmentEndDate,
             phoneNumber: formRegister.phoneNumber,
             employmentType: formRegister.employmentType,
             profileURL: formRegister.profileURL,
@@ -318,11 +322,14 @@ function ModalEditUser({ data, onClose }: { data: Profile; onClose?: () => void 
                             <Grid size={{ xs: 12, md: 6 }}>
                                 <MuiMobileDatePicker
                                     label='วันเริ่มทำงาน'
-                                    value={formRegister.employmentStartDate ? dayjs(formRegister.employmentStartDate) : undefined}
-                                    // minDate={leaveForm.startDate || undefined}
+                                    value={formRegister.employmentStartDate ? dayjs(formRegister.employmentStartDate) : null}
+                                    // minDate={leaveForm.startDate || null}
                                     onAccept={(newValue) => {
-                                        if (!newValue) return;
-                                        setFormRegister((prev) => ({ ...prev, employmentStartDate: newValue.format('YYYY-MM-DD') }));
+                                        if (newValue) {
+                                            setFormRegister((prev) => ({ ...prev, employmentStartDate: newValue.format('YYYY-MM-DD') }));
+                                        } else {
+                                            setFormRegister((prev) => ({ ...prev, employmentStartDate: null }));
+                                        }
                                     }}
                                     slotProps={{
                                         textField: {
@@ -335,11 +342,14 @@ function ModalEditUser({ data, onClose }: { data: Profile; onClose?: () => void 
                             <Grid size={{ xs: 12, md: 6 }}>
                                 <MuiMobileDatePicker
                                     label='วันสิ้นสุดการทำงาน'
-                                    value={formRegister.employmentEndDate ? dayjs(formRegister.employmentEndDate) : undefined}
+                                    value={formRegister.employmentEndDate ? dayjs(formRegister.employmentEndDate) : null}
                                     // minDate={leaveForm.startDate || undefined}
                                     onAccept={(newValue) => {
-                                        if (!newValue) return;
-                                        setFormRegister((prev) => ({ ...prev, employmentEndDate: newValue.format('YYYY-MM-DD') }));
+                                        if (newValue) {
+                                            setFormRegister((prev) => ({ ...prev, employmentEndDate: newValue.format('YYYY-MM-DD') }));
+                                        } else {
+                                            setFormRegister((prev) => ({ ...prev, employmentEndDate: null }));
+                                        }
                                     }}
                                     slotProps={{
                                         textField: {

@@ -1,5 +1,5 @@
 import { db } from 'context/FirebaseProvider/FirebaseProvider';
-import { collection, doc, getDocs, query, updateDoc, where, writeBatch } from 'firebase/firestore';
+import { and, collection, doc, getDocs, query, updateDoc, where, writeBatch } from 'firebase/firestore';
 import { useEffect } from 'react';
 import { CheckinDate, Profile } from 'type.global';
 import dayjs from 'dayjs';
@@ -8,27 +8,14 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { Button } from '@mui/material';
 import { Bar, BarChart, Tooltip, XAxis, YAxis } from 'recharts';
 import ModalEditUser from 'pages/Member/component/ModalEditUser';
+import { createLeave } from 'context/FirebaseProvider/firebaseApi/leaveApi';
+import { getUserWorkTime } from 'context/FirebaseProvider/firebaseApi/checkinApi';
+import { workTimeList } from './backupData20251119';
+import isBetween from 'dayjs/plugin/isBetween';
 
 dayjs.extend(customParseFormat);
 dayjs.extend(utc);
-
-const userProfile: Profile = {
-    role: 'USER',
-    name: 'oos',
-    jobPosition: 'Back-End',
-    email: 'jakkapan199610@gmail.com',
-    status: 'APPROVE',
-    employmentEndDate: '',
-    fullName: 'jakkapan',
-    employmentStartDate: '2025-01-01',
-    phoneNumber: '',
-    suid: '1763004020537',
-    employmentType: 'Company Employee',
-    updatedAt: '2025-11-13T03:18:44.174Z',
-    profileURL: '',
-    googleUid: 'qg4vQmYIl3YVRHLt2Aesk1luM392',
-    id: '1763004020537',
-};
+dayjs.extend(isBetween);
 
 // #region Sample data
 const data = [
@@ -77,8 +64,8 @@ const data = [
 ];
 
 function Demo() {
-    const addAllItems = async () => {
-        const items: any[] = [];
+    const onBatchAction = async (items: any[] = []) => {
+        // const items: any[] = [];
         const CHUNK_SIZE = 500; // Firestore batch limit
         const chunks = [];
 
@@ -96,10 +83,11 @@ function Demo() {
                 const colRef = collection(db, 'workTimesList');
 
                 chunk.forEach((item) => {
-                    // const docRef = doc(db, 'leaveListX', item.id);
-                    const docRef = doc(colRef); // auto ID
+                    const docRef = doc(db, 'workTimesList', item.id);
+                    // const docRef = doc(colRef); // auto ID
                     delete item.id;
-                    batch.set(docRef, item);
+                    // batch.set(docRef, item);
+                    batch.delete(docRef);
                 });
 
                 await batch.commit();
@@ -112,8 +100,51 @@ function Demo() {
         }
     };
 
+    const onX = async () => {
+        await createLeave({
+            name: 'เอ็ม',
+            email: 'm.teerapolph@gmail.com',
+            suid: '1763004024894',
+            leaveType: 'VACATION',
+            leavePeriod: 'FULL_DAY',
+            startDate: '2025-06-09',
+            endDate: '2025-06-20',
+            reason: 'ลาบวช',
+            status: 'WAITING',
+            approveBy: '',
+            approveBySuid: '',
+        });
+
+        alert('success');
+    };
+
     useEffect(() => {
         const init = async () => {
+            const n = workTimeList
+                .filter((f) => dayjs(f.date).isBetween('2025-06-27', dayjs('2025-07-02'), 'day') && f.name === 'm.teerapolph@gmail.com')
+                .sort((a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf());
+            console.log('n:', n);
+            // const res = await getUserWorkTime({
+            //     startDate: '2025-06-06',
+            //     endDate: '2025-06-20',
+            //     suid: '1763004024894',
+            // });
+            // const q = query(
+            //     collection(db, 'workTimesList'),
+            //     and(
+            //         where('time', '==', ''), // Your date field in Firestore
+            //         where('reason', '==', ''),
+            //         where('approveBy', '==', ''),
+            //         where('remark', '==', '')
+            //         // where('status', '!=', 99)
+            //     )
+            // );
+            // const querySnapshot = await getDocs(q);
+            // const res: CheckinDate[] = querySnapshot.docs.map((doc) => ({
+            //     ...(doc.data() as CheckinDate),
+            //     id: doc.id,
+            // }));
+            // onBatchAction(res);
             // const q = query(
             //     collection(db, 'usersList')
             //     // where('leavePeriod', '==', 'HALF_DAY_AM')
@@ -127,82 +158,11 @@ function Demo() {
             //     id: doc.id,
             // }));
             // console.log('res:', res);
-            // console.log(
-            //     'res:',
-            //     // res.filter((f) => f.email === 'khawkriab.game@gmail.com')
-            //     res
-            //         .map((f) => ({ email: f.email, leavePeriod: f.leavePeriod, date: f.date }))
-            //         .sort((a, b) => (a.date as string).localeCompare(b.date))
-            // );
-            // const usersRef = collection(db, 'absentList');
-            // const q1 = query(usersRef, where('status', '==', 'APPROVE'));
-            // const querySnapshot1 = await getDocs(q1);
-            // const absentList = querySnapshot1.docs.map((doc) => ({
-            //     id: doc.id,
-            //     ...doc.data(),
-            // }));
-            // console.log('r:', leaveList);
-            // console.log(
-            //     'backup:',
-            //     backup.filter((f) => f.name === '' && f.email)
-            // );
-            // addAllItems(backup);
-            // const updateData = backup.map((m) => {
-            //     if (m.absentId) {
-            //         const fl = leaveList.find((f) => f.id === m.absentId);
-            //         if (fl) {
-            //             return {
-            //                 ...m,
-            //                 remark: '',
-            //                 leaveType: fl.leaveType,
-            //                 leavePeriod: fl.leavePeriod,
-            //                 isWorkOutside: m.isWFH,
-            //             };
-            //         }
-            //         return {
-            //             ...m,
-            //             leaveType: 'VACATION',
-            //             leavePeriod: 'FULL_DAY',
-            //             isWorkOutside: m.isWFH,
-            //         };
-            //     }
-            //     return {
-            //         ...m,
-            //         leaveType: null,
-            //         leavePeriod: null,
-            //         isWorkOutside: m.isWFH,
-            //     };
-            // });
-            // console.log('updateData2:', updateData);
-            // console.log('res:', res);
-            // const workTimeList = res.filter((f) => !!f.leavePeriod || !!f.absentId);
-            // const updateWorkTimeList = workTimeList.map(m=>{
-            //     if()
-            // })
-            // deleteDoc(doc(db, 'checkinToday', id));
         };
 
         init();
     }, []);
 
-    useEffect(() => {
-        const remap = () => {
-            // const n = backupData.map((m) => {
-            //     const cu = userList.find((f) => f.email === m.email);
-            //     const ab = userList.find((f) => f.googleId === m.approveByGoogleId);
-            //     return {
-            //         ...m,
-            //         suid: cu?.suid || 'nodata',
-            //         approveBySuid: ab?.suid || 'nodata',
-            //     };
-            // });
-            // console.log('n:', n);
-            // console.log('backupData:', backupData.length);
-            // const r = remapData.filter((f) => !!f.approveBySuid);
-        };
-
-        // remap();
-    }, []);
     return (
         <div>
             {/* <BarChart width={400} height={300} data={data} layout='vertical'>
@@ -212,8 +172,8 @@ function Demo() {
                 <Bar dataKey='uv' fill='#8884d8' />
                 <Bar dataKey='pv' fill='#ff0000' />
             </BarChart> */}
-
-            <ModalEditUser data={userProfile} />
+            <Button onClick={onX}>x</Button>
+            {/* <ModalEditUser data={userProfile} /> */}
         </div>
     );
 }

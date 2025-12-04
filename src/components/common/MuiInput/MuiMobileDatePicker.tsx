@@ -2,6 +2,7 @@ import { LocalizationProvider, MobileDatePicker, MobileDatePickerProps } from '@
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { Dayjs } from 'dayjs';
 import { useState } from 'react';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 
 function CustomMobileDatePicker(props: MobileDatePickerProps) {
     const [showDialog, setShowDialog] = useState(false);
@@ -35,6 +36,27 @@ function CustomMobileDatePicker(props: MobileDatePickerProps) {
                         shrink: true,
                     },
                     ...props?.slotProps?.textField,
+                    InputProps: {
+                        endAdornment: (
+                            <>
+                                {props.value ? (
+                                    <span
+                                        style={{ cursor: 'pointer', paddingRight: 8 }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setTemp(null);
+                                            props.onAccept?.(null, undefined as any);
+                                        }}
+                                    >
+                                        ✕
+                                    </span>
+                                ) : (
+                                    <CalendarMonthIcon />
+                                )}
+                                {/* {props?.slotProps?.textField?.InputProps?.endAdornment} */}
+                            </>
+                        ),
+                    },
                 },
             }}
         />

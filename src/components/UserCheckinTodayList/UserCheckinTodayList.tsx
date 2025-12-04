@@ -1,34 +1,13 @@
-import {
-    Alert,
-    Box,
-    Button,
-    Dialog,
-    DialogContent,
-    DialogTitle,
-    Paper,
-    Slide,
-    Snackbar,
-    Table,
-    TableBody,
-    TableContainer,
-    TableHead,
-    TableRow,
-    TextField,
-} from '@mui/material';
+import { Alert, Box, Button, Paper, Slide, Snackbar, Table, TableBody, TableContainer, TableHead, TableRow } from '@mui/material';
 import { useFirebase } from 'context/FirebaseProvider';
-import {
-    getCheckinTodayList,
-    getUserWorkTime,
-    getWorkTimeListWithStatus,
-    updateWorkTime,
-} from 'context/FirebaseProvider/firebaseApi/checkinApi';
+import { getUserWorkTime, getWorkTimeListWithStatus, updateWorkTime } from 'context/FirebaseProvider/firebaseApi/checkinApi';
 import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/MuiTable';
 import dayjs from 'dayjs';
 import usePageVisibility from 'hooks/usePageVisibility';
 import { useEffect, useRef, useState } from 'react';
 import { CalendarDateConfig, CheckinDate } from 'type.global';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import { CalendarDateExtendText } from 'pages/Home/HomeFirebase';
+import { CalendarDateExtendText } from 'pages/Home/component/CalendarTable';
 
 dayjs.extend(customParseFormat);
 

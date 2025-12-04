@@ -343,7 +343,7 @@ function LeaveRequest() {
         const getLeave = async () => {
             try {
                 const res = await getLeaveList();
-                setLeaveList([...res.sort((a, b) => dayjs(a.startDate).valueOf() - dayjs(b.startDate).valueOf())]);
+                setLeaveList([...res.sort((a, b) => dayjs(b.startDate).valueOf() - dayjs(a.startDate).valueOf())]);
             } catch (error) {
                 console.log('error:', error);
             }
@@ -353,11 +353,11 @@ function LeaveRequest() {
             try {
                 const res = await getUsersList();
 
-                const annualLeaveEntitlement = res.map((m) => getAnnualLeaveEntitlement(m.suid));
+                const annualLeaveEntitlement = res.filter((f) => f.status === 'APPROVE').map((m) => getAnnualLeaveEntitlement(m.suid));
 
                 Promise.all(annualLeaveEntitlement).then((entitlement) => {
                     const remap = res
-                        .filter((f) => f.jobPosition !== 'CEO')
+                        .filter((f) => f.jobPosition !== 'CEO' && f.status === 'APPROVE')
                         .map((user) => {
                             const r = entitlement.find((f) => f.suid === user.suid);
                             return {
@@ -389,7 +389,10 @@ function LeaveRequest() {
                     }}
                 >
                     {userUsedLeaveDays.map((u) => (
-                        <Paper key={u.suid} sx={{ padding: 2, borderRadius: 2, flex: 1 }}>
+                        <Paper
+                            key={u.suid}
+                            sx={(theme) => ({ padding: 2, borderRadius: 2, flex: 1, border: `1px solid ${theme.palette.primary.light}` })}
+                        >
                             <Typography variant='h6'>
                                 {u.name} {u.fullName}
                             </Typography>

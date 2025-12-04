@@ -152,12 +152,18 @@ export const getUsersList = () => {
 
 // today format '2024-06-01'
 export const getUsersListWithMonth = ({ today }: { today: string }) => {
+    const date = dayjs(today);
+
     return new Promise<Profile[]>(async (resolve, reject) => {
         const q = query(
             collection(db, 'usersList'),
             or(
-                and(where('status', '==', 'APPROVE'), where('employmentStartDate', '<=', today)),
-                and(where('status', '==', 'INACTIVE'), where('employmentStartDate', '<=', today), where('employmentEndDate', '>=', today))
+                and(where('status', '==', 'APPROVE'), where('employmentStartDate', '<=', date.endOf('month').format('YYYY-MM-DD'))),
+                and(
+                    where('status', '==', 'INACTIVE'),
+                    where('employmentStartDate', '<=', date.endOf('month').format('YYYY-MM-DD')),
+                    where('employmentEndDate', '>=', date.startOf('month').format('YYYY-MM-DD'))
+                )
             )
         );
 

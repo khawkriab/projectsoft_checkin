@@ -22,6 +22,7 @@ import { useFirebase } from 'context/FirebaseProvider';
 import { createLeave, getUserLeave } from 'context/FirebaseProvider/firebaseApi/leaveApi';
 import { leavePeriods, leaveTypes } from 'helper/leaveType';
 import { useNotification } from 'components/common/NotificationCenter';
+import { MuiMobileDatePicker } from 'components/common/MuiInput';
 
 dayjs.locale('th');
 
@@ -32,38 +33,6 @@ type LeaveForm = {
     endDate: Dayjs | null;
     reason: string;
 };
-
-function CustomMobileDatePicker(props: MobileDatePickerProps) {
-    const [showDialog, setShowDialog] = useState(false);
-
-    //
-
-    return (
-        <MobileDatePicker
-            {...props}
-            open={showDialog}
-            onOpen={() => setShowDialog(true)}
-            onClose={() => setShowDialog(false)}
-            format='DD/MM/YYYY'
-            sx={{
-                '& .MuiPickersOutlinedInput-root.Mui-disabled *': {
-                    color: '#000',
-                },
-            }}
-            slotProps={{
-                textField: {
-                    fullWidth: true,
-                    onClick: () => setShowDialog(true),
-                    disabled: true,
-                    InputLabelProps: {
-                        shrink: true,
-                    },
-                    ...props?.slotProps?.textField,
-                },
-            }}
-        />
-    );
-}
 
 export function LeaveRequestMenuBox() {
     const { profile } = useFirebase();
@@ -178,7 +147,7 @@ export function LeaveRequestMenuBox() {
                         <Grid container spacing={2}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                                 <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                    <CustomMobileDatePicker
+                                    <MuiMobileDatePicker
                                         label='วันเริ่มต้น'
                                         minDate={dayjs()}
                                         maxDate={leaveForm.endDate || undefined}
@@ -196,7 +165,7 @@ export function LeaveRequestMenuBox() {
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>
                                 <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                    <CustomMobileDatePicker
+                                    <MuiMobileDatePicker
                                         label='วันสิ้นสุด'
                                         // value={leaveForm.endDate}
                                         minDate={leaveForm.startDate || undefined}

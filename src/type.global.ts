@@ -29,8 +29,8 @@ export type EmployeeInfo = {
     phoneNumber?: string;
     jobPosition?: string;
     employmentType?: string;
-    employmentStartDate: string;
-    employmentEndDate?: string;
+    employmentStartDate?: string | null;
+    employmentEndDate?: string | null;
 };
 
 export type FirebaseQuery = BaseData & {

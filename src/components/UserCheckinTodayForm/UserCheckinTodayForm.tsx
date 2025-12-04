@@ -6,9 +6,9 @@ import { getUserWorkTime, updateWorkTime } from 'context/FirebaseProvider/fireba
 import { useNotification } from 'components/common/NotificationCenter';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
-import { CheckinCalendar, CheckinDate, Profile, UserCheckInDate, UserCheckinList } from 'type.global';
+import { CheckinDate, Profile } from 'type.global';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import { CalendarDateExtendText } from 'pages/Home/HomeFirebase';
+import { CalendarDateExtendText } from 'pages/Home/component/CalendarTable';
 
 dayjs.extend(customParseFormat);
 

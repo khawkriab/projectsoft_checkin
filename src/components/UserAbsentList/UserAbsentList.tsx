@@ -20,6 +20,7 @@ function UserAbsentList({ calendar = [], afterUndate }: { calendar: CalendarDate
     //
 
     const onApprove = async (absentData: LeaveData) => {
+        console.log('absentData:', absentData);
         const startLeave = dayjs(absentData.startDate);
         const endLeave = dayjs(absentData.endDate);
 
@@ -31,46 +32,54 @@ function UserAbsentList({ calendar = [], afterUndate }: { calendar: CalendarDate
         // แปลง calendar เป็น Map เพื่อหาเร็วขึ้น
         const calendarConfig = await getCalendarConfig(`${startLeave.year()}-${startLeave.month() + 1}`);
 
+        if (calendarConfig.length <= 0) {
+            return alert('not calendar config');
+        }
         const calendarMap = new Map(calendarConfig.map((entry) => [entry.date, entry]));
+        console.log('calendarMap:', calendarMap);
 
         // ตรวจว่าทุกวันมีอยู่ใน calendar
-        if (!datesInRange.every((d) => calendarMap.has(d))) {
-            return alert('date not match');
-        }
+        // if (!datesInRange.every((d) => calendarMap.has(d))) {
+        //     return alert('date not match');
+        // }
 
         const checkInList = await getUserWorkTime({
             startDate: startLeave.format('YYYY-MM-DD'),
             endDate: endLeave.format('YYYY-MM-DD'),
             suid: absentData.suid,
         });
+        console.log('checkInList:', checkInList);
 
-        const all = datesInRange.map((date) => {
-            const checkInCurrentDate = checkInList?.find((tt) => tt.date === date);
-            const lpl = getLeavePeriodLabel(absentData?.leavePeriod);
-            const ltl = getLeaveType(absentData.leaveType);
+        const all: Promise<string>[] = [];
 
-            return updateWorkTime(
-                {
-                    date: date,
-                    email: absentData.email,
-                    suid: absentData.suid,
-                    absentId: absentData.id,
-                    name: absentData.name,
-                    leavePeriod: absentData.leavePeriod,
-                    leaveType: absentData.leaveType,
-                    reason: absentData.reason ?? checkInCurrentDate?.reason ?? '',
-                    time: checkInCurrentDate?.time ?? '',
-                    remark: checkInCurrentDate?.remark || `${ltl}-${lpl}`,
-                    isWorkOutside: checkInCurrentDate?.isWorkOutside ?? false,
-                    approveBy: profile?.name ?? '',
-                    approveBySuid: profile?.suid ?? '',
-                    status: 1,
-                },
-                checkInCurrentDate?.id
+        calendarMap.forEach((m) => {
+            const checkInCurrentDate = checkInList?.find((f) => f.date === m.date);
+
+            all.push(
+                updateWorkTime(
+                    {
+                        date: m.date,
+                        email: absentData.email,
+                        suid: absentData.suid,
+                        absentId: absentData.id,
+                        name: absentData.name,
+                        leavePeriod: absentData.leavePeriod,
+                        leaveType: absentData.leaveType,
+                        reason: absentData.reason ?? checkInCurrentDate?.reason ?? '',
+                        time: checkInCurrentDate?.time ?? '',
+                        remark: checkInCurrentDate?.remark || '',
+                        isWorkOutside: checkInCurrentDate?.isWorkOutside ?? false,
+                        approveBy: profile?.name ?? '',
+                        approveBySuid: profile?.suid ?? '',
+                        status: 1,
+                    },
+                    checkInCurrentDate?.id
+                )
             );
         });
 
-        setUpdating(true);
+        // setUpdating(true);
+        console.log('all:', all);
         Promise.all(all).then(async () => {
             if (absentData.id) {
                 await updateLeave(absentData.id, {

@@ -226,6 +226,7 @@ export function getUserWorkTime({ startDate, endDate, suid }: { startDate: strin
 export const updateWorkTime = (payload: CheckinDate, id?: string) => {
     return new Promise<string>(async (resolve, reject) => {
         if (id) {
+            console.log('payload:', payload);
             await updateDoc(doc(db, 'workTimesList', id), payload);
         } else {
             await addDoc(collection(db, 'workTimesList'), payload);

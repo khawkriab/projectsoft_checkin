@@ -182,9 +182,9 @@ function Home() {
                                 />
                             </>
                         )}
-                        {(profile?.role === 'ORGANIZATION' || profile?.role === 'ADMIN') && (
-                            <UserAbsentList calendar={calendarConfig} afterUndate={() => getCheckin(years, month, calendarConfig)} />
-                        )}
+                        {/* {(profile?.role === 'ORGANIZATION' || profile?.role === 'ADMIN') && ( */}
+                        <UserAbsentList calendar={calendarConfig} afterUndate={() => getCheckin(years, month, calendarConfig)} />
+                        {/* )} */}
                     </Box>
                 )
             )}

@@ -235,6 +235,13 @@ export const updateWorkTime = (payload: CheckinDate, id?: string) => {
         resolve('success');
     });
 };
+export const deleteWorkTime = (id: string) => {
+    return new Promise<string>(async (resolve, reject) => {
+        await deleteDoc(doc(db, 'workTimesList', id));
+
+        resolve('success');
+    });
+};
 
 export const getSystemAreaConfig = () => {
     return new Promise<SystemAreaConfig>(async (resolve, reject) => {

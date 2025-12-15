@@ -34,6 +34,8 @@ function UserAbsentList({ calendar = [], afterUndate }: { calendar: CalendarDate
         openNotify('success', 'update success');
     };
     const onApprove = async (absentData: LeaveData) => {
+        setUpdating(true);
+
         const startLeave = dayjs(absentData.startDate);
         const endLeave = dayjs(absentData.endDate);
 
@@ -42,18 +44,26 @@ function UserAbsentList({ calendar = [], afterUndate }: { calendar: CalendarDate
             startLeave.add(i, 'day').format('YYYY-MM-DD')
         );
 
-        // แปลง calendar เป็น Map เพื่อหาเร็วขึ้น
-        const calendarConfig = await getCalendarConfig(`${startLeave.year()}-${startLeave.month() + 1}`);
+        // get calendarConfig
+        let calendarConfig: CalendarDateConfig[] = [];
+        const startLeaveCalendarConfig = await getCalendarConfig(`${startLeave.year()}-${startLeave.month() + 1}`);
+        calendarConfig.push(...startLeaveCalendarConfig);
+
+        if (startLeave.month() !== endLeave.month()) {
+            const endLeaveCalendarConfig = await getCalendarConfig(`${endLeave.year()}-${endLeave.month() + 1}`);
+            calendarConfig.push(...endLeaveCalendarConfig);
+        }
 
         if (calendarConfig.length <= 0) {
             return alert('not calendar config');
         }
-        const calendarMap = new Map(calendarConfig.map((entry) => [entry.date, entry]));
 
-        // ตรวจว่าทุกวันมีอยู่ใน calendar
-        // if (!datesInRange.every((d) => calendarMap.has(d))) {
-        //     return alert('date not match');
-        // }
+        let allLeaveDays: string[] = []; // YYYY-MM-DD
+        calendarConfig.forEach((e) => {
+            if (datesInRange.some((s) => s === e.date)) {
+                allLeaveDays.push(e.date);
+            }
+        });
 
         const checkInList = await getUserWorkTime({
             startDate: startLeave.format('YYYY-MM-DD'),
@@ -63,13 +73,13 @@ function UserAbsentList({ calendar = [], afterUndate }: { calendar: CalendarDate
 
         const all: Promise<string>[] = [];
 
-        calendarMap.forEach((m) => {
-            const checkInCurrentDate = checkInList?.find((f) => f.date === m.date);
+        allLeaveDays.forEach((date) => {
+            const checkInCurrentDate = checkInList?.find((f) => f.date === date);
 
             all.push(
                 updateWorkTime(
                     {
-                        date: m.date,
+                        date: date,
                         email: absentData.email,
                         suid: absentData.suid,
                         absentId: absentData.id,
@@ -89,8 +99,6 @@ function UserAbsentList({ calendar = [], afterUndate }: { calendar: CalendarDate
             );
         });
 
-        // setUpdating(true);
-        console.log('all:', all);
         Promise.all(all).then(async () => {
             if (absentData.id) {
                 await updateLeave(absentData.id, {
@@ -161,6 +169,7 @@ function UserAbsentList({ calendar = [], afterUndate }: { calendar: CalendarDate
                                                         loading={updating}
                                                         variant='contained'
                                                         color='error'
+                                                        sx={{ marginLeft: 3 }}
                                                         onClick={() => onReject(c)}
                                                     >
                                                         ปฏิเสธ

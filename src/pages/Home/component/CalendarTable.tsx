@@ -1,5 +1,6 @@
-import { Box, Paper, Table, TableBody, TableContainer, TableHead, TableRow } from '@mui/material';
+import { Box, Button, Paper, Table, TableBody, TableContainer, TableHead, TableRow } from '@mui/material';
 import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/MuiTable';
+import { deleteWorkTime } from 'context/FirebaseProvider/firebaseApi/checkinApi';
 import React from 'react';
 import { CalendarDateList, CheckinDate, Profile } from 'type.global';
 
@@ -42,6 +43,12 @@ function CalendarTable({ userFilterList, calendarCheckin }: { userFilterList: Pr
         }
         return {};
     };
+
+    // const onDelete = async (d: CalendarDateExtendText['userCheckinList'][0]) => {
+    //     if (!d?.id) return;
+
+    //     await deleteWorkTime(d?.id);
+    // };
 
     return (
         <TableContainer component={Paper}>
@@ -145,6 +152,9 @@ function CalendarTable({ userFilterList, calendarCheckin }: { userFilterList: Pr
                                                 {u?.statusText}
                                             </Box>
                                             <Box>{u?.reason}</Box>
+                                            {/* <Button color='error' onClick={() => onDelete(u)}>
+                                                delete
+                                            </Button> */}
                                         </TableBodyCell>
                                     </React.Fragment>
                                 ))}

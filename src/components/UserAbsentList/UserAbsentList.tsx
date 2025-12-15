@@ -19,8 +19,21 @@ function UserAbsentList({ calendar = [], afterUndate }: { calendar: CalendarDate
     const [absentList, setAbsentList] = useState<LeaveData[]>([]);
     //
 
+    const onReject = async (absentData: LeaveData) => {
+        if (absentData.id) {
+            await updateLeave(absentData.id, {
+                status: 'REJECT',
+                approveBy: profile?.name ?? '',
+                approveBySuid: profile?.suid ?? '',
+            });
+        }
+
+        await getAbsentData();
+        afterUndate();
+        setUpdating(false);
+        openNotify('success', 'update success');
+    };
     const onApprove = async (absentData: LeaveData) => {
-        console.log('absentData:', absentData);
         const startLeave = dayjs(absentData.startDate);
         const endLeave = dayjs(absentData.endDate);
 
@@ -36,7 +49,6 @@ function UserAbsentList({ calendar = [], afterUndate }: { calendar: CalendarDate
             return alert('not calendar config');
         }
         const calendarMap = new Map(calendarConfig.map((entry) => [entry.date, entry]));
-        console.log('calendarMap:', calendarMap);
 
         // ตรวจว่าทุกวันมีอยู่ใน calendar
         // if (!datesInRange.every((d) => calendarMap.has(d))) {
@@ -48,7 +60,6 @@ function UserAbsentList({ calendar = [], afterUndate }: { calendar: CalendarDate
             endDate: endLeave.format('YYYY-MM-DD'),
             suid: absentData.suid,
         });
-        console.log('checkInList:', checkInList);
 
         const all: Promise<string>[] = [];
 
@@ -134,15 +145,28 @@ function UserAbsentList({ calendar = [], afterUndate }: { calendar: CalendarDate
                                         )}`}</TableBodyCell>
                                         <TableBodyCell sx={{ whiteSpace: 'break-spaces' }}>{c.reason}</TableBodyCell>
                                         <TableBodyCell>
-                                            <Button
-                                                size='small'
-                                                loading={updating}
-                                                variant='contained'
-                                                color='warning'
-                                                onClick={() => onApprove(c)}
-                                            >
-                                                อนุมัติ
-                                            </Button>
+                                            {(profile?.role === 'ORGANIZATION' || profile?.role === 'ADMIN') && (
+                                                <>
+                                                    <Button
+                                                        size='small'
+                                                        loading={updating}
+                                                        variant='contained'
+                                                        color='warning'
+                                                        onClick={() => onApprove(c)}
+                                                    >
+                                                        อนุมัติ
+                                                    </Button>
+                                                    <Button
+                                                        size='small'
+                                                        loading={updating}
+                                                        variant='contained'
+                                                        color='error'
+                                                        onClick={() => onReject(c)}
+                                                    >
+                                                        ปฏิเสธ
+                                                    </Button>
+                                                </>
+                                            )}
                                         </TableBodyCell>
                                     </TableRow>
                                 ))}

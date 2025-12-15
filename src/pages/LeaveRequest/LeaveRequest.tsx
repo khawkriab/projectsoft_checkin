@@ -312,9 +312,11 @@ function LeaveRequest() {
     //
 
     const userUsedLeaveDays = useMemo(() => {
-        const temp = userList.map((m) => {
-            const n = m.annualLeaveEntitlement.map((a) => {
-                const l = leaveList.filter((f) => f.suid === m.suid && a.id === String(dayjs(f.startDate).year()));
+        const temp = userList.map((u) => {
+            const n = u.annualLeaveEntitlement.map((a) => {
+                const l = leaveList.filter(
+                    (f) => f.suid === u.suid && a.id === String(dayjs(f.startDate).year()) && f.status === 'APPROVE'
+                );
                 const r = summarizeUserLeave(l);
 
                 return {
@@ -325,7 +327,7 @@ function LeaveRequest() {
             });
 
             return {
-                ...m,
+                ...u,
                 summaryLeaveDays: n,
             };
         });

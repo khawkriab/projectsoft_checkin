@@ -6,11 +6,11 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { Button } from '@mui/material';
-import { Bar, BarChart, Tooltip, XAxis, YAxis } from 'recharts';
+// import { Bar, BarChart, Tooltip, XAxis, YAxis } from 'recharts';
 import ModalEditUser from 'pages/Member/component/ModalEditUser';
 import { createLeave } from 'context/FirebaseProvider/firebaseApi/leaveApi';
 import { getUserWorkTime } from 'context/FirebaseProvider/firebaseApi/checkinApi';
-import { workTimeList } from './backupData20251119';
+// import { workTimeList } from './backupData20251119';
 import isBetween from 'dayjs/plugin/isBetween';
 
 dayjs.extend(customParseFormat);
@@ -120,10 +120,10 @@ function Demo() {
 
     useEffect(() => {
         const init = async () => {
-            const n = workTimeList
-                .filter((f) => dayjs(f.date).isBetween('2025-06-27', dayjs('2025-07-02'), 'day') && f.name === 'm.teerapolph@gmail.com')
-                .sort((a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf());
-            console.log('n:', n);
+            // const n = workTimeList
+            //     .filter((f) => dayjs(f.date).isBetween('2025-06-27', dayjs('2025-07-02'), 'day') && f.name === 'm.teerapolph@gmail.com')
+            //     .sort((a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf());
+            // console.log('n:', n);
             // const res = await getUserWorkTime({
             //     startDate: '2025-06-06',
             //     endDate: '2025-06-20',

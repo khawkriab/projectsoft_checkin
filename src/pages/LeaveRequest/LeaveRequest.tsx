@@ -317,6 +317,7 @@ function LeaveRequest() {
                 const l = leaveList.filter(
                     (f) => f.suid === u.suid && a.id === String(dayjs(f.startDate).year()) && f.status === 'APPROVE'
                 );
+                console.log('l:', l);
                 const r = summarizeUserLeave(l);
 
                 return {

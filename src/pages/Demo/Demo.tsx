@@ -12,6 +12,7 @@ import { createLeave } from 'context/FirebaseProvider/firebaseApi/leaveApi';
 import { getUserWorkTime } from 'context/FirebaseProvider/firebaseApi/checkinApi';
 // import { workTimeList } from './backupData20251119';
 import isBetween from 'dayjs/plugin/isBetween';
+import PublicDriveImage from 'components/common/ProfileImage';
 
 dayjs.extend(customParseFormat);
 dayjs.extend(utc);
@@ -173,6 +174,9 @@ function Demo() {
                 <Bar dataKey='pv' fill='#ff0000' />
             </BarChart> */}
             <Button onClick={onX}>x</Button>
+            <PublicDriveImage fileUrl='https://drive.google.com/file/d/1CbH9cK8LHuQEHy6mKKYIrq7mqdlcFvhi/view?usp=sharing' />
+            <PublicDriveImage firstName='Khawkriab' />
+            {/* <img src='https://photos.google.com/share/AF1QipMhjpH-Oh0wEVib8U3xbhxhD2Gvq7m_vAld9iAS2iPH4Ez_4hZRJtCbNsq89Ofnag?key=eVdpeHA4SWtXTEk2UE5RQWwzMml4SkRkNFFidldR' /> */}
             {/* <ModalEditUser data={userProfile} /> */}
         </div>
     );

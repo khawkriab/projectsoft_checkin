@@ -18,6 +18,7 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import CloseIcon from '@mui/icons-material/Close';
 import { Profile, UserCheckinList } from 'type.global';
 import { useFirebase } from 'context/FirebaseProvider';
+import ProfileImage from '../ProfileImage';
 
 interface FilterCheckinUserProps {
     userList: Profile[];
@@ -67,7 +68,13 @@ export default function FilterCheckinUser({ userList, onChangeFilter }: FilterCh
                         .map((user) => (
                             <Chip
                                 key={user.id}
-                                avatar={<Avatar src={user.profileURL} />}
+                                avatar={
+                                    <ProfileImage
+                                        fileUrl={user.profileURL}
+                                        firstName={user.name}
+                                        sx={{ width: 24, height: 24, marginLeft: '4px' }}
+                                    />
+                                }
                                 label={user.name}
                                 onDelete={() => handleRemoveUser(user.suid)}
                                 deleteIcon={<CloseIcon />}
@@ -77,7 +84,13 @@ export default function FilterCheckinUser({ userList, onChangeFilter }: FilterCh
                         ))}
                 {profile?.suid && (
                     <Chip
-                        avatar={<Avatar src={profile.profileURL} />}
+                        avatar={
+                            <ProfileImage
+                                fileUrl={profile.profileURL}
+                                firstName={profile.name}
+                                sx={{ width: 24, height: 24, marginLeft: '4px' }}
+                            />
+                        }
                         label={'Me'}
                         variant='outlined'
                         {...(selectedUsers.some((u) => u.suid === profile.suid)
@@ -142,7 +155,8 @@ export default function FilterCheckinUser({ userList, onChangeFilter }: FilterCh
                                     sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', minWidth: '180px' }}
                                 >
                                     <Box display='flex' alignItems='center'>
-                                        <Avatar src={user.profileURL} sx={{ width: 28, height: 28, mr: 1 }} />
+                                        {/* <Avatar src={user.profileURL} sx={{ width: 28, height: 28, mr: 1 }} /> */}
+                                        <ProfileImage fileUrl={user.profileURL} firstName={user.name} />
                                         <Typography variant='body2'>{user.name}</Typography>
                                     </Box>
 

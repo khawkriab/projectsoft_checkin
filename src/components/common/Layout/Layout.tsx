@@ -5,6 +5,7 @@ import { useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import { useFirebase } from 'context/FirebaseProvider';
 import SwitchThemeModeButton from './SwitchThemeModeButton';
+import ProfileImage from '../ProfileImage';
 
 function MenuItem({ children, to, onClick = () => {} }: { to: string; children: React.ReactNode; onClick?: () => void }) {
     const location = useLocation();
@@ -132,7 +133,11 @@ function Layout() {
                                 <>
                                     {isSignedIn && (
                                         <>
-                                            <Avatar />
+                                            <ProfileImage
+                                                fileUrl={profile?.profileURL}
+                                                firstName={profile?.name}
+                                                sx={{ width: 34, height: 34 }}
+                                            />
                                             <Typography>{profile?.fullName}</Typography>
                                             <Button variant='contained' color='error' onClick={signOutUser}>
                                                 Logout
@@ -176,7 +181,11 @@ function Layout() {
                             <>
                                 {isSignedIn && (
                                     <>
-                                        <Avatar />
+                                        <ProfileImage
+                                            fileUrl={profile?.profileURL}
+                                            firstName={profile?.name}
+                                            sx={{ width: 34, height: 34 }}
+                                        />
                                         <Typography>{profile?.fullName}</Typography>
                                         <Button variant='contained' color='error' onClick={signOutUser}>
                                             Logout

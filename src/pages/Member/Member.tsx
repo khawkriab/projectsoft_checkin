@@ -8,6 +8,7 @@ import CopyBox from 'components/common/CopyBox';
 import { useNotification } from 'components/common/NotificationCenter';
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
 import ModalEditUser from './component/ModalEditUser';
+import ProfileImage from 'components/common/ProfileImage';
 
 function BoxBetween({ label, children }: { label: string; children: React.ReactNode }) {
     return (
@@ -65,9 +66,10 @@ function CardUser({
             >
                 {data.jobPosition}
             </Box>
-            <Box width={'60px'} height={'60px'} borderRadius={'100%'} overflow={'hidden'} bgcolor={'#cccccc'}>
+            <ProfileImage fileUrl={data.profileURL} firstName={data.name} />
+            {/* <Box width={'60px'} height={'60px'} borderRadius={'100%'} overflow={'hidden'} bgcolor={'#cccccc'}>
                 <Box component={'img'} src={data.profileURL || ''} sx={{ objectFit: 'contain', width: '100%', height: '100%' }} />
-            </Box>
+            </Box> */}
             <Box marginTop={3}>
                 <Box>{data.name}</Box>
                 <Box>

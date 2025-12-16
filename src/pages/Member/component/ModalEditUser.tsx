@@ -12,10 +12,13 @@ import {
     FormLabel,
     Grid,
     IconButton,
+    List,
+    ListItem,
     MenuItem,
     Radio,
     RadioGroup,
     TextField,
+    Tooltip,
     Typography,
 } from '@mui/material';
 import { MuiMobileDatePicker } from 'components/common/MuiInput';
@@ -30,6 +33,31 @@ import { useEffect, useMemo, useState } from 'react';
 import { AnnualLeaveEntitlement, Profile, ProfileStatus } from 'type.global';
 import CloseIcon from '@mui/icons-material/Close';
 import { useNotification } from 'components/common/NotificationCenter';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+
+const tooltipData = [
+    'Open Google Drive in your browser.',
+    'Locate the image file (JPG/PNG/WebP).',
+    'Right-click the file → select Share.',
+    'In the “Share” dialog, find the section General access.',
+    'Change Restricted → Anyone with the link.',
+    'Set permission to Viewer (recommended).',
+    'Click Done (or Save, depending on UI).',
+    'Right-click the file again → Copy link.',
+];
+
+function TooltipBox() {
+    return (
+        <>
+            <Box component={'ul'} sx={{ listStyleType: 'decimal', paddingLeft: '18px' }}>
+                {tooltipData.map((tooltip, i) => (
+                    <li key={i}>{tooltip}</li>
+                ))}
+            </Box>
+            <Box>Your copied link typically looks like: {'https://drive.google.com/file/d/<FILE_ID>'}/view?usp=sharing</Box>
+        </>
+    );
+}
 
 function ModalEditUser({ data, onClose }: { data: Profile; onClose?: () => void }) {
     const { openNotify } = useNotification();
@@ -225,12 +253,30 @@ function ModalEditUser({ data, onClose }: { data: Profile; onClose?: () => void 
                                 <TextField
                                     // required
                                     fullWidth
-                                    label='Photo Url'
+                                    // label='Google Drive File Url'
+                                    label={
+                                        <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+                                            Google Drive File Url
+                                            <Tooltip title={<TooltipBox />}>
+                                                <IconButton
+                                                    size='small'
+                                                    tabIndex={-1}
+                                                    sx={{
+                                                        padding: 0,
+                                                        color: 'info.main',
+                                                    }}
+                                                >
+                                                    <HelpOutlineIcon fontSize='inherit' />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </Box>
+                                    }
                                     variant='outlined'
                                     // disabled
                                     name='profileURL'
                                     value={formRegister.profileURL}
                                     onChange={onChangeText}
+                                    helperText='Locate the image file (JPG/PNG/WebP).'
                                 />
                             </Grid>
                             <Grid size={{ xs: 12, md: 6 }}>

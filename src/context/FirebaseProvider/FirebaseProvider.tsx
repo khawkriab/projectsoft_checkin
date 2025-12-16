@@ -72,7 +72,7 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
                 phoneNumber: '',
                 suid: '',
                 employmentType: '',
-                profileURL: c?.photoURL || '',
+                profileURL: '',
                 googleUid: c?.uid,
             };
 

@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
 import { PickersDay, PickersDayProps } from '@mui/x-date-pickers';
-import { StatusBox } from '../StatusBox';
+import { StatusBox } from '../Menu/StatusBox';
 import { UserCalendarCheckin } from 'context/UserCalendarProvider';
 import { STATUS } from 'context/UserCalendarProvider/UserCalendarProvider';
 
@@ -19,7 +19,7 @@ export function CustomDay({
 
     return (
         <Box
-            sx={(theme) => ({
+            sx={() => ({
                 position: 'relative',
                 display: 'flex',
                 flexDirection: 'column',
@@ -39,7 +39,7 @@ export function CustomDay({
             />
             {data && !data.isWFH && !data.isHoliDay && (
                 <Box
-                    sx={(theme) => ({
+                    sx={() => ({
                         position: 'absolute',
                         top: 0,
                         left: 0,
@@ -52,7 +52,7 @@ export function CustomDay({
             )}
             {data?.isHoliDay && (
                 <Box
-                    sx={(theme) => ({
+                    sx={() => ({
                         position: 'absolute',
                         top: 0,
                         left: 0,
@@ -65,7 +65,7 @@ export function CustomDay({
             )}
             {data?.isWFH && (
                 <Box
-                    sx={(theme) => ({
+                    sx={() => ({
                         position: 'absolute',
                         top: 0,
                         left: 0,

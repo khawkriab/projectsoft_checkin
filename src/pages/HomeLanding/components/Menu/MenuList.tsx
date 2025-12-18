@@ -1,5 +1,5 @@
 import { Box, Grid, Stack, useMediaQuery } from '@mui/material';
-import { TodayCheckIn } from './TodayCheckIn';
+import { TodayCheckIn } from '../TodayCheckIn';
 import { LeaveRemainingMenuBox } from './LeaveRemainingMenuBox';
 import { LeaveRequestMenuBox } from './LeaveRequestMenuBox';
 import { SettingsMenuBox } from './SettingsMenuBox';

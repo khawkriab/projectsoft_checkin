@@ -33,7 +33,7 @@ export function StatusBox({
         >
             {shape === 'circle' && (
                 <Box
-                    sx={(theme) => ({
+                    sx={() => ({
                         width: '8px',
                         height: '8px',
                         borderRadius: '50%',
@@ -43,7 +43,7 @@ export function StatusBox({
             )}
             {shape === 'triangle' && (
                 <Box
-                    sx={(theme) => ({
+                    sx={() => ({
                         width: 0,
                         height: 0,
                         borderTop: `10px solid ${values.color}`,

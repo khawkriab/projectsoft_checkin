@@ -47,10 +47,17 @@ export const getLeaveList = (status?: LeaveStatus) => {
         resolve([...r]);
     });
 };
-export const getUserLeave = (suid: string) => {
+export const getUserLeave = (suid: string, years?: number) => {
     return new Promise<(FirebaseQuery & LeaveData)[]>(async (resolve, reject) => {
         const usersRef = collection(db, 'leaveList');
-        const q = query(usersRef, where('suid', '==', suid));
+
+        let q = query(usersRef, where('suid', '==', suid));
+
+        if (years) {
+            const startDate = dayjs().set('years', years).startOf('years').startOf('months').format('YYYY-MM-DD');
+            const endDate = dayjs().set('years', years).endOf('years').endOf('months').format('YYYY-MM-DD');
+            q = query(usersRef, where('suid', '==', suid), where('startDate', '>=', startDate), where('startDate', '<=', endDate));
+        }
 
         const querySnapshot = await getDocs(q);
 

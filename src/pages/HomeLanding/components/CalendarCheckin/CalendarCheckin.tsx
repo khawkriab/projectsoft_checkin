@@ -4,7 +4,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import { CustomCalendarHeader } from './CustomCalendarHeader';
 import { CustomDay } from './CustomDay';
-import { StatusBox } from '../StatusBox';
+import { StatusBox } from '../Menu/StatusBox';
 import { useUserCalendarContext } from 'context/UserCalendarProvider';
 
 function CalendarCheckin() {

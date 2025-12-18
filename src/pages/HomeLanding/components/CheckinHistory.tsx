@@ -1,7 +1,7 @@
 import { Box, Stack, Typography, useMediaQuery } from '@mui/material';
-import { MenuBox } from './MenuBox';
+import { MenuBox } from './Menu/MenuBox';
 import dayjs from 'dayjs';
-import { StatusBox } from './StatusBox';
+import { StatusBox } from './Menu/StatusBox';
 import { UserCalendarCheckin, useUserCalendarContext } from 'context/UserCalendarProvider';
 import { getLeaveLabel } from 'helper/leaveType';
 

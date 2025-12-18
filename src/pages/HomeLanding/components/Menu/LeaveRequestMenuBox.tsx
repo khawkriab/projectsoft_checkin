@@ -14,12 +14,12 @@ import {
 import { MenuBox } from './MenuBox';
 import { Close, MailOutline } from '@mui/icons-material';
 import { useMemo, useState } from 'react';
-import { LocalizationProvider, MobileDatePicker, MobileDatePickerProps } from '@mui/x-date-pickers';
+import { LocalizationProvider } from '@mui/x-date-pickers';
 import dayjs, { Dayjs } from 'dayjs';
 import { LeavePeriodsType, LeaveTypes } from 'type.global';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { useFirebase } from 'context/FirebaseProvider';
-import { createLeave, getUserLeave } from 'context/FirebaseProvider/firebaseApi/leaveApi';
+import { createLeave } from 'context/FirebaseProvider/firebaseApi/leaveApi';
 import { leavePeriods, leaveTypes } from 'helper/leaveType';
 import { useNotification } from 'components/common/NotificationCenter';
 import { MuiMobileDatePicker } from 'components/common/MuiInput';

@@ -5,7 +5,6 @@ import {
     CheckinDate,
     SystemAreaConfig,
     UserCheckInData,
-    UserCheckInDate,
     UserCheckinList,
     WeeklyWorkingDays,
     WorkTimes,
@@ -13,7 +12,6 @@ import {
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import { getAuth } from 'firebase/auth';
 
 dayjs.extend(customParseFormat);
 

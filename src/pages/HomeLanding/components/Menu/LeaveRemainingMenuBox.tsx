@@ -49,7 +49,7 @@ export function AmountBox({
     }, [type, remaining]);
 
     return (
-        <Stack justifyContent={'center'}>
+        <Stack justifyContent={'center'} textAlign={'center'}>
             <Box display={'flex'} alignItems={'baseline'} justifyContent={'center'} gap={0.5}>
                 <Typography variant='h4' sx={{ color: statusColor }}>
                     {remaining}

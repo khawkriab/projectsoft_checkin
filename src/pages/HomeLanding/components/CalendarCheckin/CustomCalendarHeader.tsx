@@ -17,7 +17,7 @@ export function CustomCalendarHeader(props: PickersCalendarHeaderProps) {
     return (
         <Box display='flex' alignItems='center' justifyContent='space-between' sx={{ px: 1, py: 1 }}>
             {/* Prev button (left) */}
-            <IconButton sx={{ borderRadius: '100%', backgroundColor: '#e2e2e293' }} onClick={handlePrevMonth} disabled>
+            <IconButton sx={{ borderRadius: '100%', backgroundColor: '#e2e2e293' }} onClick={handlePrevMonth}>
                 <ArrowBackIosNewRounded sx={{ fontSize: '12px' }} />
             </IconButton>
 
@@ -27,7 +27,7 @@ export function CustomCalendarHeader(props: PickersCalendarHeaderProps) {
             </Typography>
 
             {/* Next button (right) */}
-            <IconButton sx={{ borderRadius: '100%', backgroundColor: '#e2e2e293' }} onClick={handleNextMonth} disabled>
+            <IconButton sx={{ borderRadius: '100%', backgroundColor: '#e2e2e293' }} onClick={handleNextMonth}>
                 <ArrowForwardIosRounded sx={{ fontSize: '12px' }} />
             </IconButton>
         </Box>

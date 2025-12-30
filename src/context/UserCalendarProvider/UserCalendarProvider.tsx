@@ -1,6 +1,6 @@
 import { useFirebase } from 'context/FirebaseProvider';
 import { getCalendarConfig, getUserWorkTime } from 'context/FirebaseProvider/firebaseApi/checkinApi';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { CalendarDateConfig, CheckinDate } from 'type.global';
 
@@ -10,7 +10,7 @@ export const STATUS = {
     LEAVE: { code: 'LEAVE', label: 'ลา', color: 'var(--status-leave-color)', bgc: 'var(--status-leave-bgc)' },
     ABSENT: { code: 'ABSENT', label: 'ขาด', color: 'var(--status-miss-color)', bgc: 'var(--status-miss-bgc)' },
     HOLIDAY: { code: 'HOLIDAY', label: 'วันหยุด', color: 'var(--status-holiday-color)', bgc: 'var(--status-holiday-bgc)' },
-    WFH_DAY: { code: 'WFH_DAY', label: 'ทำงานที่บ้าน', color: 'var(--status-wfh-day-color)', bgc: 'var(--status-wfh-day-bgc)' },
+    WFH_DAY: { code: 'WFH_DAY', label: 'วันทำงานที่บ้าน', color: 'var(--status-wfh-day-color)', bgc: 'var(--status-wfh-day-bgc)' },
     WORK_DAY: { code: 'WFH_DAY', label: 'วันทำงาน', color: 'var(--status-work-day-color)', bgc: 'var(--status-work-day-bgc)' },
 } as const;
 
@@ -23,7 +23,7 @@ export type UserCalendarContextType = {
     calendarDateList: UserCalendarCheckin[];
     dateSelect: string;
     onSelectDate: (date: string) => void; // format YYYY-MM-DD
-    getUserCheckin: () => Promise<void>;
+    getUserCheckin: (date: Dayjs, selectDate?: Dayjs) => Promise<void>;
 };
 
 const UserCalendarContext = createContext<UserCalendarContextType>(null!);
@@ -40,20 +40,24 @@ function UserCalendarProvider({ children }: { children: React.ReactNode }) {
         setDateSelect(date);
     };
 
-    const getUserCheckin = async () => {
+    const getUserCheckin = async (date: Dayjs, selectDate?: Dayjs) => {
         if (!profile?.suid) return;
 
         let c = [...calendarConfig];
-        if (calendarConfig.length <= 0) {
-            c = await getCalendarConfig(dayjs().format('YYYY-M'));
+        if (calendarConfig.length <= 0 || date.format('YYYY-M') !== dayjs(dateSelect).format('YYYY-M')) {
+            c = await getCalendarConfig(date.format('YYYY-M'));
             setCalendarConfig([...c]);
         }
 
         const res = await getUserWorkTime({
-            startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
-            endDate: dayjs().format('YYYY-MM-DD'),
+            startDate: date.startOf('month').format('YYYY-MM-DD'),
+            endDate: date.endOf('month').format('YYYY-MM-DD'),
             suid: profile?.suid,
         });
+
+        if (selectDate) {
+            setDateSelect(selectDate.format('YYYY-MM-DD'));
+        }
 
         if (!res) return;
 
@@ -61,7 +65,7 @@ function UserCalendarProvider({ children }: { children: React.ReactNode }) {
             let checkinData: UserCalendarCheckin['checkinData'] = null;
 
             const td = res.find((f) => f.date === data.date);
-            const isBeforeDay = dayjs(data.date).isBefore(dayjs().add(-1, 'day'));
+            const isBeforeDay = dayjs(data.date).isBefore(date.add(-1, 'day'));
             const startWork = dayjs(profile.employmentStartDate).isAfter(data.date);
 
             if (td) {
@@ -93,7 +97,7 @@ function UserCalendarProvider({ children }: { children: React.ReactNode }) {
         setalendarDateList([...arr]);
     };
     useEffect(() => {
-        getUserCheckin();
+        getUserCheckin(dayjs());
     }, [profile?.suid]);
 
     return (

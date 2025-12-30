@@ -66,6 +66,9 @@ export function LeaveRequestMenuBox() {
         setIsSending(true);
         try {
             await createLeave({
+                // name: 'oos',
+                // email: 'jakkapan199610@gmail.com',
+                // suid: '1763004020537',
                 name: profile.name,
                 email: profile.email,
                 suid: profile.suid,

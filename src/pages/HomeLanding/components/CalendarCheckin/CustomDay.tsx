@@ -1,19 +1,22 @@
 import { Box } from '@mui/material';
 import { PickersDay, PickersDayProps } from '@mui/x-date-pickers';
-import { StatusBox } from '../Menu/StatusBox';
+import { cornerCurveStyle, StatusBox } from '../Menu/StatusBox';
 import { UserCalendarCheckin } from 'context/UserCalendarProvider';
 import { STATUS } from 'context/UserCalendarProvider/UserCalendarProvider';
+import { CalendarDateConfig } from 'type.global';
 
 export function CustomDay({
     day,
     outsideCurrentMonth,
+    calendarConfig,
     dataList,
     desktopSize,
     ...props
-}: PickersDayProps & { dataList: UserCalendarCheckin[]; desktopSize?: boolean }) {
+}: PickersDayProps & { dataList: UserCalendarCheckin[]; desktopSize?: boolean; calendarConfig: CalendarDateConfig[] }) {
     const key = day.format('YYYY-MM-DD');
     const data = dataList.find((f) => f.date === key);
     const status = data?.checkinData?.statusCode ? data?.checkinData?.statusCode : null;
+    const dateConfig = calendarConfig.find((f) => f.date === key);
     const isStartOfWeek = day.isSame(day.startOf('week'), 'day');
     const isEndOfWeek = day.isSame(day.endOf('week'), 'day');
 
@@ -24,9 +27,12 @@ export function CustomDay({
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
+                justifyContent: 'center',
                 width: 'calc(100% / 7)',
-                paddingTop: { xs: '12px', md: '24px' },
-                paddingBottom: { xs: '12px', md: '24px' },
+                aspectRatio: '1.2/1',
+                // border: '1px solid #f00',
+                paddingTop: { xs: '8px', md: '12px' },
+                paddingBottom: { xs: '12px', md: '26px' },
                 // border: '1px solid #ccc',
             })}
         >
@@ -37,45 +43,9 @@ export function CustomDay({
                 outsideCurrentMonth={outsideCurrentMonth}
                 disabled={isStartOfWeek || isEndOfWeek}
             />
-            {data && !data.isWFH && !data.isHoliDay && (
-                <Box
-                    sx={() => ({
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: 0,
-                        height: 0,
-                        borderTop: `10px solid ${STATUS['WORK_DAY'].color}`,
-                        borderRight: '10px solid transparent',
-                    })}
-                />
-            )}
-            {data?.isHoliDay && (
-                <Box
-                    sx={() => ({
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: 0,
-                        height: 0,
-                        borderTop: `10px solid ${STATUS['HOLIDAY'].color}`,
-                        borderRight: '10px solid transparent',
-                    })}
-                />
-            )}
-            {data?.isWFH && (
-                <Box
-                    sx={() => ({
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: 0,
-                        height: 0,
-                        borderTop: `10px solid ${STATUS['WFH_DAY'].color}`,
-                        borderRight: '10px solid transparent',
-                    })}
-                />
-            )}
+            {dateConfig && !dateConfig.isWFH && !dateConfig.isHoliDay && <Box sx={cornerCurveStyle(STATUS['WORK_DAY'].color)} />}
+            {dateConfig?.isHoliDay && <Box sx={cornerCurveStyle(STATUS['HOLIDAY'].color)} />}
+            {dateConfig?.isWFH && <Box sx={cornerCurveStyle(STATUS['WFH_DAY'].color)} />}
             {status && data?.checkinData?.status !== 99 && !outsideCurrentMonth && (
                 <Box
                     sx={{

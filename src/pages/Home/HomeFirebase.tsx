@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
-import { Box, Button, MenuItem, Paper, Select, Typography } from '@mui/material';
+import { Box, MenuItem, Select, Typography } from '@mui/material';
 import { CalendarDateConfig, CalendarDateList, Profile } from 'type.global';
 import utc from 'dayjs/plugin/utc';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -36,18 +36,19 @@ function Home() {
         if (uList.length <= 0) return [];
 
         const m: CalendarDateExtendText[] = calender.map((calendarDate) => {
-            let checkinData: CalendarDateExtendText['userCheckinList'] = [];
+            const checkinData: CalendarDateExtendText['userCheckinList'] = [];
             const isBeforeDay = dayjs(calendarDate.date).isBefore(dayjs().add(-1, 'day'));
 
             uList.forEach((ul) => {
                 const userCheckin = calendarDate.userCheckinList.find((f) => f?.suid === ul.suid);
                 // employee start work
-                const startWork = dayjs(ul.employmentStartDate).isAfter(calendarDate.date);
+                const isStartWork = dayjs(ul.employmentStartDate).isAfter(calendarDate.date);
+                const isEndWork = ul.employmentEndDate && dayjs(ul.employmentEndDate).isBefore(calendarDate.date);
 
-                if (userCheckin) {
+                if (userCheckin && !isEndWork) {
                     // time: HH:mm
-                    let timeText = userCheckin?.time || '';
-                    let remark =
+                    const timeText = userCheckin?.time || '';
+                    const remark =
                         userCheckin.isWorkOutside && !userCheckin?.remark?.toLowerCase().includes('wfh')
                             ? 'WFH'
                             : userCheckin?.remark || '';
@@ -78,7 +79,7 @@ function Home() {
                         lateFlag = 2;
                     }
                     checkinData.push({ ...userCheckin, statusText, lateFlag, timeText, reason });
-                } else if (isBeforeDay && !startWork) {
+                } else if (isBeforeDay && !isStartWork && !isEndWork) {
                     checkinData.push({
                         name: ul.name,
                         email: ul.email,

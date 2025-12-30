@@ -40,10 +40,11 @@ export function CheckinButton({
     if (todayConfig.isWorkDay)
         return (
             <>
-                {userCheckinToday === null && (
+                {(userCheckinToday === null || !userCheckinToday?.time) && (
                     <>
                         {todayConfig.isWFH ? (
                             <Button
+                                disabled={userCheckinToday?.leavePeriod === 'FULL_DAY'}
                                 loading={isSending}
                                 variant='contained'
                                 color='warning'
@@ -58,17 +59,31 @@ export function CheckinButton({
                                 color='warning'
                                 sx={{ height: 'calc(50% - 4px)' }}
                                 onClick={onOpenModalMapsCheckin}
-                                disabled={!isMapsLoaded}
+                                disabled={!isMapsLoaded || userCheckinToday?.leavePeriod === 'FULL_DAY'}
                             >
-                                check-in
+                                {userCheckinToday?.leavePeriod ? (
+                                    <>
+                                        {userCheckinToday.leavePeriod === 'FULL_DAY' && 'ลางาน'}
+                                        {userCheckinToday.leavePeriod === 'HALF_DAY_PM' && 'ลงชื่อเข้างานเช้า'}
+                                        {userCheckinToday.leavePeriod === 'HALF_DAY_AM' && 'ลงชื่อเข้างานบ่าย'}
+                                    </>
+                                ) : (
+                                    'ลงชื่อเข้างาน'
+                                )}
                             </Button>
                         )}
-                        <Button variant='contained' color='secondary' sx={{ height: 'calc(50% - 4px)' }} onClick={onOpenModalOutsideArea}>
+                        <Button
+                            variant='contained'
+                            color='secondary'
+                            sx={{ height: 'calc(50% - 4px)' }}
+                            disabled={userCheckinToday?.leavePeriod === 'FULL_DAY'}
+                            onClick={onOpenModalOutsideArea}
+                        >
                             ทำงานนอกสถานที่
                         </Button>
                     </>
                 )}
-                {userCheckinToday && (
+                {userCheckinToday?.time && (
                     <>
                         <Box
                             sx={(theme) => ({

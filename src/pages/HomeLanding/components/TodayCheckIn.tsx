@@ -16,25 +16,25 @@ export type OnCheckinType = (isWorkOutside?: boolean, remark?: string, latlng?: 
 
 const libraries = ['places', 'marker'];
 
-function logError(error: GeolocationPositionError) {
-    switch (error.code) {
-        case error.PERMISSION_DENIED:
-            return 'User denied the request for Geolocation.';
-        case error.POSITION_UNAVAILABLE:
-            return 'Location information is unavailable.';
-        case error.TIMEOUT:
-            return 'The request to get user location timed out.';
-        default:
-            return 'An unknown error';
-    }
-}
+// function logError(error: GeolocationPositionError) {
+//     switch (error.code) {
+//         case error.PERMISSION_DENIED:
+//             return 'User denied the request for Geolocation.';
+//         case error.POSITION_UNAVAILABLE:
+//             return 'Location information is unavailable.';
+//         case error.TIMEOUT:
+//             return 'The request to get user location timed out.';
+//         default:
+//             return 'An unknown error';
+//     }
+// }
 
 export function TodayCheckIn() {
     const parseData = dayjs().format('YYYY-MM-DD');
     //
     const { profile } = useFirebase();
     const { getUserCheckin } = useUserCalendarContext();
-    const { isLoaded, loadError } = useLoadScript({
+    const { isLoaded } = useLoadScript({
         googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY as string,
         libraries: libraries as any,
         mapIds: [process.env.REACT_APP_GOOGLE_MAPS_ID as string],
@@ -71,7 +71,7 @@ export function TodayCheckIn() {
 
             try {
                 await updateWorkTime(payload, res?.id);
-                await getUserCheckin();
+                await getUserCheckin(dayjs());
             } catch (error) {
                 console.error('error:', error);
             }

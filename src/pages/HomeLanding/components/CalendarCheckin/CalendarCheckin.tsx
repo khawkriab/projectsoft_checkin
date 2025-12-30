@@ -6,27 +6,29 @@ import { CustomCalendarHeader } from './CustomCalendarHeader';
 import { CustomDay } from './CustomDay';
 import { StatusBox } from '../Menu/StatusBox';
 import { useUserCalendarContext } from 'context/UserCalendarProvider';
+import th from 'dayjs/locale/th';
+
+dayjs.locale(th);
 
 function CalendarCheckin() {
-    const { dateSelect, calendarDateList, onSelectDate } = useUserCalendarContext();
+    const { dateSelect, calendarDateList, calendarConfig, onSelectDate, getUserCheckin } = useUserCalendarContext();
     const desktopSize = useMediaQuery((t) => t.breakpoints.up('lg'));
+    const weeklyShowHeader = useMediaQuery((t) => t.breakpoints.down('md'));
     return (
         <Box
             sx={(theme) => ({
-                // boxShadow: { xs: 'none', lg: '0 0 10px 10px #bababa3b' },
                 boxShadow: { xs: 'none', lg: theme.palette.mode === 'light' ? '0 0 5px 2px #a0a0a03a' : 'none' },
                 border: { xs: 'none', lg: '2px solid #bababa3b' },
-                // backgroundColor: { xs: 'transparent', lg: '#ffffff' },
                 backgroundColor: 'transparent',
                 overflow: { xs: 'visible', lg: 'hidden' },
                 borderRadius: '12px',
-                // mb: '24px',
             })}
         >
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale='th-TH'>
                 <DateCalendar
                     value={dayjs(dateSelect)}
                     autoFocus={false}
+                    dayOfWeekFormatter={(date) => date.format(weeklyShowHeader ? 'dd' : 'ddd')} // Sunday, Monday, ...
                     // showDaysOutsideCurrentMonth
                     // fixedWeekNumber={6}
                     sx={(theme) => ({
@@ -38,7 +40,7 @@ function CalendarCheckin() {
                             borderRadius: '12px',
                             overflow: 'hidden',
                             marginTop: '12px',
-                            padding: '12px',
+                            padding: { xs: 0, md: '12px' },
                         },
                         '&.MuiDateCalendar-root': {
                             width: '100%',
@@ -70,8 +72,22 @@ function CalendarCheckin() {
                         },
                     })}
                     slots={{
-                        calendarHeader: CustomCalendarHeader, // 👈 override header
-                        day: (dayProps) => <CustomDay dataList={calendarDateList} desktopSize={desktopSize} {...dayProps} />,
+                        calendarHeader: (headerProps) => (
+                            <CustomCalendarHeader
+                                {...headerProps}
+                                onMonthChange={(date) => {
+                                    getUserCheckin(date, date);
+                                }}
+                            />
+                        ),
+                        day: (dayProps) => (
+                            <CustomDay
+                                calendarConfig={calendarConfig}
+                                dataList={calendarDateList}
+                                desktopSize={desktopSize}
+                                {...dayProps}
+                            />
+                        ),
                     }}
                     onChange={(newValue) => {
                         const date = newValue?.format('YYYY-MM-DD');
@@ -82,14 +98,18 @@ function CalendarCheckin() {
                 />
             </LocalizationProvider>
             {/* status */}
-            <Box display={'flex'} gap={'12px'} padding={'12px'} justifyContent={{ xs: 'flex-start', lg: 'center' }} flexWrap={'wrap'}>
-                <StatusBox color={(theme) => theme.palette.text.primary} shape='triangle' status='WORK_DAY' />
-                <StatusBox color={(theme) => theme.palette.text.primary} shape='triangle' status='HOLIDAY' />
-                <StatusBox color={(theme) => theme.palette.text.primary} shape='triangle' status='WFH_DAY' />
-                <StatusBox color={(theme) => theme.palette.text.primary} status='NORMAL' />
-                <StatusBox color={(theme) => theme.palette.text.primary} status='LATE' />
-                <StatusBox color={(theme) => theme.palette.text.primary} status='LEAVE' />
-                <StatusBox color={(theme) => theme.palette.text.primary} status='ABSENT' />
+            <Box sx={{ padding: { xs: '12px 0', md: '12px' } }}>
+                <Box display={'flex'} gap={'12px'} justifyContent={{ xs: 'flex-start', lg: 'center' }} flexWrap={'wrap'}>
+                    <StatusBox color={(theme) => theme.palette.text.primary} shape='triangle' status='WORK_DAY' />
+                    <StatusBox color={(theme) => theme.palette.text.primary} shape='triangle' status='HOLIDAY' />
+                    <StatusBox color={(theme) => theme.palette.text.primary} shape='triangle' status='WFH_DAY' />
+                </Box>
+                <Box display={'flex'} gap={'12px'} justifyContent={{ xs: 'flex-start', lg: 'center' }} flexWrap={'wrap'}>
+                    <StatusBox color={(theme) => theme.palette.text.primary} status='NORMAL' />
+                    <StatusBox color={(theme) => theme.palette.text.primary} status='LATE' />
+                    <StatusBox color={(theme) => theme.palette.text.primary} status='LEAVE' />
+                    <StatusBox color={(theme) => theme.palette.text.primary} status='ABSENT' />
+                </Box>
             </Box>
         </Box>
     );

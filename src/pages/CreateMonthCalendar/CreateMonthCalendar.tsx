@@ -1,9 +1,8 @@
-import { Badge, Box, Button, Checkbox, FormControlLabel, FormGroup, Switch, TextField, ToggleButton, Typography } from '@mui/material';
+import { Box, Button, Checkbox, FormControlLabel, FormGroup, Switch, Typography, useMediaQuery } from '@mui/material';
 import { DateCalendar, LocalizationProvider, PickersDay, PickersDayProps } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { useEffect, useMemo, useState } from 'react';
-import dayjs, { Dayjs } from 'dayjs';
+import { useEffect, useState } from 'react';
+import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import {
     getCalendarConfig,
@@ -11,9 +10,14 @@ import {
     getSystemWorkTimesConfig,
     updateCalendarConfig,
 } from 'context/FirebaseProvider/firebaseApi/checkinApi';
-import { CalendarDateConfig, CheckinCalendar, Profile, ProfileRole, UserCheckinList, WeeklyWorkingDays, WorkTimes } from 'type.global';
+import { CalendarDateConfig, WeeklyWorkingDays, WorkTimes } from 'type.global';
 import { useNotification } from 'components/common/NotificationCenter';
 import { useFirebase } from 'context/FirebaseProvider';
+import CelebrationTwoToneIcon from '@mui/icons-material/CelebrationTwoTone';
+import EventTwoToneIcon from '@mui/icons-material/EventTwoTone';
+import CakeTwoToneIcon from '@mui/icons-material/CakeTwoTone';
+import HomeWorkTwoToneIcon from '@mui/icons-material/HomeWorkTwoTone';
+import WorkTwoToneIcon from '@mui/icons-material/WorkTwoTone';
 
 dayjs.extend(customParseFormat);
 
@@ -35,20 +39,25 @@ function DayCustom({
 
     return (
         <Box
-            sx={(theme) => ({
+            sx={() => ({
                 position: 'relative',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'flex-start',
                 width: 'calc(100% / 7)',
                 padding: '6px',
-                border: '1px solid #ccc',
+                border: '1px solid',
+                borderColor: 'primary.light',
             })}
         >
-            <PickersDay sx={{ fontSize: '16px', fontWeight: 600 }} {...props} outsideCurrentMonth={outsideCurrentMonth} day={day} />
-            {/* <Box>{isSelected ? <CheckCircleIcon color='success' /> : undefined}</Box> */}
+            <PickersDay
+                sx={{ fontSize: '16px', fontWeight: 600, '&.MuiButtonBase-root.MuiPickersDay-root': { marginLeft: 'auto' } }}
+                {...props}
+                outsideCurrentMonth={outsideCurrentMonth}
+                day={day}
+            />
             {!outsideCurrentMonth && weeklyWorkingDays[weekDay] && (
-                <Box>
+                <Box padding={1}>
                     <FormGroup>
                         <FormControlLabel
                             control={<Switch size='small' checked={isSelected} name='workDay' onChange={(e) => onChangeConfig(e, day)} />}
@@ -88,6 +97,7 @@ function DayCustom({
 
 function CreateMonthCalendar() {
     const { profile } = useFirebase();
+    const weeklyShowHeader = useMediaQuery((t) => t.breakpoints.down('md'));
     //
     const { openNotify } = useNotification();
     const [updating, setUpdating] = useState(false);
@@ -157,47 +167,12 @@ function CreateMonthCalendar() {
             </Box>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DateCalendar
-                    // fixedWeekNumber={6}
-                    // sx={{
-                    //     '& .MuiPickersDay-root.Mui-selected, & .MuiPickersDay-root.Mui-selected:hover, , & .MuiPickersDay-root.Mui-selected:focus':
-                    //         {
-                    //             color: 'inherit',
-                    //             backgroundColor: 'inherit',
-                    //         },
-                    //     '&.MuiDateCalendar-root': {
-                    //         width: '90vw',
-                    //         height: '68vh',
-                    //         maxHeight: 'unset',
-                    //     },
-                    //     '& .MuiPickersSlideTransition-root': {
-                    //         height: '60vh',
-                    //     },
-                    //     '& .MuiPickersDay-root, .MuiDayCalendar-weekDayLabel': {
-                    //         fontSize: '1.25rem',
-                    //         width: 'calc(90vw / 7)',
-                    //         height: 'calc(60vh / 7)',
-                    //         borderRadius: 0,
-                    //         margin: 0,
-                    //         opacity: 1,
-                    //         border: '1px solid #ccc',
-                    //     },
-                    //     '& .MuiDayCalendar-weekContainer': {
-                    //         margin: 0,
-                    //     },
-                    //     '& .MuiDayCalendar-weekDayLabel': {
-                    //         backgroundColor: '#777',
-                    //     },
-                    // }}
+                    dayOfWeekFormatter={(date) => date.format(weeklyShowHeader ? 'dd' : 'ddd')}
                     sx={(theme) => ({
                         '.MuiDayCalendar-root': {
-                            // boxShadow: { xs: '0 0 10px 10px #bababa3b', lg: 'none' },
-                            // boxShadow: { xs: theme.palette.mode === 'light' ? '0 0 5px 2px #a0a0a03a' : 'none', lg: 'none' },
-                            // border: { xs: '2px solid #bababa3b', lg: 'none' },
                             backgroundColor: 'transparent',
-                            // borderRadius: '12px',
                             overflow: 'hidden',
                             marginTop: '12px',
-                            // padding: '12px',
                         },
                         '&.MuiDateCalendar-root': {
                             width: '100%',
@@ -237,7 +212,7 @@ function CreateMonthCalendar() {
                                 calendarDateConfig={calendarDateConfig}
                                 weeklyWorkingDays={weeklyWorkingDays}
                                 onChangeConfig={(e, day) => {
-                                    let n = [...calendarDateConfig];
+                                    const n = [...calendarDateConfig];
                                     const parseDay = day.format('YYYY-MM-DD');
                                     const index = n.findIndex((f) => f.date === parseDay);
 
@@ -286,7 +261,7 @@ function CreateMonthCalendar() {
                             />
                         ),
                     }}
-                    shouldDisableDate={(day) => {
+                    shouldDisableDate={() => {
                         // const date = day.date();
                         // const hasData = currentFromDatabase.filter((f) => f.userCheckinList.length > 0);
                         // return day.isBefore(dayjs(), 'day');
@@ -299,7 +274,7 @@ function CreateMonthCalendar() {
                 />
             </LocalizationProvider>
             {(profile?.role === 'ADMIN' || profile?.role === 'ORGANIZATION') && (
-                <Box display={'flex'} justifyContent={'flex-end'} width={'100%'} margin={'auto'} pr={'12px'}>
+                <Box display={'flex'} justifyContent={'flex-end'} width={'100%'} margin={'auto'} mt={3} pr={'12px'}>
                     {/* {calendarDateConfig[3]?.isHoliDay && (
                         <TextField
                             size='small'

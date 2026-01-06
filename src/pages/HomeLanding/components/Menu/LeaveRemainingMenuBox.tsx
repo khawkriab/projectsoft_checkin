@@ -94,7 +94,7 @@ export function LeaveRemainingMenuBox() {
 
                 setLeaveList([...res]);
             } catch (error) {
-                console.log('error:', error);
+                console.error('error:', error);
             }
         };
 

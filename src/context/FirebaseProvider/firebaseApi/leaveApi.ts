@@ -69,7 +69,8 @@ export const getUserLeave = (suid: string, years?: number) => {
         if (matchedUsers.length > 0) {
             resolve([...matchedUsers]);
         } else {
-            reject('not found data');
+            console.warn('not found user leave data');
+            resolve([]);
         }
     });
 };

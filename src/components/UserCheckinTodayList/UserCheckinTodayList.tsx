@@ -42,8 +42,6 @@ function UserCheckinTodayList({
 
             const payload: CheckinDate = {
                 ...data,
-                device: null,
-                latlng: null,
                 status: 1,
                 approveBy: profile?.name ?? '',
                 approveBySuid: profile?.suid ?? '',

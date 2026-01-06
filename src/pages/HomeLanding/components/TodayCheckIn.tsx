@@ -5,7 +5,31 @@ import { useFirebase } from 'context/FirebaseProvider';
 import { getUserWorkTime, updateWorkTime } from 'context/FirebaseProvider/firebaseApi/checkinApi';
 import dayjs from 'dayjs';
 import { useState } from 'react';
-import { deviceDetect } from 'react-device-detect';
+import {
+    browserName,
+    deviceType,
+    engineName,
+    engineVersion,
+    fullBrowserVersion,
+    getUA,
+    isAndroid,
+    isChrome,
+    isChromium,
+    isEdge,
+    isFirefox,
+    isIOS,
+    isMacOs,
+    isMobile,
+    isOpera,
+    isSafari,
+    isSamsungBrowser,
+    isTablet,
+    isWindows,
+    mobileModel,
+    mobileVendor,
+    osName,
+    osVersion,
+} from 'react-device-detect';
 import { CheckinDate, LatLng } from 'type.global';
 import { useUserCalendarContext } from 'context/UserCalendarProvider';
 import { CheckinButton } from './CheckinButton';
@@ -46,6 +70,34 @@ export function TodayCheckIn() {
     const [openModalOutsideArea, setOpenModalOutsideArea] = useState(false);
     //
 
+    const getDeviceDetail = () => {
+        return {
+            browserName: browserName,
+            browserVersion: fullBrowserVersion,
+            isChrome: isChrome,
+            isFirefox: isFirefox,
+            isSafari: isSafari,
+            isOpera: isOpera,
+            isEdge: isEdge,
+            isChromium: isChromium,
+            isSamsungBrowser: isSamsungBrowser,
+            isMobile: isMobile,
+            isTablet: isTablet,
+            isAndroid: isAndroid,
+            isIOS: isIOS,
+            isWindows: isWindows,
+            isMacOs: isMacOs,
+            osName: osName,
+            osVersion: osVersion,
+            mobileVendor: mobileVendor,
+            mobileModel: mobileModel,
+            engineName: engineName,
+            engineVersion: engineVersion,
+            getUA: getUA,
+            deviceType: deviceType,
+        };
+    };
+
     const onCheckin: OnCheckinType = async (isWorkOutside = false, remark, latlng, reason) => {
         setIsSending(true);
         if (profile) {
@@ -65,7 +117,7 @@ export function TodayCheckIn() {
                 absentId: res?.absentId || null,
                 isWorkOutside: isWorkOutside,
                 status: 99,
-                device: deviceDetect(undefined),
+                device: getDeviceDetail(),
                 latlng: latlng || null,
             };
 

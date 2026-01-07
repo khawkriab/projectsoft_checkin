@@ -123,8 +123,8 @@ function SystemConfig() {
                             <GoogleMap
                                 options={{
                                     mapId: process.env.REACT_APP_GOOGLE_MAPS_STYLE_ID,
-                                    disableDefaultUI: true,
-                                    mapTypeId: 'hybrid',
+                                    // disableDefaultUI: true,
+                                    // mapTypeId: 'hybrid',
                                 }}
                                 mapContainerStyle={{
                                     width: '100%',

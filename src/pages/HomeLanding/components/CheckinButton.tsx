@@ -3,6 +3,37 @@ import { useUserCalendarContext } from 'context/UserCalendarProvider';
 import dayjs from 'dayjs';
 import { useMemo } from 'react';
 import { OnCheckinType } from './TodayCheckIn';
+import {
+    browserName,
+    browserVersion,
+    deviceType,
+    engineName,
+    engineVersion,
+    getUA,
+    isAndroid,
+    isIOS,
+    isMobile,
+    isTablet,
+    mobileModel,
+    mobileVendor,
+    osName,
+} from 'react-device-detect';
+
+export const isMobileDevice = () => {
+    return (
+        (isMobile || isTablet) &&
+        (isAndroid || isIOS) &&
+        !!deviceType &&
+        !!osName &&
+        !!mobileModel &&
+        !!mobileVendor &&
+        !!engineName &&
+        !!engineVersion &&
+        !!browserName &&
+        !!browserVersion &&
+        !!getUA
+    );
+};
 
 export function CheckinButton({
     isSending,
@@ -19,6 +50,7 @@ export function CheckinButton({
 }) {
     const { calendarConfig, calendarDateList } = useUserCalendarContext();
     //
+
     const todayConfig = useMemo(() => {
         const d = calendarConfig.find((f) => f.date === dayjs().format('YYYY-MM-DD'));
 
@@ -59,7 +91,7 @@ export function CheckinButton({
                                 color='warning'
                                 sx={{ height: 'calc(50% - 4px)' }}
                                 onClick={onOpenModalMapsCheckin}
-                                disabled={!isMapsLoaded || userCheckinToday?.leavePeriod === 'FULL_DAY'}
+                                disabled={!isMapsLoaded || userCheckinToday?.leavePeriod === 'FULL_DAY' || !isMobileDevice()}
                             >
                                 {userCheckinToday?.leavePeriod ? (
                                     <>

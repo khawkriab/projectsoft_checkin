@@ -1,8 +1,10 @@
-import { Box, Button, Paper, Table, TableBody, TableContainer, TableHead, TableRow } from '@mui/material';
+import { Box, IconButton, Paper, Table, TableBody, TableContainer, TableHead, TableRow } from '@mui/material';
 import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/MuiTable';
-import { deleteWorkTime } from 'context/FirebaseProvider/firebaseApi/checkinApi';
+import { useNotification } from 'components/common/NotificationCenter';
+import DeviceDetector from 'node-device-detector';
 import React from 'react';
 import { CalendarDateList, CheckinDate, Profile } from 'type.global';
+import InfoTwoToneIcon from '@mui/icons-material/InfoTwoTone';
 
 export type CalendarDateExtendText = Omit<CalendarDateList, 'userCheckinList'> & {
     userCheckinList: (
@@ -16,6 +18,16 @@ export type CalendarDateExtendText = Omit<CalendarDateList, 'userCheckinList'> &
 };
 
 function CalendarTable({ userFilterList, calendarCheckin }: { userFilterList: Profile[]; calendarCheckin: CalendarDateExtendText[] }) {
+    const { openNotify } = useNotification();
+    const detector = new DeviceDetector({
+        clientIndexes: true,
+        deviceIndexes: true,
+        osIndexes: true,
+        deviceAliasCode: false,
+        deviceTrusted: true,
+        deviceInfo: false,
+        // maxUserAgentSize: 500,
+    });
     const statusStyle = (data: CalendarDateExtendText['userCheckinList'][0]) => {
         if (data?.lateFlag) {
             if (data.lateFlag === 1) {
@@ -127,10 +139,44 @@ function CalendarTable({ userFilterList, calendarCheckin }: { userFilterList: Pr
                                             })}
                                         >
                                             {u?.timeText}
+                                            {u?.device?.getUA && (
+                                                <IconButton
+                                                    size='small'
+                                                    // variant='outlined'
+                                                    color='warning'
+                                                    onClick={() => {
+                                                        const n = detector.detect(u?.device?.getUA);
+                                                        openNotify(
+                                                            'info',
+                                                            <>
+                                                                {JSON.stringify(n.os)}
+                                                                <br />
+                                                                {JSON.stringify(n.device)}
+                                                                <br />
+                                                                {JSON.stringify(n.client)}
+                                                            </>
+                                                        );
+                                                    }}
+                                                >
+                                                    <InfoTwoToneIcon />
+                                                </IconButton>
+                                            )}
                                             <Box display={'inline-block'} color={'#ff6f00'} fontWeight={700}>
                                                 {u?.remark && u?.timeText && ' - '}
                                                 {u?.remark}
                                             </Box>
+
+                                            {u?.timeText && u?.latlng && (
+                                                <Box>
+                                                    <a
+                                                        rel='noreferrer'
+                                                        href={`https://www.google.com/maps?q=${u?.latlng?.lat},${u?.latlng?.lng}`}
+                                                        target='_blank'
+                                                    >
+                                                        {`[${u?.latlng?.lat},${u?.latlng?.lng}]`}
+                                                    </a>
+                                                </Box>
+                                            )}
                                         </TableBodyCell>
                                         {/* สถานะ */}
                                         <TableBodyCell

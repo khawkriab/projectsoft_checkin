@@ -4,6 +4,7 @@ export type LeaveStatus = 'APPROVE' | 'WAITING' | 'REJECT';
 export type LeaveTypes = 'VACATION' | 'SICK' | 'PERSONAL';
 export type LeavePeriodsType = 'HALF_DAY_AM' | 'HALF_DAY_PM' | 'FULL_DAY';
 export type LeavePeriodsLabel = 'ลาเช้า' | 'ลาบ่าย' | 'ทั้งวัน';
+export type EventType = 'HOLIDAY' | 'BIRTHDAY' | 'OUTING' | 'OTHER';
 
 export type LatLng = { lat: number; lng: number };
 
@@ -112,6 +113,7 @@ export type CalendarDateConfig = FirebaseQuery &
         date: string; // YYYY-MM-DD
         isHoliDay: boolean;
         isWFH?: boolean;
+        eventType?: EventType;
         remark?: string;
         createdAt?: Date; // Date
         updatedAt?: Date; // Date

@@ -1,21 +1,27 @@
 import { Alert, AlertColor, Slide, Snackbar } from '@mui/material';
 import { createContext, useContext, useState } from 'react';
 
-const NotificationCenterContext = createContext<{ openNotify: (color: AlertColor, message: string) => void }>(null!);
+type AlertOptions = {
+    message: React.ReactNode;
+    color: string;
+    open: boolean;
+};
+
+const NotificationCenterContext = createContext<{ openNotify: (color: AlertColor, message: React.ReactNode) => void }>(null!);
 
 function useNotification() {
     return useContext(NotificationCenterContext);
 }
 
 function NotificationCenterProvider({ children }: { children: React.ReactNode }) {
-    const [alertOptions, setAlertOptions] = useState({
+    const [alertOptions, setAlertOptions] = useState<AlertOptions>({
         message: '',
         color: '',
         open: false,
     });
     //
 
-    const setOpen = (color: AlertColor, message: string) => {
+    const setOpen = (color: AlertColor, message: React.ReactNode) => {
         setAlertOptions((prev) => ({
             ...prev,
             message: message,

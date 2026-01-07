@@ -7,6 +7,7 @@ import { getSystemAreaConfig } from 'context/FirebaseProvider/firebaseApi/checki
 import isWithinRadius from 'helper/checkDistance';
 import { OnCheckinType } from './TodayCheckIn';
 import { LatLng, SystemAreaConfig } from 'type.global';
+import { isMobileDevice } from './CheckinButton';
 
 export function ModalMapsCheckin({
     isMapsLoaded,
@@ -22,6 +23,7 @@ export function ModalMapsCheckin({
     onClose: () => void;
 }) {
     const watchId = useRef<number>(0);
+    const isMobile = isMobileDevice();
     //
     const [areaConfig, setAreaConfig] = useState<SystemAreaConfig | null>(null);
     const [currentLocation, setCurrentLocation] = useState<LatLng | null>(null);
@@ -31,7 +33,7 @@ export function ModalMapsCheckin({
         navigator.geolocation.clearWatch(watchId.current);
 
         if (open) {
-            if (!areaConfig) {
+            if (!areaConfig || !isMobile) {
                 onClose();
 
                 console.error('Not area config.');
@@ -52,6 +54,7 @@ export function ModalMapsCheckin({
                     console.log('within:', within);
                     if (within) {
                         navigator.geolocation.clearWatch(watchId.current);
+
                         onCheckin(false, '', current);
                     }
                 },
@@ -70,7 +73,7 @@ export function ModalMapsCheckin({
         return () => {
             navigator.geolocation.clearWatch(watchId.current);
         };
-    }, [open, JSON.stringify(areaConfig)]);
+    }, [open, isMobile, JSON.stringify(areaConfig)]);
 
     useEffect(() => {
         const getAreaConfig = async () => {

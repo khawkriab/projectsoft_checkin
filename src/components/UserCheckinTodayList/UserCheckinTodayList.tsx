@@ -120,7 +120,9 @@ function UserCheckinTodayList({
                                         <TableBodyCell>{c.remark}</TableBodyCell>
                                         <TableBodyCell>{c.reason}</TableBodyCell>
                                         <TableBodyCell sx={{ whiteSpace: 'break-spaces' }}>
-                                            {`${c.device?.osName || c.device?.os}-${c.device?.browserName || c.device?.ua}`}
+                                            {`${c.device?.deviceType} ${c.device?.osName} ${c.device?.mobileModel} ${c.device?.mobileVendor}/ engine:${c.device?.engineName}${c.device?.engineVersion}/ browser:${c.device?.browserName}${c.device?.browserVersion}`}
+                                            <br />
+                                            {`${c.device?.getUA}`}
                                             <br />
                                             {`[${c?.latlng?.lat},${c?.latlng?.lng}]`}
                                         </TableBodyCell>

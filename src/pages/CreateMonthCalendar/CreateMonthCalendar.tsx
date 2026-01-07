@@ -1,4 +1,24 @@
-import { Box, Button, Checkbox, FormControlLabel, FormGroup, Switch, Typography, useMediaQuery } from '@mui/material';
+import {
+    Alert,
+    Box,
+    Button,
+    Checkbox,
+    Chip,
+    ChipProps,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    FormControlLabel,
+    FormGroup,
+    IconButton,
+    MenuItem,
+    Stack,
+    Switch,
+    TextField,
+    Typography,
+    useMediaQuery,
+} from '@mui/material';
 import { DateCalendar, LocalizationProvider, PickersDay, PickersDayProps } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { useEffect, useState } from 'react';
@@ -10,7 +30,7 @@ import {
     getSystemWorkTimesConfig,
     updateCalendarConfig,
 } from 'context/FirebaseProvider/firebaseApi/checkinApi';
-import { CalendarDateConfig, WeeklyWorkingDays, WorkTimes } from 'type.global';
+import { CalendarDateConfig, EventType, WeeklyWorkingDays, WorkTimes } from 'type.global';
 import { useNotification } from 'components/common/NotificationCenter';
 import { useFirebase } from 'context/FirebaseProvider';
 import CelebrationTwoToneIcon from '@mui/icons-material/CelebrationTwoTone';
@@ -18,20 +38,54 @@ import EventTwoToneIcon from '@mui/icons-material/EventTwoTone';
 import CakeTwoToneIcon from '@mui/icons-material/CakeTwoTone';
 import HomeWorkTwoToneIcon from '@mui/icons-material/HomeWorkTwoTone';
 import WorkTwoToneIcon from '@mui/icons-material/WorkTwoTone';
+import CheckCircleTwoToneIcon from '@mui/icons-material/CheckCircleTwoTone';
+import BookmarkAddTwoToneIcon from '@mui/icons-material/BookmarkAddTwoTone';
+import CloseIcon from '@mui/icons-material/Close';
 
 dayjs.extend(customParseFormat);
+
+function ChipCustom({
+    checked,
+    color,
+    onDelete,
+    ...props
+}: {
+    checked: boolean;
+} & ChipProps) {
+    return (
+        <Chip
+            {...props}
+            sx={{
+                width: '100%',
+                borderRadius: 1,
+                justifyContent: 'initial',
+                mb: 1,
+                '&.MuiChip-root>.MuiChip-deleteIcon': {
+                    ml: 'auto',
+                },
+            }}
+            size='small'
+            variant={checked ? 'filled' : 'outlined'}
+            color={checked ? color : 'default'}
+            deleteIcon={checked ? <CheckCircleTwoToneIcon /> : undefined}
+            onDelete={checked ? onDelete : undefined}
+        />
+    );
+}
 
 function DayCustom({
     calendarDateConfig,
     weeklyWorkingDays,
-    onChangeConfig,
     day,
     outsideCurrentMonth,
+    onChangeConfig,
+    onShowAddEvent,
     ...props
 }: PickersDayProps & {
     calendarDateConfig: CalendarDateConfig[];
     weeklyWorkingDays: WeeklyWorkingDays;
-    onChangeConfig: (event: React.ChangeEvent<HTMLInputElement>, day: dayjs.Dayjs) => void;
+    onChangeConfig: (event: { target: { name: string; checked: boolean } }, day: dayjs.Dayjs) => void;
+    onShowAddEvent: (data?: CalendarDateConfig) => void;
 }) {
     const findDate = calendarDateConfig.find((f) => f.date === day.format('YYYY-MM-DD'));
     const isSelected = !outsideCurrentMonth && !!findDate && !findDate.isHoliDay && !findDate.isWFH;
@@ -50,45 +104,56 @@ function DayCustom({
                 borderColor: 'primary.light',
             })}
         >
-            <PickersDay
-                sx={{ fontSize: '16px', fontWeight: 600, '&.MuiButtonBase-root.MuiPickersDay-root': { marginLeft: 'auto' } }}
-                {...props}
-                outsideCurrentMonth={outsideCurrentMonth}
-                day={day}
-            />
+            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                {!outsideCurrentMonth && (
+                    <IconButton color='warning' onClick={() => onShowAddEvent(findDate)}>
+                        <BookmarkAddTwoToneIcon />
+                    </IconButton>
+                )}
+                <PickersDay
+                    sx={{ fontSize: '16px', fontWeight: 600, '&.MuiButtonBase-root.MuiPickersDay-root': { marginLeft: 'auto' } }}
+                    {...props}
+                    outsideCurrentMonth={outsideCurrentMonth}
+                    day={day}
+                />
+            </Box>
             {!outsideCurrentMonth && weeklyWorkingDays[weekDay] && (
-                <Box padding={1}>
-                    <FormGroup>
-                        <FormControlLabel
-                            control={<Switch size='small' checked={isSelected} name='workDay' onChange={(e) => onChangeConfig(e, day)} />}
-                            label='Work Day'
-                        />
-
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    size='small'
-                                    color='warning'
-                                    name='isWFH'
-                                    checked={findDate?.isWFH}
-                                    onChange={(e) => onChangeConfig(e, day)}
-                                />
-                            }
-                            label='WFH Day'
-                        />
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    size='small'
-                                    color='success'
-                                    name='isHoliDay'
-                                    checked={findDate?.isHoliDay}
-                                    onChange={(e) => onChangeConfig(e, day)}
-                                />
-                            }
-                            label='Holiday'
-                        />
-                    </FormGroup>
+                <Box width={'100%'}>
+                    <ChipCustom
+                        label='Work Day'
+                        color='primary'
+                        icon={<WorkTwoToneIcon />}
+                        checked={isSelected}
+                        onClick={() => onChangeConfig({ target: { name: 'workDay', checked: !isSelected } }, day)}
+                        onDelete={() => onChangeConfig({ target: { name: 'workDay', checked: false } }, day)}
+                    />
+                    <ChipCustom
+                        label='WFH Day'
+                        color='warning'
+                        icon={<HomeWorkTwoToneIcon />}
+                        checked={!!findDate?.isWFH}
+                        onClick={() => onChangeConfig({ target: { name: 'isWFH', checked: !findDate?.isWFH } }, day)}
+                        onDelete={() => onChangeConfig({ target: { name: 'isWFH', checked: false } }, day)}
+                    />
+                    <ChipCustom
+                        label='Holiday'
+                        color='success'
+                        icon={<CelebrationTwoToneIcon />}
+                        checked={!!findDate?.isHoliDay}
+                        onClick={() => onChangeConfig({ target: { name: 'isHoliDay', checked: !findDate?.isHoliDay } }, day)}
+                        onDelete={() => onChangeConfig({ target: { name: 'isHoliDay', checked: false } }, day)}
+                    />
+                    {findDate?.remark && (
+                        <Alert
+                            onClick={() => onShowAddEvent(findDate)}
+                            color='warning'
+                            variant='outlined'
+                            icon={<EventTwoToneIcon />}
+                            sx={{ '&.MuiPaper-root, &.MuiPaper-root .MuiAlert-icon, &.MuiPaper-root .MuiAlert-message': { padding: 0 } }}
+                        >
+                            {findDate.remark}
+                        </Alert>
+                    )}
                 </Box>
             )}
         </Box>
@@ -114,6 +179,10 @@ function CreateMonthCalendar() {
         Tuesday: false,
         Wednesday: false,
     });
+    const [addEventData, setAddEventData] = useState<{ open: boolean; data: CalendarDateConfig | null }>({
+        open: false,
+        data: null,
+    });
     //
 
     const onUpdateCalendar = async () => {
@@ -128,12 +197,69 @@ function CreateMonthCalendar() {
         openNotify('success', 'update seccess');
     };
 
+    const onChangeConfig = (
+        e: {
+            target: {
+                name: string;
+                checked: boolean;
+            };
+        },
+        day: dayjs.Dayjs
+    ) => {
+        const n = [...calendarDateConfig];
+        const parseDay = day.format('YYYY-MM-DD');
+        const index = n.findIndex((f) => f.date === parseDay);
+
+        // if has data, has one of isHoliDay or isWFH or object
+        if (index >= 0) {
+            const value = n[index];
+            // if not isHoliDay and isWFH and workDay is false, remove array
+            if (e.target.name === 'workDay' && !e.target.checked && !value.isHoliDay && !value.isWFH) {
+                n.splice(index, 1);
+
+                // if not workDay, but checked, reset all and update new value
+            } else if (e.target.name !== 'workDay' && e.target.checked) {
+                n[index] = {
+                    ...n[index],
+                    isWFH: false,
+                    isHoliDay: false,
+                    [e.target.name]: e.target.checked,
+                };
+
+                // if workDay is checked, reset all to false
+            } else if (e.target.name === 'workDay' && e.target.checked) {
+                n[index] = {
+                    ...n[index],
+                    isWFH: false,
+                    isHoliDay: false,
+                };
+
+                // all is false, remove array
+            } else {
+                n.splice(index, 1);
+            }
+        } else if (e.target.checked) {
+            n.push({
+                date: parseDay,
+                isWFH: false,
+                isHoliDay: false,
+                entryTime: '',
+                exitTime: '',
+                remark: '',
+                ...(e.target.name !== 'workDay' && { [e.target.name]: e.target.checked }),
+            });
+        }
+
+        setCalendarDateConfig([...n]);
+    };
+
     // ** month: 0-11
     const getCalendar = async (year: number, month: number) => {
         // new way
         const res = await getCalendarConfig(`${year}-${month + 1}`);
         setCalendarDateConfig([...res]);
     };
+
     useEffect(() => {
         getCalendar(years, month);
     }, [month, years]);
@@ -211,53 +337,8 @@ function CreateMonthCalendar() {
                                 {...dayProps}
                                 calendarDateConfig={calendarDateConfig}
                                 weeklyWorkingDays={weeklyWorkingDays}
-                                onChangeConfig={(e, day) => {
-                                    const n = [...calendarDateConfig];
-                                    const parseDay = day.format('YYYY-MM-DD');
-                                    const index = n.findIndex((f) => f.date === parseDay);
-
-                                    // if has data, has one of isHoliDay or isWFH or object
-                                    if (index >= 0) {
-                                        const value = n[index];
-                                        // if not isHoliDay and isWFH and workDay is false, remove array
-                                        if (e.target.name === 'workDay' && !e.target.checked && !value.isHoliDay && !value.isWFH) {
-                                            n.splice(index, 1);
-
-                                            // if not workDay, but checked, reset all and update new value
-                                        } else if (e.target.name !== 'workDay' && e.target.checked) {
-                                            n[index] = {
-                                                ...n[index],
-                                                isWFH: false,
-                                                isHoliDay: false,
-                                                [e.target.name]: e.target.checked,
-                                            };
-
-                                            // if workDay is checked, reset all to false
-                                        } else if (e.target.name === 'workDay' && e.target.checked) {
-                                            n[index] = {
-                                                ...n[index],
-                                                isWFH: false,
-                                                isHoliDay: false,
-                                            };
-
-                                            // all is false, remove array
-                                        } else {
-                                            n.splice(index, 1);
-                                        }
-                                    } else if (e.target.checked) {
-                                        n.push({
-                                            date: parseDay,
-                                            isWFH: false,
-                                            isHoliDay: false,
-                                            entryTime: '',
-                                            exitTime: '',
-                                            remark: '',
-                                            ...(e.target.name !== 'workDay' && { [e.target.name]: e.target.checked }),
-                                        });
-                                    }
-
-                                    setCalendarDateConfig([...n]);
-                                }}
+                                onChangeConfig={onChangeConfig}
+                                onShowAddEvent={(data) => setAddEventData((prev) => ({ ...prev, open: true, data: data || null }))}
                             />
                         ),
                     }}
@@ -297,6 +378,91 @@ function CreateMonthCalendar() {
                     </Button>
                 </Box>
             )}
+            <Dialog
+                open={addEventData.open}
+                maxWidth={'md'}
+                fullWidth
+                onClose={() => setAddEventData((prev) => ({ ...prev, open: false, data: null }))}
+            >
+                <DialogTitle
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                    }}
+                >
+                    <Box display={'flex'} gap={2}>
+                        <Typography sx={{ fontSize: 'inherit' }}>Add Event</Typography>
+                    </Box>
+                    <IconButton size='small' onClick={() => setAddEventData((prev) => ({ ...prev, open: false, data: null }))}>
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent dividers>
+                    <Box
+                        sx={{
+                            width: '100%',
+                            padding: '1rem 0',
+                        }}
+                    >
+                        <Stack spacing={2}>
+                            <TextField
+                                select
+                                size='small'
+                                label={'ประเภท Event'}
+                                name='eventType'
+                                value={addEventData.data?.eventType || ''}
+                                onChange={(e) =>
+                                    setAddEventData((prev) => ({
+                                        ...prev,
+                                        data: { ...(prev.data || ({} as CalendarDateConfig)), eventType: e.target.value as EventType },
+                                    }))
+                                }
+                            >
+                                <MenuItem value='HOLIDAY'>วันหยุด</MenuItem>
+                                <MenuItem value='BIRTHDAY'>วันเกิด</MenuItem>
+                                <MenuItem value='OUTING'>Outing</MenuItem>
+                                <MenuItem value='OTHER'>อื่นๆ</MenuItem>
+                            </TextField>
+                            <TextField
+                                multiline
+                                rows={3}
+                                size='small'
+                                label={'คำอธิบาย'}
+                                // placeholder='หยุดเพราะอะไร'
+                                name='remark'
+                                value={addEventData.data?.remark || ''}
+                                onChange={(e) =>
+                                    setAddEventData((prev) => ({
+                                        ...prev,
+                                        data: { ...(prev.data || ({} as CalendarDateConfig)), remark: e.target.value },
+                                    }))
+                                }
+                            />
+                        </Stack>
+                    </Box>
+                </DialogContent>
+                <DialogActions>
+                    <Button
+                        variant='contained'
+                        color='primary'
+                        onClick={() => {
+                            const index = calendarDateConfig.findIndex((f) => f.date === addEventData.data?.date);
+
+                            if (index >= 0) {
+                                const n = [...calendarDateConfig];
+                                n[index].eventType = addEventData.data?.eventType;
+                                n[index].remark = addEventData.data?.remark;
+
+                                setCalendarDateConfig([...n]);
+                                setAddEventData((prev) => ({ ...prev, open: false, data: null }));
+                            }
+                        }}
+                    >
+                        Add
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }

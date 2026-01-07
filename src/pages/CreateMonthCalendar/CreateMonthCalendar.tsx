@@ -105,7 +105,7 @@ function DayCustom({
             })}
         >
             <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                {!outsideCurrentMonth && (
+                {!outsideCurrentMonth && weeklyWorkingDays[weekDay] && (
                     <IconButton color='warning' onClick={() => onShowAddEvent(findDate)}>
                         <BookmarkAddTwoToneIcon />
                     </IconButton>
@@ -328,6 +328,7 @@ function CreateMonthCalendar() {
                             color: theme.palette.text.primary,
                             fontSize: theme.typography.h6.fontSize,
                             border: '1px solid #ccc',
+                            borderColor: 'primary.light',
                             margin: 0,
                         },
                     })}

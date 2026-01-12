@@ -4,6 +4,9 @@ import { cornerCurveStyle, StatusBox } from '../Menu/StatusBox';
 import { UserCalendarCheckin } from 'context/UserCalendarProvider';
 import { STATUS } from 'context/UserCalendarProvider/UserCalendarProvider';
 import { CalendarDateConfig } from 'type.global';
+import CelebrationTwoToneIcon from '@mui/icons-material/CelebrationTwoTone';
+import EventTwoToneIcon from '@mui/icons-material/EventTwoTone';
+import CakeTwoToneIcon from '@mui/icons-material/CakeTwoTone';
 
 export function CustomDay({
     day,
@@ -43,6 +46,30 @@ export function CustomDay({
                 outsideCurrentMonth={outsideCurrentMonth}
                 disabled={isStartOfWeek || isEndOfWeek}
             />
+
+            {dateConfig?.eventType && (
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        top: 0,
+                        right: '6px',
+                        left: '12px',
+                        display: 'flex',
+                        justifyContent: 'flex-end',
+                        alignItems: 'flex-start',
+                    }}
+                >
+                    {dateConfig?.eventType === 'HOLIDAY' && (
+                        <CelebrationTwoToneIcon sx={{ color: '#ff00ea', fontSize: { xs: '16px', sm: '22px' } }} />
+                    )}
+                    {dateConfig?.eventType === 'BIRTHDAY' && (
+                        <CakeTwoToneIcon sx={{ color: '#ff00ea', fontSize: { xs: '16px', sm: '22px' } }} />
+                    )}
+                    {dateConfig?.eventType === 'OTHER' && (
+                        <EventTwoToneIcon sx={{ color: '#ff00ea', fontSize: { xs: '16px', sm: '22px' } }} />
+                    )}
+                </Box>
+            )}
             {dateConfig && !dateConfig.isWFH && !dateConfig.isHoliDay && <Box sx={cornerCurveStyle(STATUS['WORK_DAY'].color)} />}
             {dateConfig?.isHoliDay && <Box sx={cornerCurveStyle(STATUS['HOLIDAY'].color)} />}
             {dateConfig?.isWFH && <Box sx={cornerCurveStyle(STATUS['WFH_DAY'].color)} />}

@@ -1,15 +1,11 @@
 import { Box, Drawer, IconButton, Stack, Table, TableBody, TableContainer, TableRow, Typography } from '@mui/material';
 import { MenuBox } from './MenuBox';
 import { Close } from '@mui/icons-material';
-import { useEffect, useMemo, useState } from 'react';
-import { getUserLeave } from 'context/FirebaseProvider/firebaseApi/leaveApi';
-import { AnnualLeaveEntitlement, LeaveData } from 'type.global';
+import { useMemo, useState } from 'react';
 import { useFirebase } from 'context/FirebaseProvider';
 import { TableBodyCell } from 'components/common/MuiTable';
 import dayjs from 'dayjs';
 import { getLeavePeriodLabel, getLeaveType } from 'helper/leaveType';
-import { getAnnualLeaveEntitlement } from 'context/FirebaseProvider/firebaseApi/userApi';
-import { summarizeUserLeave } from 'utils/summarizeUserLeave';
 import { numberjs } from 'utils/numberJs';
 
 export function AmountBox({
@@ -62,64 +58,64 @@ export function AmountBox({
 }
 
 export function LeaveRemainingMenuBox() {
-    const { profile } = useFirebase();
+    const { leaveList, summaryLeaveDays } = useFirebase();
     //
     const [open, setOpen] = useState(false);
-    const [leaveList, setLeaveList] = useState<LeaveData[]>([]);
-    const [annualLeaveEntitlement, setAnnualLeaveEntitlement] = useState<
-        (AnnualLeaveEntitlement & { summaryLeaveDays: AnnualLeaveEntitlement }) | null
-    >(null);
+    // const [leaveList, setLeaveList] = useState<LeaveData[]>([]);
+    // const [annualLeaveEntitlement, setAnnualLeaveEntitlement] = useState<
+    //     (AnnualLeaveEntitlement & { summaryLeaveDays: AnnualLeaveEntitlement }) | null
+    // >(null);
     //
 
-    useEffect(() => {
-        const getLeave = async () => {
-            if (!profile?.suid) return;
+    // useEffect(() => {
+    //     const getLeave = async () => {
+    //         if (!profile?.suid) return;
 
-            try {
-                const res = await getUserLeave(profile.suid, dayjs().year());
-                const resLeave = await getAnnualLeaveEntitlement(profile.suid);
+    //         try {
+    //             const res = await getUserLeave(profile.suid, dayjs().year());
+    //             const resLeave = await getAnnualLeaveEntitlement(profile.suid);
 
-                const s = summarizeUserLeave(res);
-                const currentYear = resLeave.annualLeaveEntitlement.find((f) => f.years === dayjs().year());
+    //             const s = summarizeUserLeave(res);
+    //             const currentYear = resLeave.annualLeaveEntitlement.find((f) => f.years === dayjs().year());
 
-                if (currentYear) {
-                    setAnnualLeaveEntitlement({
-                        ...currentYear,
-                        summaryLeaveDays: {
-                            years: currentYear.years,
-                            ...s,
-                        },
-                    });
-                }
+    //             if (currentYear) {
+    //                 setAnnualLeaveEntitlement({
+    //                     ...currentYear,
+    //                     summaryLeaveDays: {
+    //                         years: currentYear.years,
+    //                         ...s,
+    //                     },
+    //                 });
+    //             }
 
-                setLeaveList([...res]);
-            } catch (error) {
-                console.error('error:', error);
-            }
-        };
+    //             setLeaveList([...res]);
+    //         } catch (error) {
+    //             console.error('error:', error);
+    //         }
+    //     };
 
-        getLeave();
-    }, [profile?.suid]);
+    //     getLeave();
+    // }, [profile?.suid]);
     //
     return (
         <>
             <MenuBox flex={'auto'} minHeight={`${50 * 2}px`} onClick={() => setOpen(true)}>
                 <Stack direction={'row'} width={'100%'} spacing={1} justifyContent={'space-around'}>
                     <AmountBox
-                        remaining={numberjs(annualLeaveEntitlement?.sick).del(annualLeaveEntitlement?.summaryLeaveDays.sick).value}
-                        total={annualLeaveEntitlement?.sick || 0}
+                        remaining={numberjs(summaryLeaveDays.all.sick).del(summaryLeaveDays.used.sick).value}
+                        total={summaryLeaveDays.all.sick || 0}
                         label='ลาป่วย'
                         type='SICK'
                     />
                     <AmountBox
-                        remaining={numberjs(annualLeaveEntitlement?.personal).del(annualLeaveEntitlement?.summaryLeaveDays.personal).value}
-                        total={annualLeaveEntitlement?.personal || 0}
+                        remaining={numberjs(summaryLeaveDays.all.personal).del(summaryLeaveDays.used.personal).value}
+                        total={summaryLeaveDays.all.personal || 0}
                         label='ลากิจ'
                         type='PERSONAL'
                     />
                     <AmountBox
-                        remaining={numberjs(annualLeaveEntitlement?.vacation).del(annualLeaveEntitlement?.summaryLeaveDays.vacation).value}
-                        total={annualLeaveEntitlement?.vacation || 0}
+                        remaining={numberjs(summaryLeaveDays.all.vacation).del(summaryLeaveDays.used.vacation).value}
+                        total={summaryLeaveDays.all.vacation || 0}
                         label='ลาพักร้อน'
                         type='VACATION'
                     />

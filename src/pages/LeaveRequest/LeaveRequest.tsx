@@ -283,7 +283,7 @@ function LeaveRequest() {
                 const res = await getLeaveList();
                 setLeaveList([...res.sort((a, b) => dayjs(b.startDate).valueOf() - dayjs(a.startDate).valueOf())]);
             } catch (error) {
-                console.log('error:', error);
+                console.error('error:', error);
             }
         };
 

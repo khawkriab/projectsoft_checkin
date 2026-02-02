@@ -2,14 +2,30 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
 import { initializeFirestore } from 'firebase/firestore';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { Profile } from 'type.global';
-import { createUsersRegister, getUsersRegisterWithEmail, getUsersWithEmail } from './firebaseApi/userApi';
+import { LeaveData, Profile } from 'type.global';
+import { createUsersRegister, getAnnualLeaveEntitlement, getUsersRegisterWithEmail, getUsersWithEmail } from './firebaseApi/userApi';
 import { useNotification } from 'components/common/NotificationCenter';
+import dayjs from 'dayjs';
+import { summarizeUserLeave } from 'utils/summarizeUserLeave';
+import { getUserLeave } from './firebaseApi/leaveApi';
 
 interface FirebaseContextType {
     profile: Profile | null;
     isSignedIn: boolean;
     authLoading: boolean;
+    leaveList: LeaveData[];
+    summaryLeaveDays: {
+        all: {
+            personal: number;
+            sick: number;
+            vacation: number;
+        };
+        used: {
+            personal: number;
+            sick: number;
+            vacation: number;
+        };
+    };
     updateUserInfo: (email: string) => Promise<Profile | undefined>;
     signInWithGoogle: () => Promise<void>;
     signOutUser: () => Promise<void>;
@@ -54,8 +70,35 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
     const [isSignedIn, setIsSignedIn] = useState(false);
     const [authLoading, setAuthLoading] = useState(true);
     const [profile, setProfile] = useState<Profile | null>(null);
+    const [leaveList, setLeaveList] = useState<LeaveData[]>([]);
+    const [summaryLeaveDays, setSummaryLeaveDays] = useState({
+        all: { personal: 0, sick: 0, vacation: 0 },
+        used: { personal: 0, sick: 0, vacation: 0 },
+    });
 
     //
+    const getUserAnnualLeaveEntitlement = async (suid: string) => {
+        try {
+            const leaveList = await getUserLeave(suid, dayjs().get('year'));
+            setLeaveList([...leaveList]);
+
+            const res = await getAnnualLeaveEntitlement(suid);
+            const used = summarizeUserLeave(leaveList);
+            const all = res.annualLeaveEntitlement.find((f) => f.years === dayjs().get('year'));
+
+            setSummaryLeaveDays((prev) => ({
+                ...prev,
+                all: {
+                    personal: all?.personal || 0,
+                    sick: all?.sick || 0,
+                    vacation: all?.vacation || 0,
+                },
+                used: used,
+            }));
+        } catch (error) {
+            console.error('error:', error);
+        }
+    };
 
     const onRegister = async () => {
         try {
@@ -116,30 +159,6 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
-    const updateUserInfo = async (profile: Profile) => {
-        // try {
-        //     const uid = auth.currentUser?.uid;
-        //     const res = await getUsersWithEmail(profile.email);
-        //     let userData = {
-        //         ...profile,
-        //     };
-        //     if (res) {
-        //         userData = {
-        //             ...userData,
-        //             ...res,
-        //             // googleId: res.googleId || profile.googleId,
-        //             fullName: res.fullName || profile.fullName,
-        //             profileURL: res.profileURL || profile.profileURL,
-        //             email: res.email || profile.email,
-        //         };
-        //     }
-        //     setProfile({ ...userData });
-        // } catch (error) {
-        //     console.error('error:', error);
-        //     setProfile({ ...profile });
-        // }
-    };
-
     const getUserInfo = async (email: string, onlyGet?: boolean) => {
         try {
             const uid = auth.currentUser?.uid;
@@ -147,7 +166,10 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
 
             if (!onlyGet) setIsSignedIn(true);
             if (res) {
+                await getUserAnnualLeaveEntitlement(res.suid);
+
                 if (!onlyGet) setProfile({ ...res });
+
                 return res;
             } else {
                 const u = await getUsersRegisterWithEmail(email, uid || '');
@@ -203,6 +225,8 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
                 profile: profile,
                 isSignedIn: isSignedIn,
                 authLoading: authLoading,
+                leaveList: leaveList,
+                summaryLeaveDays: summaryLeaveDays,
                 signInWithGoogle,
                 signOutUser,
                 updateUserInfo: getUserInfo,

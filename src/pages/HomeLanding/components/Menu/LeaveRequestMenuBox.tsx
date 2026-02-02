@@ -35,7 +35,7 @@ type LeaveForm = {
 };
 
 export function LeaveRequestMenuBox() {
-    const { profile } = useFirebase();
+    const { profile, summaryLeaveDays } = useFirebase();
     const { openNotify } = useNotification();
     //
     const [open, setOpen] = useState(false);
@@ -197,7 +197,14 @@ export function LeaveRequestMenuBox() {
                                         color='primary'
                                     >
                                         {leaveTypes.map((m) => (
-                                            <ToggleButton key={m.value} value={m.value}>
+                                            <ToggleButton
+                                                key={m.value}
+                                                value={m.value}
+                                                disabled={
+                                                    summaryLeaveDays.used[m.key as 'personal' | 'sick' | 'vacation'] >=
+                                                    summaryLeaveDays.all[m.key as 'personal' | 'sick' | 'vacation']
+                                                }
+                                            >
                                                 {m.label}
                                             </ToggleButton>
                                         ))}

@@ -1,9 +1,9 @@
 import { LeavePeriodsType, LeavePeriodsLabel, LeaveTypes } from 'type.global';
 
 export const leaveTypes = [
-    { label: 'ลาพักร้อน', value: 'VACATION' },
-    { label: 'ลาป่วย', value: 'SICK' },
-    { label: 'ลากิจ', value: 'PERSONAL' },
+    { label: 'ลาพักร้อน', value: 'VACATION', key: 'personal' },
+    { label: 'ลาป่วย', value: 'SICK', key: 'sick' },
+    { label: 'ลากิจ', value: 'PERSONAL', key: 'vacation' },
 ];
 
 export const leavePeriods: {

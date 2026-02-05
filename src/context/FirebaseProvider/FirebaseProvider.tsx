@@ -83,7 +83,7 @@ function FirebaseProvider({ children }: { children: React.ReactNode }) {
             setLeaveList([...leaveList]);
 
             const res = await getAnnualLeaveEntitlement(suid);
-            const used = summarizeUserLeave(leaveList);
+            const used = summarizeUserLeave(leaveList.filter(f=>f.status === 'APPROVE'));
             const all = res.annualLeaveEntitlement.find((f) => f.years === dayjs().get('year'));
 
             setSummaryLeaveDays((prev) => ({

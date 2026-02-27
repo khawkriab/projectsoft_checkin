@@ -105,17 +105,18 @@ function DayCustom({
             })}
         >
             <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                  <PickersDay
+                    sx={{ fontSize: '16px', fontWeight: 600, '&.MuiButtonBase-root.MuiPickersDay-root': { marginRight: 'auto' } }}
+                    {...props}
+                    outsideCurrentMonth={outsideCurrentMonth}
+                    day={day}
+                />
                 {!outsideCurrentMonth && weeklyWorkingDays[weekDay] && (
                     <IconButton color='warning' onClick={() => onShowAddEvent(findDate)}>
                         <BookmarkAddTwoToneIcon />
                     </IconButton>
                 )}
-                <PickersDay
-                    sx={{ fontSize: '16px', fontWeight: 600, '&.MuiButtonBase-root.MuiPickersDay-root': { marginLeft: 'auto' } }}
-                    {...props}
-                    outsideCurrentMonth={outsideCurrentMonth}
-                    day={day}
-                />
+              
             </Box>
             {!outsideCurrentMonth && weeklyWorkingDays[weekDay] && (
                 <Box width={'100%'}>
@@ -461,6 +462,24 @@ function CreateMonthCalendar() {
                         }}
                     >
                         Add
+                    </Button>
+                    <Button
+                        variant='contained'
+                        color='error'
+                        onClick={() => {
+                            const index = calendarDateConfig.findIndex((f) => f.date === addEventData.data?.date);
+
+                            if (index >= 0) {
+                                const n = [...calendarDateConfig];
+                                n[index].eventType = undefined;
+                                n[index].remark = '';
+
+                                setCalendarDateConfig([...n]);
+                                setAddEventData((prev) => ({ ...prev, open: false, data: null }));
+                            }
+                        }}
+                    >
+                        Delete
                     </Button>
                 </DialogActions>
             </Dialog>

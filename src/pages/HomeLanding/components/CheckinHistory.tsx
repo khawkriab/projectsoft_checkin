@@ -43,7 +43,7 @@ function DateAndHistoryCard({ data, dateConfig }: { data?: UserCalendarCheckin; 
                         รออนุมัติ
                     </Box>
                 )}
-                {(data?.isHoliDay || dateConfig?.eventType || dateConfig?.isHoliDay) && <StatusBox status={'HOLIDAY'} showBackground />}
+                {(data?.isHoliDay ||   dateConfig?.isHoliDay) && <StatusBox status={'HOLIDAY'} showBackground />}
             </Box>
         </MenuBox>
     );

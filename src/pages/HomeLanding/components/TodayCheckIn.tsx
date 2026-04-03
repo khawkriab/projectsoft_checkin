@@ -93,6 +93,8 @@ export function TodayCheckIn() {
         if (profile) {
             const res = await getUserWorkTime({ startDate: parseData, suid: profile.suid });
 
+               const nomalCheckin = !isWorkOutside && !remark && !reason && latlng
+
             const payload: CheckinDate = {
                 date: parseData,
                 email: profile.email,
@@ -101,12 +103,12 @@ export function TodayCheckIn() {
                 time: dayjs().format('HH:mm'),
                 remark: remark ?? res?.remark ?? '',
                 reason: (reason || res?.reason) ?? '',
-                approveBy: res?.approveBy || '',
-                approveBySuid: res?.approveBySuid || '',
+                approveBy: nomalCheckin ? 'System' : res?.approveBy || '',
+                approveBySuid: nomalCheckin ? "sys00000001" : res?.approveBySuid || '',
                 leavePeriod: res?.leavePeriod || null,
                 absentId: res?.absentId || null,
                 isWorkOutside: isWorkOutside,
-                status: 99,
+                status: nomalCheckin ? 1 : 99,
                 device: getDeviceDetail(),
                 latlng: latlng || null,
             };

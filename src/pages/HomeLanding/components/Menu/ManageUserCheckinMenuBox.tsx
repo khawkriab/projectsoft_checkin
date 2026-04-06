@@ -1,7 +1,7 @@
 import { Typography } from '@mui/material';
 import { MenuBox } from './MenuBox';
-import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import { NavLink } from 'react-router-dom';
+import AssignmentIcon from '@mui/icons-material/Assignment';
 
 function ManageUserCheckinMenuBox() {
     return (
@@ -19,7 +19,7 @@ function ManageUserCheckinMenuBox() {
                 })}
             >
                 <Typography>จัดการเวลาเข้างาน</Typography>
-                <EventAvailableIcon sx={{ fontSize: { xs: '2.5rem', lg: '1.5rem' } }} />
+                <AssignmentIcon sx={{ fontSize: { xs: '2.5rem', lg: '1.5rem' } }} />
             </MenuBox>
         </NavLink>
     );

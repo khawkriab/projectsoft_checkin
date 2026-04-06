@@ -139,6 +139,27 @@ export const updateCalendarConfig = ({ id, data }: { id: string; data: CalendarD
     });
 };
 
+// id: 'YYYY-M'
+export const getCalendarHoliday = (id: string) => {
+    return new Promise<{ month:string, holidayList:CalendarDateConfig[]}>(async (resolve, reject) => {
+        const docRef = doc(db, 'calendarConfig', id);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            const res = docSnap.data() as { data: CalendarDateConfig[] };
+            let holidayList:  CalendarDateConfig[] = []
+            res.data.forEach((m) => {
+                if (!m.isHoliDay) return;
+
+                holidayList.push({...m,id: m.date, })
+            })
+            resolve({month:`${id}-1`, holidayList});
+        } else {
+            reject('something wrong');
+        }
+    });
+};
+
 // startDateString,endDateString: 'YYYY-MM-DD'
 export const getWorkTimeList = ({ startDateString, endDateString }: { startDateString: string; endDateString: string }) => {
     return new Promise<CheckinDate[]>(async (resolve, reject) => {

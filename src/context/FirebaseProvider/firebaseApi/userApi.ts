@@ -149,7 +149,7 @@ export const getUsersList = () => {
         resolve(usersData.sort((a, b) => a.name?.toLowerCase().localeCompare(b.name?.toLowerCase())));
     });
 };
-
+ 
 // today format '2024-06-01'
 export const getUsersListWithMonth = ({ today }: { today: string }) => {
     const date = dayjs(today);
@@ -178,7 +178,7 @@ export const updateUser = (suid: string, payload: Partial<Profile>) => {
         if (!suid) reject('no id');
 
         try {
-            await updateDoc(doc(db, 'usersList', suid), {
+            await setDoc(doc(db, 'usersList', suid), {
                 ...payload,
                 updatedAt: dayjs().toISOString(),
             });

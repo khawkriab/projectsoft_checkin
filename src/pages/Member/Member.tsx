@@ -1,6 +1,6 @@
 import { Box, Button, Chip, Paper, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import { useFirebase } from 'context/FirebaseProvider';
-import { updateUser, getUsersList, updateAnnualLeaveEntitlement } from 'context/FirebaseProvider/firebaseApi/userApi';
+import { updateUser, getUsersList, updateAnnualLeaveEntitlement, getUsersRegisterList } from 'context/FirebaseProvider/firebaseApi/userApi';
 import { useEffect, useMemo, useState } from 'react';
 import { Profile, ProfileRole, ProfileStatus } from 'type.global';
 import dayjs from 'dayjs';
@@ -153,6 +153,7 @@ function Member() {
     const { openNotify } = useNotification();
     //
     const [memberList, setMemberList] = useState<Profile[]>([]);
+    const [registerList, setRegisterList] = useState<Profile[]>([]);
     const [updating, setUpdating] = useState(false);
     const [openEdit, setOpenEdit] = useState<{ open: boolean; data: Profile | null }>({ open: false, data: null });
 
@@ -202,9 +203,21 @@ function Member() {
 
         setUpdating(false);
     };
+    const getUserRegisterList = async () => {
+        const res = await getUsersRegisterList();
+        console.log('res:', res);
+
+        setRegisterList([...res]);
+
+        // setUpdating(false);
+    };
     useEffect(() => {
         if (profile) getUserList();
     }, [JSON.stringify(profile)]);
+
+    // useEffect(() => {
+    //     getUserRegisterList();
+    // }, []);
 
     const dataList = useMemo(() => {
         return memberList.sort((a, b) => (a.status || '')?.localeCompare(b.status || ''));
@@ -212,6 +225,20 @@ function Member() {
 
     return (
         <Box>
+            {registerList.length > 0 && (
+                <Box display={'flex'} flexWrap={'wrap'} gap={2} mb={2}>
+                    {registerList.map((m) => (
+                        <CardUser
+                            key={m.id}
+                            data={m}
+                            role={profile?.role}
+                            onChangeRole={onChangeRole}
+                            onChangeStatus={onChangeStatus}
+                            onEditUser={(data) => onUpdateSuid(data)}
+                        />
+                    ))}
+                </Box>
+            )}
             <Box display={'flex'} flexWrap={'wrap'} gap={2}>
                 {dataList.map((m) => (
                     <CardUser

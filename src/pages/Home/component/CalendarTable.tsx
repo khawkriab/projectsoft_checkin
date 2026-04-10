@@ -1,9 +1,9 @@
-import { Box, IconButton, Paper, Table, TableBody, TableContainer, TableHead, TableRow } from '@mui/material';
+import { Box, IconButton, Paper, Table, TableBody, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
 import { TableBodyCell, TableHeadCell, TableHeadRow } from 'components/common/MuiTable';
 import { useNotification } from 'components/common/NotificationCenter';
 import React from 'react';
 import { CalendarDateList, CheckinDate, Profile } from 'type.global';
-import InfoTwoToneIcon from '@mui/icons-material/InfoTwoTone';
+import HelpCenterTwoToneIcon from '@mui/icons-material/HelpCenterTwoTone';
 
 export type CalendarDateExtendText = Omit<CalendarDateList, 'userCheckinList'> & {
     userCheckinList: (
@@ -18,33 +18,27 @@ export type CalendarDateExtendText = Omit<CalendarDateList, 'userCheckinList'> &
 
 function CalendarTable({ userFilterList, calendarCheckin }: { userFilterList: Profile[]; calendarCheckin: CalendarDateExtendText[] }) {
     const { openNotify } = useNotification();
- 
+
     const statusStyle = (data: CalendarDateExtendText['userCheckinList'][0]) => {
         if (data?.lateFlag) {
             if (data.lateFlag === 1) {
                 return {
-                    color: '#ffffff',
-                    textAlign: 'center',
                     backgroundColor: '#FBBC04',
                 };
             }
 
             // data.lateFlag === 2 ***หาย
             return {
-                color: '#ffffff',
-                textAlign: 'center',
                 backgroundColor: '#D32F2F',
             };
         }
 
         if (data?.absentId) {
             return {
-                color: '#ffffff',
-                textAlign: 'center',
                 backgroundColor: '#FF9800',
             };
         }
-        return {};
+        return { color: '#ffffff', textAlign: 'center', backgroundColor: 'var(--status-normal-color)' };
     };
 
     // const onDelete = async (d: CalendarDateExtendText['userCheckinList'][0]) => {
@@ -55,7 +49,13 @@ function CalendarTable({ userFilterList, calendarCheckin }: { userFilterList: Pr
 
     return (
         <TableContainer component={Paper}>
-            <Table>
+            <Table
+                sx={{
+                    td: {
+                        padding: '0 8px 8px 8px',
+                    },
+                }}
+            >
                 <TableHead>
                     <TableHeadRow>
                         <TableHeadCell
@@ -72,7 +72,7 @@ function CalendarTable({ userFilterList, calendarCheckin }: { userFilterList: Pr
                         </TableHeadCell>
                         {userFilterList.map((user, index) => {
                             return (
-                                <TableHeadCell key={index} colSpan={2} align='center' sx={{ borderLeft: '1px solid #fff' }}>
+                                <TableHeadCell key={index} rowSpan={2} align='center' sx={{ borderLeft: '1px solid #fff' }}>
                                     {user.name}
                                 </TableHeadCell>
                             );
@@ -91,14 +91,6 @@ function CalendarTable({ userFilterList, calendarCheckin }: { userFilterList: Pr
                         >
                             {'วันที่'}
                         </TableHeadCell>
-                        {userFilterList.map((_, index) => {
-                            return (
-                                <React.Fragment key={index}>
-                                    <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'เวลาเข้าทำงาน'}</TableHeadCell>
-                                    <TableHeadCell sx={{ borderLeft: '1px solid #fff' }}>{'สถานะ'}</TableHeadCell>
-                                </React.Fragment>
-                            );
-                        })}
                     </TableHeadRow>
                 </TableHead>
                 <TableBody>
@@ -127,29 +119,46 @@ function CalendarTable({ userFilterList, calendarCheckin }: { userFilterList: Pr
                                             sx={(theme) => ({
                                                 border: '1px solid',
                                                 borderLeftColor: theme.palette.secondary.contrastText,
+                                                alignItems: 'flex-start',
                                             })}
                                         >
-                                            {u?.timeText}
-                                            {u?.device?.getUA && (
-                                                <IconButton
-                                                    size='small'
-                                                    // variant='outlined'
-                                                    color='warning'
-                                                    onClick={() => { 
-                                                        openNotify(
-                                                            'info',
-                                                       u?.device?.getUA
-                                                        );
-                                                    }}
-                                                >
-                                                    <InfoTwoToneIcon />
-                                                </IconButton>
-                                            )}
-                                            <Box display={'inline-block'} color={'#ff6f00'} fontWeight={700}>
-                                                {u?.remark && u?.timeText && ' - '}
-                                                {u?.remark}
+                                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <Box>
+                                                    <Typography component={'span'}>{u?.timeText}</Typography>{' '}
+                                                    <Box
+                                                        sx={{
+                                                            display: 'inline-block',
+                                                            padding: '0 4px',
+                                                            borderRadius: 1,
+                                                            color: '#ffffff',
+                                                            textAlign: 'center',
+                                                            fontSize: '90%',
+                                                            ...statusStyle(u),
+                                                        }}
+                                                    >
+                                                        {u?.statusText}
+                                                    </Box>
+                                                </Box>
+                                                {u?.device?.getUA && (
+                                                    <IconButton
+                                                        size='small'
+                                                        sx={{
+                                                            color: '#009dff',
+                                                        }}
+                                                        onClick={() => {
+                                                            openNotify('info', u?.device?.getUA);
+                                                        }}
+                                                    >
+                                                        <HelpCenterTwoToneIcon />
+                                                    </IconButton>
+                                                )}
                                             </Box>
-
+                                            <Box marginBottom={1}>
+                                                <Box display={'inline-block'} color={'#ff6f00'} fontWeight={700}>
+                                                    {u?.remark} {u?.absentId && 'ลา'}
+                                                </Box>{' '}
+                                                <Box display={'inline-block'}>{u?.reason}</Box>
+                                            </Box>
                                             {u?.timeText && u?.latlng && (
                                                 <Box>
                                                     <a
@@ -161,27 +170,7 @@ function CalendarTable({ userFilterList, calendarCheckin }: { userFilterList: Pr
                                                     </a>
                                                 </Box>
                                             )}
-                                        </TableBodyCell>
-                                        {/* สถานะ */}
-                                        <TableBodyCell
-                                            sx={(theme) => ({
-                                                border: '1px solid',
-                                                borderLeftColor: theme.palette.secondary.contrastText,
-                                            })}
-                                        >
-                                            <Box
-                                                sx={{
-                                                    padding: '2px 4px',
-                                                    borderRadius: 1,
-                                                    // backgroundColor: u?.lateFlag ? '#FBBC04' : u?.absentId ? '#FF9800' : '',
-                                                    // color: u?.lateFlag || u?.absentId ? '#ffffff' : '',
-                                                    // textAlign: u?.lateFlag || u?.absentId ? 'center' : '',
-                                                    ...statusStyle(u),
-                                                }}
-                                            >
-                                                {u?.statusText}
-                                            </Box>
-                                            <Box>{u?.reason}</Box>
+
                                             {/* <Button color='error' onClick={() => onDelete(u)}>
                                                 delete
                                             </Button> */}

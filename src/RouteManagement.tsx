@@ -16,6 +16,7 @@ function RoutesManagement() {
         <Routes>
             <Route element={<UserLayout />}>
                 <Route path={`/`} element={<HomeLanding />} />
+                <Route path='/user-checkin' element={<Home />} />
             </Route>
             <Route path='/manage' element={<Layout />}>
                 <Route index element={<Home />} />

@@ -7,6 +7,7 @@ import ManageUserCheckinMenuBox from './ManageUserCheckinMenuBox';
 import { useFirebase } from 'context/FirebaseProvider';
 import LogoutMenuBox from './LogoutMenuBox';
 import Holiday from '../HolidayMenuBox';
+import WhoArrivedMenuBox from './WhoArrivedMenuBox';
 
 export function MenuList() {
     const { profile } = useFirebase();
@@ -24,6 +25,9 @@ export function MenuList() {
                     </Grid>
                     <Grid size={{ xs: 4, lg: 3 }} display={'flex'}>
                         <Holiday />
+                    </Grid>
+                    <Grid size={{ xs: 4, lg: 3 }} display={'flex'}>
+                        <WhoArrivedMenuBox />
                     </Grid>
                     {(profile?.role === 'ADMIN' || profile?.role === 'STAFF' || profile?.role === 'ORGANIZATION') && (
                         <Grid size={{ xs: 4, lg: 3 }} display={'flex'}>

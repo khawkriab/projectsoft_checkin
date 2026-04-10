@@ -15,22 +15,6 @@ function UserLayout() {
                 position: 'relative',
                 overflow: 'hidden',
                 backgroundColor: theme.palette.background.default,
-                // CSS variables for status colors and backgrounds
-                '--status-leave-color': '#FF9800',
-                '--status-leave-bgc': '#FFE2C6',
-                '--status-miss-color': '#D32F2F',
-                '--status-miss-bgc': '#FFDBDC',
-                '--status-late-color': '#FBBC04',
-                '--status-late-bgc': '#FEF9C3',
-                '--status-normal-color': '#34A853',
-                '--status-normal-bgc': '#DCFCE7',
-                '--status-holiday-color': '#000000',
-                '--status-holiday-bgc': '#E0E0E0',
-                '--status-work-day-color': theme.palette.primary.light,
-                '--status-work-day-bgc': '#DCFCE7',
-                '--status-wfh-day-color': '#ffa600',
-                '--status-wfh-day-bgc': '#DCFCE7',
-                '--main-accent': theme.palette.primary.main,
             })}
         >
             <HomeAppBar />

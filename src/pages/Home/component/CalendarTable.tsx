@@ -8,9 +8,12 @@ import HelpCenterTwoToneIcon from '@mui/icons-material/HelpCenterTwoTone';
 export type CalendarDateExtendText = Omit<CalendarDateList, 'userCheckinList'> & {
     userCheckinList: (
         | (CheckinDate & {
-              statusText: string;
+              leaveTypeText: string;
+              leavePeriodText: string;
               lateFlag: number; // 0:not late, 1:late, 2:unknown
               timeText: string;
+              timeStatus: string;
+              workOutsideText: string;
           })
         | null
     )[];
@@ -33,11 +36,6 @@ function CalendarTable({ userFilterList, calendarCheckin }: { userFilterList: Pr
             };
         }
 
-        if (data?.absentId) {
-            return {
-                backgroundColor: '#FF9800',
-            };
-        }
         return { color: '#ffffff', textAlign: 'center', backgroundColor: 'var(--status-normal-color)' };
     };
 
@@ -125,6 +123,21 @@ function CalendarTable({ userFilterList, calendarCheckin }: { userFilterList: Pr
                                             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', justifyContent: 'space-between' }}>
                                                 <Box>
                                                     <Typography component={'span'}>{u?.timeText}</Typography>{' '}
+                                                    {u?.timeStatus && (
+                                                        <Box
+                                                            sx={{
+                                                                display: 'inline-block',
+                                                                padding: '0 4px',
+                                                                borderRadius: 1,
+                                                                color: '#ffffff',
+                                                                textAlign: 'center',
+                                                                fontSize: '90%',
+                                                                ...statusStyle(u),
+                                                            }}
+                                                        >
+                                                            {u?.timeStatus}
+                                                        </Box>
+                                                    )}
                                                     <Box
                                                         sx={{
                                                             display: 'inline-block',
@@ -133,10 +146,10 @@ function CalendarTable({ userFilterList, calendarCheckin }: { userFilterList: Pr
                                                             color: '#ffffff',
                                                             textAlign: 'center',
                                                             fontSize: '90%',
-                                                            ...statusStyle(u),
+                                                            backgroundColor: '#FF9800',
                                                         }}
                                                     >
-                                                        {u?.statusText}
+                                                        {u?.leaveTypeText}
                                                     </Box>
                                                 </Box>
                                                 {u?.device?.getUA && (
@@ -155,8 +168,10 @@ function CalendarTable({ userFilterList, calendarCheckin }: { userFilterList: Pr
                                             </Box>
                                             <Box marginBottom={1}>
                                                 <Box display={'inline-block'} color={'#ff6f00'} fontWeight={700}>
-                                                    {u?.remark} {u?.absentId && 'ลา'}
+                                                    {u?.leavePeriodText}
+                                                    {u?.workOutsideText}
                                                 </Box>{' '}
+                                                <Box display={'inline-block'}>{u?.remark}</Box>
                                                 <Box display={'inline-block'}>{u?.reason}</Box>
                                             </Box>
                                             {u?.timeText && u?.latlng && (

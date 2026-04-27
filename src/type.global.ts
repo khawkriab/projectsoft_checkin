@@ -97,6 +97,8 @@ export type WeeklyScheduleData = {
 export type WorkTimes = {
     entryTime: string; // HH:mm
     exitTime: string; // HH:mm
+    breakEndTime:string; // HH:mm
+    breakStartTime:string; // HH:mm
 };
 
 export type WeeklyWorkingDays = {

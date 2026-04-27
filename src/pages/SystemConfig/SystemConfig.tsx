@@ -34,6 +34,8 @@ function SystemConfig() {
     const [workTimes, setWorkTimes] = useState<WorkTimes>({
         entryTime: '00:00',
         exitTime: '00:00',
+        breakStartTime: '12:00',
+        breakEndTime: '13:00',
     }); // HH:mm
     const [weeklyWorkingDays, setWeeklyWorkingDays] = useState<WeeklyWorkingDays>({
         Friday: false,

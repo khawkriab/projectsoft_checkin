@@ -48,49 +48,97 @@ function Home() {
                 if (userCheckin && !isEndWork) {
                     // time: HH:mm
                     const timeText = userCheckin?.time || '';
-                    const remark =
-                        userCheckin.isWorkOutside && !userCheckin?.remark?.toLowerCase().includes('wfh')
-                            ? 'WFH'
-                            : userCheckin?.remark || '';
-                    let reason = userCheckin?.reason ?? '';
-                    let statusText = 'ตรงเวลา';
+                    let timeStatus = 'ตรงเวลา';
                     let lateFlag = 0;
-                    const lpl = userCheckin?.leavePeriod ? getLeavePeriodLabel(userCheckin?.leavePeriod) : '';
-                    const ltl = userCheckin?.leaveType ? getLeaveType(userCheckin.leaveType) : '';
-                    const wfhText = userCheckin?.isWorkOutside ? 'WFH' : '';
 
-                    if (remark.includes('ลา') || userCheckin?.absentId) {
-                        statusText = `${remark} ${wfhText} ${lpl && `${lpl}-${ltl}`}`;
-                        if (remark.includes('ลา') && !userCheckin?.absentId) {
-                            statusText += ' no absentId';
-                        }
-                        reason = `${userCheckin?.reason}`;
-                    } else if (
+                    let workOutsideText = '';
+
+                    let leaveTypeText = '';
+                    let leavePeriodText = '';
+
+                    let remark = userCheckin?.remark || '';
+
+                    // check leave
+                    if (userCheckin?.absentId) {
+                        const lpl = userCheckin?.leavePeriod ? getLeavePeriodLabel(userCheckin?.leavePeriod) : '';
+                        const ltl = userCheckin?.leaveType ? getLeaveType(userCheckin.leaveType) : '';
+                        leaveTypeText = ltl as string;
+                        leavePeriodText = lpl as string;
+                    }
+                    if (userCheckin.isWorkOutside || remark.toLowerCase().includes('wfh')) {
+                        workOutsideText = remark.toLowerCase().includes('wfh') ? 'WFH' : 'ทำงานนอกสถานที่';
+                        remark = remark.replace(/wfh/gi, '').replace('ทำงานนอกสถานที่', '');
+                    }
+                    // check status time
+                    if (
                         timeText &&
                         dayjs(`${calendarDate.date} ${timeText}`).isAfter(dayjs(`${calendarDate.date} ${calendarDate.entryTime}`))
                     ) {
-                        statusText = `สาย ${dayjs(`${calendarDate.date} ${timeText}`).diff(
-                            dayjs(`${calendarDate.date} ${calendarDate.entryTime}`),
-                            'minutes'
-                        )} นาที`;
-                        lateFlag = 1;
-                    } else if (!remark && !timeText && isBeforeDay) {
-                        statusText = 'null';
+                        if (userCheckin?.absentId) {
+                            if (userCheckin?.leavePeriod === 'HALF_DAY_PM') {
+                                timeStatus = `สาย ${dayjs(`${calendarDate.date} ${timeText}`).diff(
+                                    dayjs(`${calendarDate.date} ${calendarDate.entryTime}`),
+                                    'minutes'
+                                )} นาที`;
+                                lateFlag = 1;
+                            } else if (userCheckin?.leavePeriod === 'HALF_DAY_AM') {
+                                if (
+                                    dayjs(`${calendarDate.date} ${timeText}`).isAfter(
+                                        dayjs(`${calendarDate.date} ${calendarDate.breakEndTime}`)
+                                    )
+                                ) {
+                                    timeStatus = `สาย ${dayjs(`${calendarDate.date} ${timeText}`).diff(
+                                        dayjs(`${calendarDate.date} ${calendarDate.breakEndTime}`),
+                                        'minutes'
+                                    )} นาที`;
+                                    lateFlag = 1;
+                                } else {
+                                    timeStatus = 'ตรงเวลา';
+                                    lateFlag = 0;
+                                }
+                            } else {
+                                timeStatus = '';
+                                lateFlag = 0;
+                            }
+                        } else {
+                            timeStatus = `สาย ${dayjs(`${calendarDate.date} ${timeText}`).diff(
+                                dayjs(`${calendarDate.date} ${calendarDate.entryTime}`),
+                                'minutes'
+                            )} นาที`;
+                            lateFlag = 1;
+                        }
+                    } else if (!userCheckin?.remark && !timeText && !userCheckin?.absentId && isBeforeDay) {
+                        timeStatus = 'null';
                         lateFlag = 2;
+                    } else if (userCheckin?.absentId && userCheckin?.leavePeriod === 'FULL_DAY') {
+                        timeStatus = '';
                     }
-                    checkinData.push({ ...userCheckin, statusText, lateFlag, timeText, reason });
+
+                    checkinData.push({
+                        ...userCheckin,
+                        timeText,
+                        timeStatus,
+                        lateFlag,
+                        leaveTypeText,
+                        leavePeriodText,
+                        workOutsideText,
+                        remark,
+                    });
                 } else if (isBeforeDay && !isStartWork && !isEndWork) {
                     checkinData.push({
                         name: ul.name,
                         email: ul.email,
                         suid: ul.suid,
-                        statusText: 'หาย',
                         status: 0,
                         approveBy: '',
                         approveBySuid: '',
                         date: calendarDate.date,
                         lateFlag: 2,
                         timeText: '',
+                        timeStatus: 'หาย',
+                        leaveTypeText: '',
+                        leavePeriodText: '',
+                        workOutsideText: '',
                     });
                 } else {
                     checkinData.push(null);

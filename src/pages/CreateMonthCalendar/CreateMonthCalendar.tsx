@@ -105,7 +105,7 @@ function DayCustom({
             })}
         >
             <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                  <PickersDay
+                <PickersDay
                     sx={{ fontSize: '16px', fontWeight: 600, '&.MuiButtonBase-root.MuiPickersDay-root': { marginRight: 'auto' } }}
                     {...props}
                     outsideCurrentMonth={outsideCurrentMonth}
@@ -116,7 +116,6 @@ function DayCustom({
                         <BookmarkAddTwoToneIcon />
                     </IconButton>
                 )}
-              
             </Box>
             {!outsideCurrentMonth && weeklyWorkingDays[weekDay] && (
                 <Box width={'100%'}>
@@ -246,6 +245,8 @@ function CreateMonthCalendar() {
                 isHoliDay: false,
                 entryTime: '',
                 exitTime: '',
+                breakStartTime: '',
+                breakEndTime: '',
                 remark: '',
                 ...(e.target.name !== 'workDay' && { [e.target.name]: e.target.checked }),
             });

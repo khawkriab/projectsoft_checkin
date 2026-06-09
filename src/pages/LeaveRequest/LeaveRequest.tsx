@@ -249,18 +249,20 @@ function LeaveRequest() {
 
     const userUsedLeaveDays = useMemo(() => {
         const temp = userList.map((u) => {
-            const n = u.annualLeaveEntitlement.map((a) => {
-                const l = leaveList.filter(
-                    (f) => f.suid === u.suid && a.id === String(dayjs(f.startDate).year()) && f.status === 'APPROVE'
-                );
-                const r = summarizeUserLeave(l);
+            const n = u.annualLeaveEntitlement
+                .map((a) => {
+                    const l = leaveList.filter(
+                        (f) => f.suid === u.suid && a.id === String(dayjs(f.startDate).year()) && f.status === 'APPROVE'
+                    );
+                    const r = summarizeUserLeave(l);
 
-                return {
-                    years: a.id,
-                    all: a,
-                    used: r,
-                };
-            });
+                    return {
+                        years: a.id,
+                        all: a,
+                        used: r,
+                    };
+                })
+                .sort((a, b) => Number(b?.years ?? 0) - Number(a?.years || 0));
 
             return {
                 ...u,

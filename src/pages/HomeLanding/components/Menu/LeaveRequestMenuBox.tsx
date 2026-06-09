@@ -196,18 +196,13 @@ export function LeaveRequestMenuBox() {
                                         }}
                                         color='primary'
                                     >
-                                        {leaveTypes.map((m) => (
-                                            <ToggleButton
-                                                key={m.value}
-                                                value={m.value}
-                                                disabled={
-                                                    summaryLeaveDays.used[m.key as 'personal' | 'sick' | 'vacation'] >=
-                                                    summaryLeaveDays.all[m.key as 'personal' | 'sick' | 'vacation']
-                                                }
-                                            >
-                                                {m.label}
-                                            </ToggleButton>
-                                        ))}
+                                        {leaveTypes.map((m) => {
+                                            return (
+                                                <ToggleButton key={m.value} value={m.value}>
+                                                    {m.label}
+                                                </ToggleButton>
+                                            );
+                                        })}
                                     </ToggleButtonGroup>
                                 </FormControl>
                             </Grid>
